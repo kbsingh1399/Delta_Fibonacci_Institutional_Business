@@ -231,7 +231,7 @@ def get_asset_trades(symbol, tf, fast_p, mid_p, slow_p, exit_mode, spread_cost_r
             
     return trades
 
-def run_portfolio_backtest(alpha_basket=True, offline=True, maker_rebate=True, uniform=True, exit_mode="fixed_3.0", cooldown_bars=12):
+def run_portfolio_backtest(alpha_basket=True, offline=True, maker_rebate=True, uniform=False, exit_mode="fixed_3.0", cooldown_bars=12):
     mode_name = "OPTIMIZED ALPHA BASKET" if alpha_basket else "FULL BASELINE LIQUID CATALOG"
     friction_drag = 0.050 if maker_rebate else 0.138
     friction_label = "Arena Maker Limit TP Rebate (0.050R Friction)" if maker_rebate else "Full Exchange Taker Fee (0.05%) + 18% GST + Slippage (0.138R)"
@@ -313,6 +313,10 @@ def run_portfolio_backtest(alpha_basket=True, offline=True, maker_rebate=True, u
             print(f"Liquid Assets with Audited Configurations: {len(df_liquid)}")
         
         ribbon_map = {
+            'Fib_89_233': (55, 89, 233),
+            'Fib_34_89': (34, 89, 233),
+            'Fib_21_55': (21, 55, 144),
+            'Classic_50_200': (50, 100, 200),
             'Fib_21_55_89': (21, 55, 89),
             'Fib_34_89_144': (34, 89, 144),
             'Fib_34_89_233': (34, 89, 233),
@@ -514,14 +518,14 @@ def main():
     parser.add_argument("--all-assets", action="store_true", help="Run the full baseline across all liquid assets including Crypto Majors")
     parser.add_argument("--live-universe", action="store_true", help="Refresh universe snapshot from live Delta Exchange API instead of static offline cache")
     parser.add_argument("--taker-fees", action="store_true", help="Use legacy full taker fees (0.138R) instead of Maker Limit TP rebate model (0.050R)")
-    parser.add_argument("--uniform", action="store_true", default=True, help="Run Option A: Uniform 4H Fib_55_89_233 strategy across assets")
-    parser.add_argument("--calmar-leaderboard", action="store_true", help="Fall back to legacy heterogeneous Calmar Leaderboard ribbons")
-    parser.add_argument("--exit-mode", default="fixed_3.0", choices=["fixed_2.5", "fixed_3.0", "fixed_3.5", "step_trail", "trail_89", "trail_55"], help="Exit strategy mode (default: fixed_3.0)")
+    parser.add_argument("--uniform", action="store_true", help="Run Option A: Uniform 4H Fib_55_89_233 strategy across assets")
+    parser.add_argument("--calmar-leaderboard", action="store_true", default=True, help="Default: Run Legacy Heterogeneous Calmar Leaderboard ribbons")
+    parser.add_argument("--exit-mode", default="fixed_3.0", choices=["fixed_2.5", "fixed_3.0", "fixed_3.5", "step_trail", "trail_89", "trail_55"], help="Exit strategy mode for uniform backtest (default: fixed_3.0)")
     parser.add_argument("--cooldown", type=int, default=12, help="Post-exit cooldown bars (default: 12 bars / 48 hours)")
     args = parser.parse_args()
     
     use_alpha = not args.all_assets
-    is_uniform = not args.calmar_leaderboard
+    is_uniform = args.uniform
     run_portfolio_backtest(
         alpha_basket=use_alpha,
         offline=not args.live_universe,

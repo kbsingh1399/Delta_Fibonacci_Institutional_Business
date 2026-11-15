@@ -36,7 +36,7 @@ if ENGINE_DIR not in sys.path:
 from asset_universe_classifier import classify_asset, ALL_SECTORS
 from delta_min_lot_sizer import fetch_delta_products
 from cluster_risk_governor import get_asset_cluster, validate_new_trade_entry
-from delta_live_scanner import fetch_recent_candles, calculate_ema, calculate_atr, scan_asset_setup
+from delta_live_scanner import fetch_recent_candles, calculate_ema, calculate_atr, scan_asset_setup, load_leaderboard_specs
 
 ACTIVE_POS_FILE = os.path.join(ENGINE_DIR, "active_positions.json")
 PAPER_LEDGER_FILE = os.path.join(AUDIT_DIR, "paper_trading_ledger.csv")
@@ -100,15 +100,25 @@ class TerminalDataStore:
                 return
             self.scanning = True
 
-        logger.info(f"Computing 4H indicators across {len(self.deployable_symbols)} assets...")
+        specs = load_leaderboard_specs()
+        logger.info(f"Computing indicators across {len(self.deployable_symbols)} assets via Calmar Leaderboard specs...")
         new_indicators = []
         active_pos = self.get_active_positions()
 
         # Prioritize symbols
         for sym in self.deployable_symbols:
             try:
-                df = fetch_recent_candles(sym, resolution="240", count=1200)
-                if df is None or len(df) < 250:
+                spec = specs.get(sym, {})
+                sym_tf = spec.get("timeframe", "4H")
+                ribbon = spec.get("ribbon", (55, 89, 233))
+                strategy = spec.get("strategy", "fixed_3.0")
+                rib_name = spec.get("ribbon_name", "Fib_55_89_233")
+                res_code = "240" if sym_tf == "4H" else "60"
+                fast_p, mid_p, slow_p = ribbon
+                bar_duration = 14400 if sym_tf == "4H" else 3600
+
+                df = fetch_recent_candles(sym, resolution=res_code, count=1200, use_mark=False)
+                if df is None or len(df) < max(250, slow_p + 15):
                     continue
 
                 # Live mark price
@@ -124,22 +134,22 @@ class TerminalDataStore:
                         df.loc[df.index[-1], "low"] = mark
 
                 closes = df["close"]
-                ema55 = calculate_ema(closes, 55).to_numpy()
-                ema89 = calculate_ema(closes, 89).to_numpy()
-                ema233 = calculate_ema(closes, 233).to_numpy()
+                ef = calculate_ema(closes, fast_p).to_numpy()
+                em = calculate_ema(closes, mid_p).to_numpy()
+                es = calculate_ema(closes, slow_p).to_numpy()
                 atr = calculate_atr(df, 14)
 
                 prev = len(df) - 2
-                # Use live forming bar indicator readings (matching TradingView 4H display)
-                curr_89 = float(ema89[-1])
-                curr_233 = float(ema233[-1])
-                curr_55 = float(ema55[-1])
+                # Use live forming bar indicator readings (matching TradingView display)
+                curr_mid = float(em[-1])
+                curr_slow = float(es[-1])
+                curr_fast = float(ef[-1])
                 curr_atr = float(atr[-1])
 
-                regime = "BULLISH" if curr_89 > curr_233 else ("BEARISH" if curr_89 < curr_233 else "NEUTRAL")
+                regime = "BULLISH" if curr_mid > curr_slow else ("BEARISH" if curr_mid < curr_slow else "NEUTRAL")
 
-                dist_89 = ((mark - curr_89) / curr_89) * 100.0 if curr_89 > 0 else 0.0
-                dist_233 = ((mark - curr_233) / curr_233) * 100.0 if curr_233 > 0 else 0.0
+                dist_mid = ((mark - curr_mid) / curr_mid) * 100.0 if curr_mid > 0 else 0.0
+                dist_slow = ((mark - curr_slow) / curr_slow) * 100.0 if curr_slow > 0 else 0.0
 
                 # Candle wick metrics
                 o = float(df["open"].iloc[prev])
@@ -156,14 +166,18 @@ class TerminalDataStore:
 
                 # Candle timing metrics
                 candle_start_ts = int(df["timestamp"].iloc[prev])
-                candle_close_ts = candle_start_ts + 14400
+                candle_close_ts = candle_start_ts + bar_duration
                 elapsed_since_close = int(time.time()) - candle_close_ts
-                forming_close_ts = int(df["timestamp"].iloc[-1]) + 14400
+                forming_close_ts = int(df["timestamp"].iloc[-1]) + bar_duration
                 minutes_to_close = max(0, (forming_close_ts - int(time.time())) // 60)
 
                 # Setup classification
-                setup = scan_asset_setup(sym, tf="4H", products_dict=self.products, live_mark_price=mark)
-                status = f"MONITORING [4H Close in {minutes_to_close}m]"
+                setup = scan_asset_setup(
+                    sym, tf=sym_tf, products_dict=self.products,
+                    live_mark_price=mark, ribbon=ribbon, strategy=strategy
+                )
+                freshness_limit = 900 if sym_tf == "4H" else 300
+                status = f"MONITORING [{sym_tf} Close in {minutes_to_close}m]"
                 status_color = "secondary"
 
                 if setup:
@@ -182,33 +196,36 @@ class TerminalDataStore:
                     elif setup["sizing_status"] == "REJECTED_OVERSIZED":
                         status = f"BLOCKED: OVERSIZED MIN-LOT"
                         status_color = "warning"
-                    elif elapsed_since_close <= 900:
-                        # Setup is fresh (within 15 minutes of candle close)
-                        status = f"READY: {setup['action']} ({setup['shelf']}) [15m Window Open]"
+                    elif elapsed_since_close <= freshness_limit:
+                        # Setup is fresh (within freshness window of candle close)
+                        status = f"READY: {setup['action']} ({setup['shelf']}) [{freshness_limit//60}m Window Open]"
                         status_color = "success"
                     else:
                         hours_ago = elapsed_since_close / 3600.0
                         status = f"HISTORICAL: {setup['action']} ({setup['shelf']}) [Closed {hours_ago:.1f}h ago]"
                         status_color = "secondary"
-                elif abs(dist_89) <= 0.6:
-                    status = f"APPROACHING EMA 89 ({dist_89:+.2f}%) [Close in {minutes_to_close}m]"
+                elif abs(dist_mid) <= 0.6:
+                    status = f"APPROACHING EMA {mid_p} ({dist_mid:+.2f}%) [{sym_tf} Close in {minutes_to_close}m]"
                     status_color = "info"
-                elif abs(dist_233) <= 0.6:
-                    status = f"APPROACHING EMA 233 ({dist_233:+.2f}%) [Close in {minutes_to_close}m]"
+                elif abs(dist_slow) <= 0.6:
+                    status = f"APPROACHING EMA {slow_p} ({dist_slow:+.2f}%) [{sym_tf} Close in {minutes_to_close}m]"
                     status_color = "info"
 
                 item = {
                     "symbol": sym,
                     "sector": classify_asset(sym),
                     "cluster": get_asset_cluster(sym),
+                    "tf": sym_tf,
+                    "strategy": strategy,
+                    "ribbon": rib_name,
                     "mark_price": round(mark, 4),
-                    "ema_55": round(curr_55, 4),
-                    "ema_89": round(curr_89, 4),
-                    "ema_233": round(curr_233, 4),
+                    "ema_55": round(curr_fast, 4),
+                    "ema_89": round(curr_mid, 4),
+                    "ema_233": round(curr_slow, 4),
                     "atr_14": round(curr_atr, 4),
                     "regime": regime,
-                    "dist_ema89_pct": round(dist_89, 2),
-                    "dist_ema233_pct": round(dist_233, 2),
+                    "dist_ema89_pct": round(dist_mid, 2),
+                    "dist_ema233_pct": round(dist_slow, 2),
                     "wick_pct": round(wick_pct, 1),
                     "status": status,
                     "status_color": status_color,

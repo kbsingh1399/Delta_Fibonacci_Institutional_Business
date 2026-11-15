@@ -347,6 +347,10 @@ class DeltaTraderMonitor:
             contracts = int(pos["contracts"])
             cv = float(pos.get("contract_value", 1.0))
             risk_inr = float(pos["actual_risk_inr"])
+            orig_stop = float(pos.get("original_stop", stop))
+            r_dist = abs(entry - orig_stop)
+            if r_dist <= 0:
+                r_dist = 1e-6
             trail_stage = pos.get("trail_stage", "INITIAL")
 
             # Update highest/lowest favorable mark
@@ -435,22 +439,61 @@ class DeltaTraderMonitor:
                 to_close.append(sym)
                 continue
 
-            # 3. Dynamic Step Trail (Move Stop to Break-Even at 1.5R target)
-            step_trail_reached = (mark >= t1) if is_long else (mark <= t1)
-            if step_trail_reached and trail_stage == "INITIAL":
-                pos["current_stop"] = entry
-                pos["trail_stage"] = "BREAK_EVEN_LOCKED"
-                modified = True
-                logger.info(f"🛡️ [RISK TIGHTENED] {sym} reached 1.5R target ({t1}) -> Stop moved to Break-Even ({entry})")
-                # Synchronize venue stop order
-                if self.mode == "live" and self.executor and pos.get("sl_order_id"):
-                    prod_id = self.products.get(sym, {}).get("id")
-                    if prod_id:
-                        try:
-                            self.executor.edit_order(order_id=pos["sl_order_id"], product_id=int(prod_id), stop_price=entry)
-                            logger.info(f"🛡️ [VENUE BRACKET UPDATED] {sym} SL Order {pos['sl_order_id']} moved to Break-Even ({entry}) on Delta Exchange")
-                        except Exception as edit_err:
-                            logger.warning(f"Could not update venue SL order {pos['sl_order_id']}: {edit_err}")
+            # 3. Dynamic Step Trail based on position strategy
+            strat = pos.get("strategy", "step_trail")
+            if strat == "step_trail":
+                cur_r = (mark - entry) / r_dist if is_long else (entry - mark) / r_dist
+                if cur_r > pos.get("max_fav_r", 0.0):
+                    pos["max_fav_r"] = cur_r
+                    modified = True
+                max_fav = pos.get("max_fav_r", 0.0)
+
+                # Tier 2: reached >= 4.0R -> lock +2.0R profit
+                if max_fav >= 4.0 and trail_stage != "LOCKED_2R":
+                    new_stop = round(entry + 2.0 * r_dist if is_long else entry - 2.0 * r_dist, 4)
+                    pos["current_stop"] = new_stop
+                    pos["trail_stage"] = "LOCKED_2R"
+                    modified = True
+                    logger.info(f"🛡️ [STEP TRAIL] {sym} reached 4R -> Trailed Stop to +2.0R ({new_stop})")
+                    if self.mode == "live" and self.executor and pos.get("sl_order_id"):
+                        prod_id = self.products.get(sym, {}).get("id")
+                        if prod_id:
+                            try:
+                                self.executor.edit_order(order_id=pos["sl_order_id"], product_id=int(prod_id), stop_price=new_stop)
+                                logger.info(f"🛡️ [VENUE BRACKET UPDATED] {sym} SL Order {pos['sl_order_id']} moved to +2.0R ({new_stop})")
+                            except Exception as e:
+                                logger.warning(f"Error syncing trailed stop on venue: {e}")
+                # Tier 1: reached >= 2.0R -> lock +0.5R profit
+                elif max_fav >= 2.0 and trail_stage == "INITIAL":
+                    new_stop = round(entry + 0.5 * r_dist if is_long else entry - 0.5 * r_dist, 4)
+                    pos["current_stop"] = new_stop
+                    pos["trail_stage"] = "LOCKED_0.5R"
+                    modified = True
+                    logger.info(f"🛡️ [STEP TRAIL] {sym} reached 2R -> Trailed Stop to +0.5R ({new_stop})")
+                    if self.mode == "live" and self.executor and pos.get("sl_order_id"):
+                        prod_id = self.products.get(sym, {}).get("id")
+                        if prod_id:
+                            try:
+                                self.executor.edit_order(order_id=pos["sl_order_id"], product_id=int(prod_id), stop_price=new_stop)
+                                logger.info(f"🛡️ [VENUE BRACKET UPDATED] {sym} SL Order {pos['sl_order_id']} moved to +0.5R ({new_stop})")
+                            except Exception as e:
+                                logger.warning(f"Error syncing trailed stop on venue: {e}")
+            else:
+                step_trail_reached = (mark >= t1) if is_long else (mark <= t1)
+                if step_trail_reached and trail_stage == "INITIAL":
+                    pos["current_stop"] = entry
+                    pos["trail_stage"] = "BREAK_EVEN_LOCKED"
+                    modified = True
+                    logger.info(f"🛡️ [RISK TIGHTENED] {sym} reached 1.5R target ({t1}) -> Stop moved to Break-Even ({entry})")
+                    # Synchronize venue stop order
+                    if self.mode == "live" and self.executor and pos.get("sl_order_id"):
+                        prod_id = self.products.get(sym, {}).get("id")
+                        if prod_id:
+                            try:
+                                self.executor.edit_order(order_id=pos["sl_order_id"], product_id=int(prod_id), stop_price=entry)
+                                logger.info(f"🛡️ [VENUE BRACKET UPDATED] {sym} SL Order {pos['sl_order_id']} moved to Break-Even ({entry}) on Delta Exchange")
+                            except Exception as edit_err:
+                                logger.warning(f"Could not update venue SL order {pos['sl_order_id']}: {edit_err}")
                 append_ledger({
                     "timestamp": now_str,
                     "event": "STEP_TRAIL_BE",
@@ -480,7 +523,7 @@ class DeltaTraderMonitor:
 
     def scan_and_punch_trades(self, ticker_map: Dict[str, float]) -> List[dict]:
         """Scans the Alpha Basket and punches approved setups into active positions."""
-        from delta_live_scanner import scan_asset_setup
+        from delta_live_scanner import scan_asset_setup, load_leaderboard_specs
 
         active = load_active_positions()
         simulated_active = dict(active)
@@ -489,12 +532,20 @@ class DeltaTraderMonitor:
         now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         cooldowns = load_trade_cooldowns()
         now_ts = int(time.time())
-        cooldown_sec = 12 * 4 * 3600  # 12 4H bars = 48 hours cooldown
+        specs = load_leaderboard_specs()
 
         for sym in self.deployable_symbols:
             # Skip if already holding a position
             if sym in simulated_active:
                 continue
+
+            spec = specs.get(sym, {})
+            sym_tf = spec.get("timeframe", self.tf)
+            sym_strat = spec.get("strategy", "fixed_3.0")
+            sym_ribbon = spec.get("ribbon", (55, 89, 233))
+            
+            bar_sec = 14400 if sym_tf == "4H" else 3600
+            cooldown_sec = 12 * bar_sec
 
             # Enforce 12-bar post-exit cooldown invariant
             cd = cooldowns.get(sym)
@@ -504,12 +555,15 @@ class DeltaTraderMonitor:
                     continue
 
             try:
+                freshness_limit = 900 if sym_tf == "4H" else 300
                 setup = scan_asset_setup(
-                    sym, tf=self.tf, equity_inr=self.equity_inr,
+                    sym, tf=sym_tf, equity_inr=self.equity_inr,
                     risk_pct=self.risk_pct, leverage=self.leverage,
                     products_dict=self.products,
                     live_mark_price=ticker_map.get(sym),
-                    max_bar_age_sec=900  # 15 minutes freshness gate
+                    max_bar_age_sec=freshness_limit,
+                    ribbon=sym_ribbon,
+                    strategy=sym_strat
                 )
                 if not setup:
                     continue
@@ -612,6 +666,9 @@ class DeltaTraderMonitor:
                     "actual_risk_inr": setup["risk_inr"],
                     "cluster": setup["cluster"],
                     "tf": setup["tf"],
+                    "strategy": setup.get("strategy", "fixed_3.0"),
+                    "ribbon": setup.get("ribbon", (55, 89, 233)),
+                    "max_fav_r": 0.0,
                     "entry_time": now_str,
                     "trail_stage": "INITIAL",
                     "venue_order_id": venue_order_id,

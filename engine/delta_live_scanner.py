@@ -87,12 +87,61 @@ def fetch_recent_candles(symbol, resolution="240", count=1200, use_mark=False):
             return fetch_recent_candles(symbol, resolution=resolution, count=count, use_mark=True)
         return None
 
-def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage=10.0, products_dict=None, live_mark_price=None, max_bar_age_sec=None):
+RIBBON_MAP = {
+    'Fib_89_233': (55, 89, 233),
+    'Fib_34_89': (34, 89, 233),
+    'Fib_21_55': (21, 55, 144),
+    'Classic_50_200': (50, 100, 200),
+    'Fib_21_55_89': (21, 55, 89),
+    'Fib_34_89_144': (34, 89, 144),
+    'Fib_34_89_233': (34, 89, 233),
+    'Fib_55_89_233': (55, 89, 233),
+    'Trad_20_50_200': (20, 50, 200),
+    'Trad_50_100_200': (50, 100, 200)
+}
+
+def load_leaderboard_specs():
+    leaderboard_file = os.path.join(BASE_DIR, "audit", "delta_calmar_leaderboard.csv")
+    if not os.path.exists(leaderboard_file):
+        return {}
+    try:
+        df = pd.read_csv(leaderboard_file)
+        specs = {}
+        for _, r in df.iterrows():
+            sym = str(r['symbol']).strip()
+            rib_str = str(r.get('ribbon', 'Fib_89_233')).strip()
+            rib = RIBBON_MAP.get(rib_str, (55, 89, 233))
+            tf = str(r.get('timeframe', '4H')).strip()
+            if tf == '4H_1H':
+                tf = '4H'
+            strat = str(r.get('strategy', 'fixed_3.0')).strip()
+            specs[sym] = {
+                'symbol': sym,
+                'timeframe': tf,
+                'ribbon_name': rib_str,
+                'ribbon': rib,
+                'strategy': strat,
+                'win_rate': float(r.get('win_rate', 0)),
+                'net_r': float(r.get('net_r', 0)),
+                'calmar_ratio': float(r.get('calmar_ratio', 0))
+            }
+        return specs
+    except Exception:
+        return {}
+
+def scan_asset_setup(symbol, tf=None, equity_inr=5000.0, risk_pct=0.01, leverage=10.0, products_dict=None, live_mark_price=None, max_bar_age_sec=None, ribbon=None, strategy=None):
     """Scans an asset for Tiered Fibonacci Rejections enforcing Single Entry, Freshness, and Lot Sizing."""
+    specs = load_leaderboard_specs()
+    spec = specs.get(symbol, {})
+    
+    tf = tf or spec.get('timeframe', '4H')
+    ribbon = ribbon or spec.get('ribbon', (55, 89, 233))
+    strategy = strategy or spec.get('strategy', 'fixed_3.0')
+    
+    fast_p, mid_p, slow_p = ribbon
     res_code = "240" if tf == "4H" else "60"
-    # QR-2026-1115 fix: 1200 bars so EMA233 stabilises with maximum historical depth.
-    df = fetch_recent_candles(symbol, resolution=res_code, count=1200)
-    if df is None or len(df) < 250:
+    df = fetch_recent_candles(symbol, resolution=res_code, count=1200, use_mark=False)
+    if df is None or len(df) < max(250, slow_p + 15):
         return None
 
     if live_mark_price is not None and live_mark_price > 0:
@@ -103,9 +152,9 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
             df.loc[df.index[-1], 'low'] = live_mark_price
 
     closes = df['close']
-    ema55 = calculate_ema(closes, 55).to_numpy()
-    ema89 = calculate_ema(closes, 89).to_numpy()
-    ema233 = calculate_ema(closes, 233).to_numpy()
+    ef = calculate_ema(closes, fast_p).to_numpy()
+    em = calculate_ema(closes, mid_p).to_numpy()
+    es = calculate_ema(closes, slow_p).to_numpy()
     atr = calculate_atr(df, 14)
     
     i = len(df) - 1 # Forming candle
@@ -116,10 +165,11 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
     candle_close_ts = candle_start_ts + bar_duration
 
     # Freshness Gate: Reject stale setups from candles that closed > max_bar_age_sec ago
-    if max_bar_age_sec is not None:
-        elapsed_since_close = int(time.time()) - candle_close_ts
-        if elapsed_since_close > max_bar_age_sec:
-            return None
+    if max_bar_age_sec is None:
+        max_bar_age_sec = 900 if tf == "4H" else 300
+    elapsed_since_close = int(time.time()) - candle_close_ts
+    if elapsed_since_close > max_bar_age_sec:
+        return None
 
     o = df['open'].iloc[prev]
     h = df['high'].iloc[prev]
@@ -129,15 +179,15 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
     if rng <= 0:
         return None
         
-    curr_55 = ema55[prev]
-    curr_89 = ema89[prev]
-    curr_233 = ema233[prev]
+    curr_fast = ef[prev]
+    curr_mid = em[prev]
+    curr_slow = es[prev]
     curr_atr = atr[prev]
     
-    # 4H Macro Trend / Regime Definition (EMA 89 vs EMA 233 Macro Gate - matching all 11,613 backtests)
-    if curr_89 > curr_233:
+    # Macro Trend / Regime Definition (Mid vs Slow EMA Gate)
+    if curr_mid > curr_slow:
         regime = "BULLISH"
-    elif curr_89 < curr_233:
+    elif curr_mid < curr_slow:
         regime = "BEARISH"
     else:
         return None
@@ -151,16 +201,16 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
             
     setup = None
     
-    # Bullish setup check (Tiered Support: EMA 89 or EMA 233)
+    # Bullish setup check (Tiered Support: Mid EMA or Slow EMA)
     if regime == "BULLISH":
         lower_wick = min(o, c) - l
         wick_ratio = lower_wick / rng
         
         shelf = None
-        if (l <= curr_89 * 1.002) and (c >= curr_89):
-            shelf = "EMA_89"
-        elif (l <= curr_233 * 1.002) and (c >= curr_233):
-            shelf = "EMA_233"
+        if (l <= curr_mid * 1.002 or l <= curr_fast * 1.002) and (c >= curr_mid):
+            shelf = f"EMA_{mid_p}"
+        elif (l <= curr_slow * 1.002) and (c >= curr_slow):
+            shelf = f"EMA_{slow_p}"
             
         if shelf and wick_ratio >= 0.25:
             # Drift gate: ensure live execution price is within 0.5% of confirmed candle close
@@ -172,11 +222,13 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
             else:
                 entry = float(c)
 
-            stop = (min(curr_233, l) - 0.35 * curr_atr) if shelf == "EMA_233" else (l - 0.30 * curr_atr)
+            stop = (min(curr_slow, l) - 0.35 * curr_atr) if shelf == f"EMA_{slow_p}" else (l - 0.30 * curr_atr)
             if entry <= stop:
                 return None
             risk_dist = entry - stop
             if risk_dist > 0:
+                is_fixed = strategy.startswith("fixed_")
+                fixed_rr = float(strategy.split("_")[1]) if is_fixed else 3.0
                 sizing = calculate_delta_order_sizing(
                     symbol, entry, stop, equity_inr=equity_inr, risk_pct=risk_pct, leverage=leverage, products_dict=products_dict
                 )
@@ -185,6 +237,8 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
                     'sector': classify_asset(symbol),
                     'cluster': get_asset_cluster(symbol),
                     'tf': tf,
+                    'strategy': strategy,
+                    'ribbon': ribbon,
                     'regime': regime,
                     'shelf': shelf,
                     'action': 'BUY / LONG',
@@ -192,9 +246,9 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
                     'stop': round(stop, 4),
                     'risk_distance': round(risk_dist, 4),
                     't1': round(entry + (1.5 * risk_dist), 4),
-                    't2': round(entry + (2.5 * risk_dist), 4),
-                    't3': round(entry + (4.0 * risk_dist), 4),
-                    'rr': 2.5,
+                    't2': round(entry + (fixed_rr * risk_dist), 4),
+                    't3': round(entry + (5.0 * risk_dist), 4),
+                    'rr': fixed_rr,
                     'contracts': sizing['contracts'],
                     'contract_value': sizing['contract_value'],
                     'underlying_units': sizing['underlying_units'],
@@ -209,16 +263,16 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
                     'entry_ts': int(df['timestamp'].iloc[prev])
                 }
                 
-    # Bearish setup check (Tiered Resistance: EMA 89 or EMA 233)
+    # Bearish setup check (Tiered Resistance: Mid EMA or Slow EMA)
     elif regime == "BEARISH":
         upper_wick = h - max(o, c)
         wick_ratio = upper_wick / rng
         
         shelf = None
-        if (h >= curr_89 * 0.998) and (c <= curr_89):
-            shelf = "EMA_89"
-        elif (h >= curr_233 * 0.998) and (c <= curr_233):
-            shelf = "EMA_233"
+        if (h >= curr_mid * 0.998 or h >= curr_fast * 0.998) and (c <= curr_mid):
+            shelf = f"EMA_{mid_p}"
+        elif (h >= curr_slow * 0.998) and (c <= curr_slow):
+            shelf = f"EMA_{slow_p}"
             
         if shelf and wick_ratio >= 0.25:
             # Drift gate: ensure live execution price is within 0.5% of confirmed candle close
@@ -230,11 +284,13 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
             else:
                 entry = float(c)
 
-            stop = (max(curr_233, h) + 0.35 * curr_atr) if shelf == "EMA_233" else (h + 0.30 * curr_atr)
+            stop = (max(curr_slow, h) + 0.35 * curr_atr) if shelf == f"EMA_{slow_p}" else (h + 0.30 * curr_atr)
             if entry >= stop:
                 return None
             risk_dist = stop - entry
             if risk_dist > 0:
+                is_fixed = strategy.startswith("fixed_")
+                fixed_rr = float(strategy.split("_")[1]) if is_fixed else 3.0
                 sizing = calculate_delta_order_sizing(
                     symbol, entry, stop, equity_inr=equity_inr, risk_pct=risk_pct, leverage=leverage, products_dict=products_dict
                 )
@@ -243,6 +299,8 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
                     'sector': classify_asset(symbol),
                     'cluster': get_asset_cluster(symbol),
                     'tf': tf,
+                    'strategy': strategy,
+                    'ribbon': ribbon,
                     'regime': regime,
                     'shelf': shelf,
                     'action': 'SELL / SHORT',
@@ -250,9 +308,9 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
                     'stop': round(stop, 4),
                     'risk_distance': round(risk_dist, 4),
                     't1': round(entry - (1.5 * risk_dist), 4),
-                    't2': round(entry - (2.5 * risk_dist), 4),
-                    't3': round(entry - (4.0 * risk_dist), 4),
-                    'rr': 2.5,
+                    't2': round(entry - (fixed_rr * risk_dist), 4),
+                    't3': round(entry - (5.0 * risk_dist), 4),
+                    'rr': fixed_rr,
                     'contracts': sizing['contracts'],
                     'contract_value': sizing['contract_value'],
                     'underlying_units': sizing['underlying_units'],
