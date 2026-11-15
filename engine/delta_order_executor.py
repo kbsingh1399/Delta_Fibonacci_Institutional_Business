@@ -61,7 +61,12 @@ import urllib.error
 import urllib.request
 from typing import Callable, Dict, Optional
 
-BASE_URL = "https://api.india.delta.exchange"
+BASE_URL = os.environ.get(
+    "DELTA_BASE_URL",
+    "https://cdn-ind.testnet.deltaex.org"
+    if os.environ.get("DELTA_MCP_ENV") == "india_testnet"
+    else "https://api.india.delta.exchange"
+)
 _MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
 _REPO_ROOT = os.path.dirname(_MODULE_DIR) if os.path.basename(_MODULE_DIR) == "engine" else _MODULE_DIR
 KILL_SWITCH_FILE = os.path.join(_REPO_ROOT, "KILL_SWITCH")
@@ -146,7 +151,7 @@ class DeltaOrderExecutor:
         if body is not None:
             headers["Content-Type"] = "application/json"
         if requires_auth:
-            ts = str(int(time.time() * 1000))
+            ts = str(int(time.time()))
             headers["api-key"] = self.api_key
             headers["timestamp"] = ts
             headers["signature"] = self._sign(method.upper(), ts, path,
