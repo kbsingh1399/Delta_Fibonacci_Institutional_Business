@@ -44,7 +44,7 @@ def calculate_atr(df, period=14):
     tr[0] = high[0] - low[0]
     for i in range(1, n):
         tr[i] = max(high[i] - low[i], abs(high[i] - close[i-1]), abs(low[i] - close[i-1]))
-    atr = pd.Series(tr).rolling(period).mean().bfill().to_numpy()
+    atr = pd.Series(tr).ewm(alpha=1.0/period, adjust=False).mean().bfill().to_numpy()
     return atr
 
 def load_active_positions():
@@ -66,10 +66,11 @@ def save_active_positions(pos_dict):
     except Exception:
         pass
 
-def fetch_recent_candles(symbol, resolution="240", count=800):
+def fetch_recent_candles(symbol, resolution="240", count=800, use_mark=True):
     now = int(time.time())
     start = now - (count * 4 * 3600 if resolution == "240" else count * 3600)
-    url = f"{DELTA_API}/v2/chart/history?symbol={symbol}&resolution={resolution}&from={start}&to={now}"
+    target_sym = f"MARK:{symbol}" if (use_mark and not symbol.startswith("MARK:")) else symbol
+    url = f"{DELTA_API}/v2/chart/history?symbol={target_sym}&resolution={resolution}&from={start}&to={now}"
     try:
         req = urllib.request.Request(url, headers=HEADERS)
         with urllib.request.urlopen(req, timeout=8) as resp:
@@ -77,6 +78,8 @@ def fetch_recent_candles(symbol, resolution="240", count=800):
         res = data.get('result', {})
         t = res.get('t', [])
         if not t or len(t) < 50:
+            if use_mark:
+                return fetch_recent_candles(symbol, resolution=resolution, count=count, use_mark=False)
             return None
         df = pd.DataFrame({
             'timestamp': t,
@@ -89,6 +92,8 @@ def fetch_recent_candles(symbol, resolution="240", count=800):
         df = df.sort_values('timestamp').reset_index(drop=True)
         return df
     except Exception:
+        if use_mark:
+            return fetch_recent_candles(symbol, resolution=resolution, count=count, use_mark=False)
         return None
 
 def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage=10.0, products_dict=None, live_mark_price=None):
@@ -99,7 +104,14 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
     df = fetch_recent_candles(symbol, resolution=res_code, count=800)
     if df is None or len(df) < 250:
         return None
-        
+
+    if live_mark_price is not None and live_mark_price > 0:
+        df.loc[df.index[-1], 'close'] = live_mark_price
+        if live_mark_price > df['high'].iloc[-1]:
+            df.loc[df.index[-1], 'high'] = live_mark_price
+        if live_mark_price < df['low'].iloc[-1]:
+            df.loc[df.index[-1], 'low'] = live_mark_price
+
     closes = df['close']
     ema55 = calculate_ema(closes, 55).to_numpy()
     ema89 = calculate_ema(closes, 89).to_numpy()

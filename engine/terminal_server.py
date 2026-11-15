@@ -107,9 +107,21 @@ class TerminalDataStore:
         # Prioritize symbols
         for sym in self.deployable_symbols:
             try:
-                df = fetch_recent_candles(sym, resolution="240", count=500)
+                df = fetch_recent_candles(sym, resolution="240", count=800)
                 if df is None or len(df) < 250:
                     continue
+
+                # Live mark price
+                with self.lock:
+                    mark = self.tickers.get(sym, float(df["close"].iloc[-1]))
+
+                # Inject live mark price into current forming candle to match TradingView live indicators
+                if mark > 0:
+                    df.loc[df.index[-1], "close"] = mark
+                    if mark > df["high"].iloc[-1]:
+                        df.loc[df.index[-1], "high"] = mark
+                    if mark < df["low"].iloc[-1]:
+                        df.loc[df.index[-1], "low"] = mark
 
                 closes = df["close"]
                 ema55 = calculate_ema(closes, 55).to_numpy()
@@ -118,14 +130,11 @@ class TerminalDataStore:
                 atr = calculate_atr(df, 14)
 
                 prev = len(df) - 2
-                curr_89 = float(ema89[prev])
-                curr_233 = float(ema233[prev])
-                curr_55 = float(ema55[prev])
-                curr_atr = float(atr[prev])
-
-                # Live mark price
-                with self.lock:
-                    mark = self.tickers.get(sym, float(df["close"].iloc[-1]))
+                # Use live forming bar indicator readings (matching TradingView 4H display)
+                curr_89 = float(ema89[-1])
+                curr_233 = float(ema233[-1])
+                curr_55 = float(ema55[-1])
+                curr_atr = float(atr[-1])
 
                 regime = "BULLISH" if curr_89 > curr_233 else ("BEARISH" if curr_89 < curr_233 else "NEUTRAL")
 
