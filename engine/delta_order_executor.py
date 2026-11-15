@@ -79,7 +79,11 @@ class DeltaOrderExecutor:
                  base_url: str = BASE_URL,
                  live: bool = False,
                  kill_switch: str = KILL_SWITCH_FILE,
-                 max_risk_r: float = 1.0,
+                 # QR-2026-1115: aligned with the lot sizer's hard cap so a
+                 # sizer-approved min-lot trade (up to Rs 55 / 1.1R) is not
+                 # rejected here at order time. The executor remains the
+                 # final authority at this bound.
+                 max_risk_r: float = 1.1,
                  risk_budget_inr: float = 50.0,
                  inr_per_usd: float = 85.0,
                  max_contracts: int = 10_000,
@@ -354,7 +358,7 @@ def main() -> None:
     ap.add_argument("--stop", type=float, default=None,
                     help="bracket stop price (default: 1%% from mark)")
     ap.add_argument("--take-profit", type=float, default=None)
-    ap.add_argument("--max-risk-r", type=float, default=1.0,
+    ap.add_argument("--max-risk-r", type=float, default=1.1,
                     help="risk cap in R multiples of the Rs 50 budget")
     args = ap.parse_args()
 
