@@ -53,26 +53,82 @@ logging.basicConfig(
 logger = logging.getLogger("DeltaMonitor")
 
 
+COOLDOWNS_FILE = os.path.join(AUDIT_DIR, "trade_cooldowns.json")
+
+
+def load_trade_cooldowns() -> Dict[str, Any]:
+    """Loads symbol cooldowns enforcing the 12-bar post-exit invariant."""
+    if os.path.exists(COOLDOWNS_FILE):
+        for _ in range(5):
+            try:
+                with open(COOLDOWNS_FILE, "r") as f:
+                    return json.load(f)
+            except Exception:
+                time.sleep(0.05)
+    return {}
+
+
+def record_trade_cooldown(symbol: str, candle_ts: Optional[int] = None, reason: str = "") -> None:
+    """Records post-exit timestamp to enforce 12-bar cooldown (no immediate re-entry)."""
+    cooldowns = load_trade_cooldowns()
+    now_ts = int(time.time())
+    cooldowns[symbol] = {
+        "exit_time": now_ts,
+        "exit_time_str": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "candle_ts": candle_ts or now_ts,
+        "reason": reason
+    }
+    dir_name = os.path.dirname(COOLDOWNS_FILE)
+    os.makedirs(dir_name, exist_ok=True)
+    tmp_path = ""
+    for attempt in range(5):
+        try:
+            fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
+            with open(fd, "w") as f:
+                json.dump(cooldowns, f, indent=2)
+            os.replace(tmp_path, COOLDOWNS_FILE)
+            break
+        except Exception:
+            time.sleep(0.05)
+            if tmp_path and os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except Exception:
+                    pass
+
+
 def load_active_positions() -> Dict[str, Any]:
     if os.path.exists(ACTIVE_POS_FILE):
-        try:
-            with open(ACTIVE_POS_FILE, "r") as f:
-                return json.load(f)
-        except Exception as e:
-            logger.warning(f"Failed to read {ACTIVE_POS_FILE}: {e}")
-            return {}
+        for _ in range(5):
+            try:
+                with open(ACTIVE_POS_FILE, "r") as f:
+                    return json.load(f)
+            except Exception:
+                time.sleep(0.05)
     return {}
 
 
 def save_active_positions(pos_dict: Dict[str, Any]) -> None:
-    try:
-        dir_name = os.path.dirname(ACTIVE_POS_FILE)
-        fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
-        with open(fd, "w") as f:
-            json.dump(pos_dict, f, indent=2)
-        os.replace(tmp_path, ACTIVE_POS_FILE)
-    except Exception as e:
-        logger.error(f"Failed to atomic-write {ACTIVE_POS_FILE}: {e}")
+    dir_name = os.path.dirname(ACTIVE_POS_FILE)
+    os.makedirs(dir_name, exist_ok=True)
+    tmp_path = ""
+    for attempt in range(5):
+        try:
+            fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
+            with open(fd, "w") as f:
+                json.dump(pos_dict, f, indent=2)
+            os.replace(tmp_path, ACTIVE_POS_FILE)
+            return
+        except Exception as e:
+            if attempt < 4:
+                time.sleep(0.05 * (attempt + 1))
+            else:
+                logger.error(f"Failed to atomic-write {ACTIVE_POS_FILE} after 5 attempts: {e}")
+            if tmp_path and os.path.exists(tmp_path):
+                try:
+                    os.remove(tmp_path)
+                except Exception:
+                    pass
 
 
 def append_ledger(row: Dict[str, Any]) -> None:
@@ -213,7 +269,7 @@ class DeltaTraderMonitor:
             return {}
 
     def monitor_open_positions(self, ticker_map: Dict[str, float]) -> None:
-        """Inspects live mark prices and triggers Stop Loss, Take Profit, or Trailing Stops."""
+        """Inspects live mark prices and venue order status; synchronizes TP, SL, and Trailing Stops."""
         active = load_active_positions()
         if not active:
             return
@@ -223,7 +279,62 @@ class DeltaTraderMonitor:
 
         now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        for sym, pos in active.items():
+        # In live mode with executor: reconcile with Delta Exchange venue positions
+        venue_positions_map = {}
+        if self.mode == "live" and self.executor:
+            try:
+                v_positions = self.executor.get_margined_positions()
+                for vp in v_positions:
+                    psym = vp.get("product_symbol")
+                    if psym:
+                        venue_positions_map[psym] = vp
+            except Exception as e:
+                logger.debug(f"Venue position reconciliation check error: {e}")
+
+        for sym, pos in list(active.items()):
+            # 0. Check if this position is a live trade and has been closed on Delta Exchange
+            if self.mode == "live" and self.executor and venue_positions_map:
+                if sym not in venue_positions_map or int(venue_positions_map[sym].get("size", 0)) == 0:
+                    # Delta Exchange venue closed the position (TP or SL bracket fill)!
+                    entry = float(pos["entry_price"])
+                    stop = float(pos["current_stop"])
+                    t2 = float(pos["target_2"])
+                    mark = ticker_map.get(sym, entry)
+                    is_long = "BUY" in pos["side"].upper()
+                    # Determine whether TP or SL filled based on distance to targets
+                    dist_to_tp = abs(mark - t2)
+                    dist_to_sl = abs(mark - stop)
+                    exit_price = t2 if dist_to_tp <= dist_to_sl else stop
+                    event_type = "TAKE_PROFIT" if dist_to_tp <= dist_to_sl else "STOP_LOSS"
+                    contracts = int(pos["contracts"])
+                    cv = float(pos.get("contract_value", 1.0))
+                    risk_inr = float(pos["actual_risk_inr"])
+                    realized_pnl = (exit_price - entry if is_long else entry - exit_price) * contracts * cv * 85.0
+                    r_mult = realized_pnl / risk_inr if risk_inr > 0 else (2.5 if event_type == "TAKE_PROFIT" else -1.0)
+                    logger.info(f"🔄 [VENUE FILL DETECTED] {sym} closed on Delta Exchange via bracket {event_type} | Realized PnL: ₹{realized_pnl:+.2f} ({r_mult:+.2f}R)")
+                    append_ledger({
+                        "timestamp": now_str,
+                        "event": event_type,
+                        "symbol": sym,
+                        "side": pos["side"],
+                        "shelf": pos.get("shelf", ""),
+                        "entry_price": entry,
+                        "exit_price": exit_price,
+                        "stop_price": stop,
+                        "target_1": pos["target_1"],
+                        "target_2": t2,
+                        "contracts": contracts,
+                        "margin_10x_inr": pos.get("margin_10x_inr", 0),
+                        "risk_inr": risk_inr,
+                        "realized_pnl_inr": round(realized_pnl, 2),
+                        "r_multiple": round(r_mult, 2),
+                        "execution_mode": pos.get("execution_mode", self.mode),
+                        "notes": f"Delta Exchange bracket fill confirmed (Venue Order: {pos.get('venue_order_id')})"
+                    })
+                    record_trade_cooldown(sym, reason=f"VENUE_{event_type}")
+                    to_close.append(sym)
+                    continue
+
             mark = ticker_map.get(sym)
             if not mark or mark <= 0:
                 continue
@@ -273,6 +384,15 @@ class DeltaTraderMonitor:
                     "execution_mode": pos.get("execution_mode", self.mode),
                     "notes": "Target 2 Maker Limit TP filled with maker rebate"
                 })
+                # Cancel orphaned venue SL order if still open
+                if self.mode == "live" and self.executor and pos.get("sl_order_id"):
+                    prod_id = self.products.get(sym, {}).get("id")
+                    try:
+                        self.executor.cancel_order(pos["sl_order_id"], prod_id)
+                        logger.info(f"Cancelled venue SL order {pos['sl_order_id']} for {sym}")
+                    except Exception as e:
+                        logger.debug(f"SL cancel note: {e}")
+                record_trade_cooldown(sym, reason="TAKE_PROFIT")
                 to_close.append(sym)
                 continue
 
@@ -303,6 +423,15 @@ class DeltaTraderMonitor:
                     "execution_mode": pos.get("execution_mode", self.mode),
                     "notes": "Stop loss breach executed"
                 })
+                # Cancel orphaned venue TP order if still open
+                if self.mode == "live" and self.executor and pos.get("tp_order_id"):
+                    prod_id = self.products.get(sym, {}).get("id")
+                    try:
+                        self.executor.cancel_order(pos["tp_order_id"], prod_id)
+                        logger.info(f"Cancelled venue TP order {pos['tp_order_id']} for {sym}")
+                    except Exception as e:
+                        logger.debug(f"TP cancel note: {e}")
+                record_trade_cooldown(sym, reason="STOP_LOSS")
                 to_close.append(sym)
                 continue
 
@@ -313,6 +442,15 @@ class DeltaTraderMonitor:
                 pos["trail_stage"] = "BREAK_EVEN_LOCKED"
                 modified = True
                 logger.info(f"🛡️ [RISK TIGHTENED] {sym} reached 1.5R target ({t1}) -> Stop moved to Break-Even ({entry})")
+                # Synchronize venue stop order
+                if self.mode == "live" and self.executor and pos.get("sl_order_id"):
+                    prod_id = self.products.get(sym, {}).get("id")
+                    if prod_id:
+                        try:
+                            self.executor.edit_order(order_id=pos["sl_order_id"], product_id=int(prod_id), stop_price=entry)
+                            logger.info(f"🛡️ [VENUE BRACKET UPDATED] {sym} SL Order {pos['sl_order_id']} moved to Break-Even ({entry}) on Delta Exchange")
+                        except Exception as edit_err:
+                            logger.warning(f"Could not update venue SL order {pos['sl_order_id']}: {edit_err}")
                 append_ledger({
                     "timestamp": now_str,
                     "event": "STEP_TRAIL_BE",
@@ -349,11 +487,21 @@ class DeltaTraderMonitor:
         punched_trades = []
 
         now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cooldowns = load_trade_cooldowns()
+        now_ts = int(time.time())
+        cooldown_sec = 12 * 4 * 3600  # 12 4H bars = 48 hours cooldown
 
         for sym in self.deployable_symbols:
             # Skip if already holding a position
             if sym in simulated_active:
                 continue
+
+            # Enforce 12-bar post-exit cooldown invariant
+            cd = cooldowns.get(sym)
+            if cd:
+                exit_time = cd.get("exit_time", 0)
+                if (now_ts - exit_time) < cooldown_sec:
+                    continue
 
             try:
                 setup = scan_asset_setup(
@@ -425,10 +573,12 @@ class DeltaTraderMonitor:
                                     try:
                                         self.executor.set_leverage(int(prod_id), 20)
                                         logger.info(f"Clamped {sym} leverage to venue maximum 20X")
-                                    except Exception:
-                                        pass
+                                    except Exception as e2:
+                                        logger.error(f"Failed to set clamped 20X leverage for {sym}: {e2}. ABORTING order dispatch.")
+                                        continue
                                 else:
-                                    logger.warning(f"Could not set {safe_lev}X leverage for {sym}: {lev_err}")
+                                    logger.error(f"Could not set {safe_lev}X leverage for {sym}: {lev_err}. ABORTING order dispatch.")
+                                    continue
                         res = self.executor.place_bracket_order(
                             symbol=sym,
                             side=sym_side.lower(),

@@ -54,8 +54,8 @@ def calculate_atr(highs, lows, closes, period=14):
     atr = pd.Series(tr).rolling(period).mean().bfill().to_numpy()
     return atr
 
-def get_asset_trades(symbol, tf, fast_p, mid_p, slow_p, exit_mode, spread_cost_r=FEE_SLIPPAGE_DRAG_R):
-    """Extracts chronological trade list for an asset using Tiered EMA logic and Single Entry Invariant."""
+def get_asset_trades(symbol, tf, fast_p, mid_p, slow_p, exit_mode, spread_cost_r=FEE_SLIPPAGE_DRAG_R, cooldown_bars=12):
+    """Extracts chronological trade list for an asset using Tiered EMA logic, Single Entry Invariant, and Post-Exit Cooldown."""
     fpath = os.path.join(DATA_DIR, f"{symbol}_{tf.lower()}.csv")
     if not os.path.exists(fpath):
         return []
@@ -103,6 +103,7 @@ def get_asset_trades(symbol, tf, fast_p, mid_p, slow_p, exit_mode, spread_cost_r
     r_dist = 0.0
     entry_i = 0
     max_fav_r = 0.0
+    last_exit_i = -cooldown_bars - 1
     
     for i in range(start_idx, n - 1):
         if in_trade:
@@ -179,6 +180,10 @@ def get_asset_trades(symbol, tf, fast_p, mid_p, slow_p, exit_mode, spread_cost_r
                     'side': trade_side
                 })
                 in_trade = False
+                last_exit_i = i
+            continue
+            
+        if (i - last_exit_i) < cooldown_bars:
             continue
             
         # Entry Logic (Tiered Support: EMA 89 or EMA 233)
@@ -226,12 +231,14 @@ def get_asset_trades(symbol, tf, fast_p, mid_p, slow_p, exit_mode, spread_cost_r
             
     return trades
 
-def run_portfolio_backtest(alpha_basket=True, offline=True, maker_rebate=True):
+def run_portfolio_backtest(alpha_basket=True, offline=True, maker_rebate=True, uniform=True, exit_mode="fixed_3.0", cooldown_bars=12):
     mode_name = "OPTIMIZED ALPHA BASKET" if alpha_basket else "FULL BASELINE LIQUID CATALOG"
     friction_drag = 0.050 if maker_rebate else 0.138
     friction_label = "Arena Maker Limit TP Rebate (0.050R Friction)" if maker_rebate else "Full Exchange Taker Fee (0.05%) + 18% GST + Slippage (0.138R)"
+    setup_label = f"Uniform 4H Fib_55_89_233 | {exit_mode} | {cooldown_bars}-Bar Cooldown" if uniform else "Legacy Heterogeneous Calmar Leaderboard"
     print("="*105)
     print(f"DELTA EXCHANGE INDIA - INSTITUTIONAL ₹5,000 BACKTEST [{mode_name}]")
+    print(f"Setup: {setup_label}")
     print(f"10X Isolated Leverage | {friction_label}")
     print("="*105)
     
@@ -241,78 +248,124 @@ def run_portfolio_backtest(alpha_basket=True, offline=True, maker_rebate=True):
     eligible_symbols = set([r['symbol'] for r in screen_rows if r.get('eligible')])
     print(f"Eligible Liquid Assets (Turnover >= ₹85 Lakhs): {len(eligible_symbols)}")
     
-    # 2. Match with Audited Configurations
-    leaderboard_file = os.path.join(AUDIT_DIR, "delta_calmar_leaderboard.csv")
-    if not os.path.exists(leaderboard_file):
-        raise FileNotFoundError(f"Missing {leaderboard_file}")
-    df_lead = pd.read_csv(leaderboard_file)
-    
-    # Filter to eligible symbols
-    df_liquid = df_lead[df_lead['symbol'].isin(eligible_symbols)].copy()
-    
-    if alpha_basket:
-        # Alpha Basket excludes CRYPTO_MAJORS entry signals
-        df_liquid = df_liquid[df_liquid['symbol'].apply(get_asset_cluster) != 'CRYPTO_MAJORS'].copy()
-        print(f"Alpha Basket Tradable Assets (Excluding Crypto Majors): {len(df_liquid)}")
-    else:
-        print(f"Liquid Assets with Audited Configurations: {len(df_liquid)}")
-    
-    # Ribbon mapping
-    ribbon_map = {
-        'Fib_21_55_89': (21, 55, 89),
-        'Fib_34_89_144': (34, 89, 144),
-        'Fib_34_89_233': (34, 89, 233),
-        'Fib_55_89_233': (55, 89, 233),
-        'Trad_20_50_200': (20, 50, 200),
-        'Trad_50_100_200': (50, 100, 200)
-    }
-    
-    # 3. Collect Raw Chronological Trades
+    # 2. Configure Asset Loop (Uniform Setup vs Legacy Leaderboard)
     all_raw_trades = []
     single_asset_stats = []
     
-    for _, row in df_liquid.iterrows():
-        sym = row['symbol']
-        tf = row['timeframe']
-        strat = row['strategy']
-        ribbon_str = row['ribbon']
-        ribbon = ribbon_map.get(ribbon_str, (34, 89, 233))
-        
-        trades = get_asset_trades(sym, tf, ribbon[0], ribbon[1], ribbon[2], strat, spread_cost_r=friction_drag)
-        if not trades:
-            continue
+    if uniform:
+        candidate_symbols = sorted(list(eligible_symbols))
+        if alpha_basket:
+            candidate_symbols = [s for s in candidate_symbols if get_asset_cluster(s) != 'CRYPTO_MAJORS']
+            print(f"Alpha Basket Tradable Assets (Excluding Crypto Majors): {len(candidate_symbols)}")
+        else:
+            print(f"All Liquid Tradable Assets: {len(candidate_symbols)}")
             
-        trade_rs = [t['r'] for t in trades]
-        wins = [r for r in trade_rs if r > 0]
-        n = len(trade_rs)
-        wr = (len(wins) / n * 100.0) if n > 0 else 0
-        tot_net_r = sum(trade_rs)
-        tot_pnl_inr = tot_net_r * RISK_PER_TRADE_INR
+        for sym in candidate_symbols:
+            trades = get_asset_trades(sym, "4H", 55, 89, 233, exit_mode, spread_cost_r=friction_drag, cooldown_bars=cooldown_bars)
+            if not trades:
+                continue
+                
+            trade_rs = [t['r'] for t in trades]
+            wins = [r for r in trade_rs if r > 0]
+            n = len(trade_rs)
+            wr = (len(wins) / n * 100.0) if n > 0 else 0
+            tot_net_r = sum(trade_rs)
+            tot_pnl_inr = tot_net_r * RISK_PER_TRADE_INR
+            
+            cum_r = np.cumsum(trade_rs)
+            peak_r = np.maximum.accumulate(np.maximum(0, cum_r))
+            dd_r = peak_r - cum_r
+            max_dd_r = float(np.max(dd_r)) if len(dd_r) > 0 else 0.0
+            max_dd_inr = max_dd_r * RISK_PER_TRADE_INR
+            max_dd_pct = (max_dd_inr / INITIAL_CAPITAL_INR) * 100.0
+            
+            single_asset_stats.append({
+                'symbol': sym,
+                'sector': classify_asset(sym),
+                'model': 'SINGLE_TF',
+                'strategy': exit_mode,
+                'trades': n,
+                'win_rate': round(wr, 1),
+                'net_r': round(tot_net_r, 2),
+                'net_pnl_inr': round(tot_pnl_inr, 1),
+                'max_dd_inr': round(max_dd_inr, 1),
+                'max_dd_pct': round(max_dd_pct, 1),
+                'return_pct': round((tot_pnl_inr / INITIAL_CAPITAL_INR) * 100.0, 1)
+            })
+            
+            for t in trades:
+                t_copy = dict(t)
+                t_copy['symbol'] = sym
+                t_copy['cluster'] = get_asset_cluster(sym)
+                t_copy['net_r'] = t['r']
+                all_raw_trades.append(t_copy)
+    else:
+        leaderboard_file = os.path.join(AUDIT_DIR, "delta_calmar_leaderboard.csv")
+        if not os.path.exists(leaderboard_file):
+            raise FileNotFoundError(f"Missing {leaderboard_file}")
+        df_lead = pd.read_csv(leaderboard_file)
+        df_liquid = df_lead[df_lead['symbol'].isin(eligible_symbols)].copy()
         
-        cum_r = np.cumsum(trade_rs)
-        peak_r = np.maximum.accumulate(np.maximum(0, cum_r))
-        dd_r = peak_r - cum_r
-        max_dd_r = float(np.max(dd_r)) if len(dd_r) > 0 else 0.0
-        max_dd_inr = max_dd_r * RISK_PER_TRADE_INR
-        max_dd_pct = (max_dd_inr / INITIAL_CAPITAL_INR) * 100.0
+        if alpha_basket:
+            df_liquid = df_liquid[df_liquid['symbol'].apply(get_asset_cluster) != 'CRYPTO_MAJORS'].copy()
+            print(f"Alpha Basket Tradable Assets (Excluding Crypto Majors): {len(df_liquid)}")
+        else:
+            print(f"Liquid Assets with Audited Configurations: {len(df_liquid)}")
         
-        single_asset_stats.append({
-            'symbol': sym,
-            'sector': classify_asset(sym),
-            'model': 'SINGLE_TF',
-            'strategy': strat,
-            'trades': n,
-            'win_rate': round(wr, 1),
-            'net_r': round(tot_net_r, 2),
-            'net_pnl_inr': round(tot_pnl_inr, 1),
-            'max_dd_inr': round(max_dd_inr, 1),
-            'max_dd_pct': round(max_dd_pct, 1),
-            'return_pct': round((tot_pnl_inr / INITIAL_CAPITAL_INR) * 100.0, 1)
-        })
+        ribbon_map = {
+            'Fib_21_55_89': (21, 55, 89),
+            'Fib_34_89_144': (34, 89, 144),
+            'Fib_34_89_233': (34, 89, 233),
+            'Fib_55_89_233': (55, 89, 233),
+            'Trad_20_50_200': (20, 50, 200),
+            'Trad_50_100_200': (50, 100, 200)
+        }
         
-        for t in trades:
-            t_copy = dict(t)
-            t_copy['symbol'] = sym
+        for _, row in df_liquid.iterrows():
+            sym = row['symbol']
+            tf = row['timeframe']
+            strat = row['strategy']
+            ribbon_str = row['ribbon']
+            ribbon = ribbon_map.get(ribbon_str, (34, 89, 233))
+            
+            trades = get_asset_trades(sym, tf, ribbon[0], ribbon[1], ribbon[2], strat, spread_cost_r=friction_drag, cooldown_bars=cooldown_bars)
+            if not trades:
+                continue
+                
+            trade_rs = [t['r'] for t in trades]
+            wins = [r for r in trade_rs if r > 0]
+            n = len(trade_rs)
+            wr = (len(wins) / n * 100.0) if n > 0 else 0
+            tot_net_r = sum(trade_rs)
+            tot_pnl_inr = tot_net_r * RISK_PER_TRADE_INR
+            
+            cum_r = np.cumsum(trade_rs)
+            peak_r = np.maximum.accumulate(np.maximum(0, cum_r))
+            dd_r = peak_r - cum_r
+            max_dd_r = float(np.max(dd_r)) if len(dd_r) > 0 else 0.0
+            max_dd_inr = max_dd_r * RISK_PER_TRADE_INR
+            max_dd_pct = (max_dd_inr / INITIAL_CAPITAL_INR) * 100.0
+            
+            single_asset_stats.append({
+                'symbol': sym,
+                'sector': classify_asset(sym),
+                'model': 'SINGLE_TF',
+                'strategy': strat,
+                'trades': n,
+                'win_rate': round(wr, 1),
+                'net_r': round(tot_net_r, 2),
+                'net_pnl_inr': round(tot_pnl_inr, 1),
+                'max_dd_inr': round(max_dd_inr, 1),
+                'max_dd_pct': round(max_dd_pct, 1),
+                'return_pct': round((tot_pnl_inr / INITIAL_CAPITAL_INR) * 100.0, 1)
+            })
+            
+            for t in trades:
+                t_copy = dict(t)
+                t_copy['symbol'] = sym
+                t_copy['cluster'] = get_asset_cluster(sym)
+                t_copy['net_r'] = t['r']
+                all_raw_trades.append(t_copy)
             t_copy['cluster'] = get_asset_cluster(sym)
             t_copy['net_r'] = t['r']
             all_raw_trades.append(t_copy)
@@ -461,10 +514,22 @@ def main():
     parser.add_argument("--all-assets", action="store_true", help="Run the full baseline across all liquid assets including Crypto Majors")
     parser.add_argument("--live-universe", action="store_true", help="Refresh universe snapshot from live Delta Exchange API instead of static offline cache")
     parser.add_argument("--taker-fees", action="store_true", help="Use legacy full taker fees (0.138R) instead of Maker Limit TP rebate model (0.050R)")
+    parser.add_argument("--uniform", action="store_true", default=True, help="Run Option A: Uniform 4H Fib_55_89_233 strategy across assets")
+    parser.add_argument("--calmar-leaderboard", action="store_true", help="Fall back to legacy heterogeneous Calmar Leaderboard ribbons")
+    parser.add_argument("--exit-mode", default="fixed_3.0", choices=["fixed_2.5", "fixed_3.0", "fixed_3.5", "step_trail", "trail_89", "trail_55"], help="Exit strategy mode (default: fixed_3.0)")
+    parser.add_argument("--cooldown", type=int, default=12, help="Post-exit cooldown bars (default: 12 bars / 48 hours)")
     args = parser.parse_args()
     
     use_alpha = not args.all_assets
-    run_portfolio_backtest(alpha_basket=use_alpha, offline=not args.live_universe, maker_rebate=not args.taker_fees)
+    is_uniform = not args.calmar_leaderboard
+    run_portfolio_backtest(
+        alpha_basket=use_alpha,
+        offline=not args.live_universe,
+        maker_rebate=not args.taker_fees,
+        uniform=is_uniform,
+        exit_mode=args.exit_mode,
+        cooldown_bars=args.cooldown
+    )
 
 if __name__ == "__main__":
     main()

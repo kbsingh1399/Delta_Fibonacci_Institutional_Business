@@ -97,6 +97,23 @@ class DeltaOrderExecutor:
                  request_timeout: float = 30.0,
                  max_retries: int = 3,
                  rate_limit_sec: float = 0.25):
+        # Auto-load credentials from ~/.delta-exchange-mcp/config.env if not provided
+        if not api_key and not os.environ.get("DELTA_API_KEY"):
+            cfg_path = os.path.expanduser("~/.delta-exchange-mcp/config.env")
+            if os.path.exists(cfg_path):
+                try:
+                    with open(cfg_path) as f:
+                        for line in f:
+                            line = line.strip()
+                            if line and not line.startswith("#") and "=" in line:
+                                k, v = line.split("=", 1)
+                                clean_k = k.strip()
+                                clean_v = v.strip().strip('"').strip("'")
+                                if clean_k not in os.environ:
+                                    os.environ[clean_k] = clean_v
+                except Exception:
+                    pass
+
         self.api_key = api_key or os.environ.get("DELTA_API_KEY", "")
         self.api_secret = (api_secret or
                            os.environ.get("DELTA_API_SECRET", "")).encode()
@@ -111,6 +128,7 @@ class DeltaOrderExecutor:
         self.max_retries = max_retries
         self.rate_limit_sec = rate_limit_sec
         self._last_request_ts = 0.0
+        self._server_time_offset = 0
         self._products: Dict[str, dict] = {}
         # external pre-trade validator: callable(order_dict) -> (bool, reason)
         self.pre_trade_hook: Optional[Callable[[dict], tuple]] = None
@@ -124,12 +142,16 @@ class DeltaOrderExecutor:
                         hashlib.sha256).hexdigest()
 
     def _check_safety(self, requires_auth: bool) -> None:
-        ks_candidates = [
-            self.kill_switch,
-            os.path.join(_REPO_ROOT, "KILL_SWITCH"),
-            os.path.join(_MODULE_DIR, "KILL_SWITCH"),
-            os.path.abspath("KILL_SWITCH"),
-        ]
+        if self.kill_switch != KILL_SWITCH_FILE:
+            # Custom kill-switch path provided (e.g. isolated test)
+            ks_candidates = [self.kill_switch]
+        else:
+            ks_candidates = [
+                self.kill_switch,
+                os.path.join(_REPO_ROOT, "KILL_SWITCH"),
+                os.path.join(_MODULE_DIR, "KILL_SWITCH"),
+                os.path.abspath("KILL_SWITCH"),
+            ]
         for ks_path in ks_candidates:
             if ks_path and os.path.exists(ks_path):
                 raise ExecutorError(
@@ -151,7 +173,7 @@ class DeltaOrderExecutor:
         if body is not None:
             headers["Content-Type"] = "application/json"
         if requires_auth:
-            ts = str(int(time.time()))
+            ts = str(int(time.time() + self._server_time_offset))
             headers["api-key"] = self.api_key
             headers["timestamp"] = ts
             headers["signature"] = self._sign(method.upper(), ts, path,
@@ -178,9 +200,26 @@ class DeltaOrderExecutor:
 
         try:
             with urllib.request.urlopen(req, timeout=self.request_timeout) as r:
+                date_hdr = r.headers.get("Date")
+                if date_hdr:
+                    try:
+                        import email.utils
+                        parsed_dt = email.utils.parsedate_to_datetime(date_hdr)
+                        self._server_time_offset = int(parsed_dt.timestamp()) - int(time.time())
+                    except Exception:
+                        pass
                 return json.loads(r.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             err_body = e.read().decode("utf-8", "replace")[:500]
+            if "expired_signature" in err_body and _retry < self.max_retries:
+                try:
+                    err_json = json.loads(err_body)
+                    server_ts = err_json.get("error", {}).get("context", {}).get("server_time")
+                    if server_ts:
+                        self._server_time_offset = int(server_ts) - int(time.time())
+                        return self._request(method, path, query, body, requires_auth, _retry=_retry + 1)
+                except Exception:
+                    pass
             retryable = e.code == 429 or 500 <= e.code < 600
             if retryable and _retry < self.max_retries and body is None:
                 # retry idempotent GETs only; never auto-retry order placement
@@ -240,14 +279,44 @@ class DeltaOrderExecutor:
         return self._request("GET", "/v2/wallet/balances",
                              requires_auth=True)["result"]
 
-    def get_positions(self) -> list:
-        return self._request("GET", "/v2/positions",
-                             requires_auth=True)["result"]
+    def get_margined_positions(self) -> list:
+        """Returns all open positions across the account from /v2/positions/margined."""
+        res = self._request("GET", "/v2/positions/margined", requires_auth=True)
+        return res.get("result", [])
 
-    def get_order(self, order_id: str) -> dict:
-        qs = f"?id={order_id}&state=filled,open"
+    def get_positions(self, product_id: Optional[int] = None) -> list:
+        """Fetch active positions. If product_id given, queries /v2/positions; otherwise queries /v2/positions/margined."""
+        if product_id is not None:
+            res = self._request("GET", "/v2/positions", query=f"?product_id={product_id}", requires_auth=True)
+            return [res.get("result", {})] if res.get("result") else []
+        return self.get_margined_positions()
+
+    def get_order(self, order_id: str | int) -> dict:
+        qs = f"?id={order_id}&state=filled,open,cancelled"
         return self._request("GET", "/v2/orders", query=qs,
                              requires_auth=True)["result"]
+
+    def edit_order(self, order_id: str | int, product_id: int,
+                   size: Optional[int] = None,
+                   limit_price: Optional[float] = None,
+                   stop_price: Optional[float] = None) -> dict:
+        """Edit an open order or bracket stop order on Delta Exchange."""
+        self._check_safety(True)
+        prods = self.get_products()
+        spec = None
+        for p in prods.values():
+            if int(p.get("id", 0)) == int(product_id):
+                spec = p
+                break
+        tick = float(spec.get("tick_size", 0)) if spec else 0.0
+        body: Dict[str, Any] = {"id": int(order_id), "product_id": int(product_id)}
+        if size is not None:
+            body["size"] = int(size)
+        if limit_price is not None:
+            body["limit_price"] = self._tick_round(limit_price, tick)
+        if stop_price is not None:
+            body["stop_price"] = self._tick_round(stop_price, tick)
+        return self._request("PUT", "/v2/orders", body=body, requires_auth=True)
 
     def cancel_order(self, order_id: str | int, product_id: Optional[int] = None) -> dict:
         self._check_safety(True)

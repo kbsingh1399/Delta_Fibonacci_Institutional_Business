@@ -23,30 +23,5 @@
     "tp_order_id": 1684736467,
     "client_order_id": "FIB4H_1794766178_SOLVUSD",
     "execution_mode": "live"
-  },
-  "TACUSD": {
-    "symbol": "TACUSD",
-    "side": "SELL / SHORT",
-    "shelf": "EMA_233",
-    "entry_price": 0.0013,
-    "current_stop": 0.0014,
-    "original_stop": 0.0014,
-    "target_1": 0.0011,
-    "target_2": 0.001,
-    "contracts": 25,
-    "contract_value": 100.0,
-    "underlying_units": 2500.0,
-    "margin_10x_inr": 25.71,
-    "actual_risk_inr": 24.31,
-    "cluster": "CRYPTO_ALTS_TOKENS",
-    "tf": "4H",
-    "entry_time": "2026-11-15 23:39:32",
-    "trail_stage": "INITIAL",
-    "venue_order_id": "1684736502",
-    "entry_order_id": 1684736502,
-    "sl_order_id": 1684736504,
-    "tp_order_id": 1684736505,
-    "client_order_id": "FIB4H_1794766180_TACUSD",
-    "execution_mode": "live"
   }
 }

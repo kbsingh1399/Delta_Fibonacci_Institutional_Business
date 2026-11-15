@@ -154,9 +154,16 @@ class TerminalDataStore:
                     else:
                         wick_pct = (h - max(o, c)) / rng * 100.0
 
+                # Candle timing metrics
+                candle_start_ts = int(df["timestamp"].iloc[prev])
+                candle_close_ts = candle_start_ts + 14400
+                elapsed_since_close = int(time.time()) - candle_close_ts
+                forming_close_ts = int(df["timestamp"].iloc[-1]) + 14400
+                minutes_to_close = max(0, (forming_close_ts - int(time.time())) // 60)
+
                 # Setup classification
                 setup = scan_asset_setup(sym, tf="4H", products_dict=self.products, live_mark_price=mark)
-                status = "NO_SETUP"
+                status = f"MONITORING [4H Close in {minutes_to_close}m]"
                 status_color = "secondary"
 
                 if setup:
@@ -169,17 +176,25 @@ class TerminalDataStore:
                         "cluster": setup["cluster"]
                     }
                     is_ok, reason = validate_new_trade_entry(candidate, active_pos, equity_inr=5000.0)
-                    if is_ok and setup["sizing_status"] != "REJECTED_OVERSIZED":
-                        status = f"READY: {setup['action']} ({setup['shelf']})"
+                    if not is_ok:
+                        status = f"BLOCKED: {reason}"
+                        status_color = "warning"
+                    elif setup["sizing_status"] == "REJECTED_OVERSIZED":
+                        status = f"BLOCKED: OVERSIZED MIN-LOT"
+                        status_color = "warning"
+                    elif elapsed_since_close <= 900:
+                        # Setup is fresh (within 15 minutes of candle close)
+                        status = f"READY: {setup['action']} ({setup['shelf']}) [15m Window Open]"
                         status_color = "success"
                     else:
-                        status = f"BLOCKED: {reason if not is_ok else setup['sizing_status']}"
-                        status_color = "warning"
+                        hours_ago = elapsed_since_close / 3600.0
+                        status = f"HISTORICAL: {setup['action']} ({setup['shelf']}) [Closed {hours_ago:.1f}h ago]"
+                        status_color = "secondary"
                 elif abs(dist_89) <= 0.6:
-                    status = f"APPROACHING EMA 89 ({dist_89:+.2f}%)"
+                    status = f"APPROACHING EMA 89 ({dist_89:+.2f}%) [Close in {minutes_to_close}m]"
                     status_color = "info"
                 elif abs(dist_233) <= 0.6:
-                    status = f"APPROACHING EMA 233 ({dist_233:+.2f}%)"
+                    status = f"APPROACHING EMA 233 ({dist_233:+.2f}%) [Close in {minutes_to_close}m]"
                     status_color = "info"
 
                 item = {
@@ -321,8 +336,8 @@ def background_poller():
             ticker_counter += 1
             STORE.update_tickers()
 
-            # Refresh 4H indicators every 30 seconds
-            if ticker_counter >= 15:
+            # Refresh 4H indicators every 3 minutes (preventing Delta API rate-limit exhaustion)
+            if ticker_counter >= 90:
                 ticker_counter = 0
                 STORE.refresh_indicators()
         except Exception as e:

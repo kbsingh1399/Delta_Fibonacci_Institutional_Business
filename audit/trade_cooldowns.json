@@ -1,0 +1,8 @@
+{
+  "TACUSD": {
+    "exit_time": 1794773157,
+    "exit_time_str": "2026-11-16 01:35:57",
+    "candle_ts": 1794773157,
+    "reason": "MANUAL_CLOSE"
+  }
+}

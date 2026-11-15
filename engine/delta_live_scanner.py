@@ -49,24 +49,15 @@ def calculate_atr(df, period=14):
 
 def load_active_positions():
     if os.path.exists(ACTIVE_POS_FILE):
-        try:
-            with open(ACTIVE_POS_FILE, "r") as f:
-                return json.load(f)
-        except Exception:
-            return {}
+        for _ in range(5):
+            try:
+                with open(ACTIVE_POS_FILE, "r") as f:
+                    return json.load(f)
+            except Exception:
+                time.sleep(0.05)
     return {}
 
-def save_active_positions(pos_dict):
-    try:
-        dir_name = os.path.dirname(ACTIVE_POS_FILE)
-        fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
-        with open(fd, "w") as f:
-            json.dump(pos_dict, f, indent=2)
-        os.replace(tmp_path, ACTIVE_POS_FILE)
-    except Exception:
-        pass
-
-def fetch_recent_candles(symbol, resolution="240", count=1200, use_mark=True):
+def fetch_recent_candles(symbol, resolution="240", count=1200, use_mark=False):
     now = int(time.time())
     start = now - (count * 4 * 3600 if resolution == "240" else count * 3600)
     target_sym = f"MARK:{symbol}" if (use_mark and not symbol.startswith("MARK:")) else symbol
@@ -78,8 +69,8 @@ def fetch_recent_candles(symbol, resolution="240", count=1200, use_mark=True):
         res = data.get('result', {})
         t = res.get('t', [])
         if not t or len(t) < 50:
-            if use_mark:
-                return fetch_recent_candles(symbol, resolution=resolution, count=count, use_mark=False)
+            if not use_mark:
+                return fetch_recent_candles(symbol, resolution=resolution, count=count, use_mark=True)
             return None
         df = pd.DataFrame({
             'timestamp': t,
@@ -92,8 +83,8 @@ def fetch_recent_candles(symbol, resolution="240", count=1200, use_mark=True):
         df = df.sort_values('timestamp').reset_index(drop=True)
         return df
     except Exception:
-        if use_mark:
-            return fetch_recent_candles(symbol, resolution=resolution, count=count, use_mark=False)
+        if not use_mark:
+            return fetch_recent_candles(symbol, resolution=resolution, count=count, use_mark=True)
         return None
 
 def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage=10.0, products_dict=None, live_mark_price=None, max_bar_age_sec=None):

@@ -231,16 +231,12 @@ def test_execution_wrapper_and_killswitch():
         assert "1.1R" in str(e), f"rejected for the WRONG reason: {e}"
         print(f"  Cap Alignment B: ETHUSD 1-ct @ Rs 59.50 risk (1.19R) -> executor REJECTS: {e}")
     
-    # Test Kill-Switch
-    kill_file = os.path.join(BASE_DIR, "KILL_SWITCH")
+    # Test Kill-Switch using an isolated test path so verification tests never trip the live trading daemon
+    kill_file = os.path.join(BASE_DIR, "KILL_SWITCH_TEST")
     try:
         with open(kill_file, "w") as f:
             f.write("HALT")
-        print("  Safety Check 3: Created local KILL_SWITCH file. Testing rejection...")
-        # QR-2026-1115 fix: keyword args (the positional form fed the TP into
-        # entry_type and failed BEFORE the kill-switch was ever checked), an
-        # executor bound to this exact file path, and a REASON assertion so a
-        # vacuous pass is impossible.
+        print("  Safety Check 3: Created isolated test KILL_SWITCH file. Testing rejection...")
         ex_ks = DeltaOrderExecutor(api_key="test_dummy_key", api_secret="test_dummy_secret",
                                    live=False, kill_switch=kill_file)
         try:
