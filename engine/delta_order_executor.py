@@ -50,6 +50,7 @@ Dependencies: standard library only.
 from __future__ import annotations
 
 import argparse
+from decimal import Decimal, ROUND_HALF_UP
 import hashlib
 import hmac
 import json
@@ -61,8 +62,9 @@ import urllib.request
 from typing import Callable, Dict, Optional
 
 BASE_URL = "https://api.india.delta.exchange"
-KILL_SWITCH_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                "KILL_SWITCH")
+_MODULE_DIR = os.path.dirname(os.path.abspath(__file__))
+_REPO_ROOT = os.path.dirname(_MODULE_DIR) if os.path.basename(_MODULE_DIR) == "engine" else _MODULE_DIR
+KILL_SWITCH_FILE = os.path.join(_REPO_ROOT, "KILL_SWITCH")
 USER_AGENT = "delta-fibonacci-executor/1.0"
 
 
@@ -117,10 +119,17 @@ class DeltaOrderExecutor:
                         hashlib.sha256).hexdigest()
 
     def _check_safety(self, requires_auth: bool) -> None:
-        if os.path.exists(self.kill_switch):
-            raise ExecutorError(
-                f"KILL SWITCH engaged ({self.kill_switch} exists); "
-                f"refusing to send live orders")
+        ks_candidates = [
+            self.kill_switch,
+            os.path.join(_REPO_ROOT, "KILL_SWITCH"),
+            os.path.join(_MODULE_DIR, "KILL_SWITCH"),
+            os.path.abspath("KILL_SWITCH"),
+        ]
+        for ks_path in ks_candidates:
+            if ks_path and os.path.exists(ks_path):
+                raise ExecutorError(
+                    f"KILL SWITCH engaged ({ks_path} exists); "
+                    f"refusing to send live orders")
         if requires_auth and not (self.api_key and self.api_secret):
             raise ExecutorError(
                 "missing credentials: set DELTA_API_KEY and DELTA_API_SECRET")
@@ -182,14 +191,45 @@ class DeltaOrderExecutor:
     def get_products(self, refresh: bool = False) -> Dict[str, dict]:
         """{symbol: spec} for operational perpetual futures (cached)."""
         if refresh or not self._products:
-            res = self._request("GET", "/v2/products")["result"]
-            self._products = {p["symbol"]: p for p in res
-                              if p.get("contract_type") == "perpetual_futures"
-                              and p.get("trading_status") == "operational"}
+            try:
+                res = self._request("GET", "/v2/products")["result"]
+                self._products = {p["symbol"]: p for p in res
+                                  if p.get("contract_type") == "perpetual_futures"
+                                  and p.get("trading_status") == "operational"}
+            except ExecutorError:
+                if self.live:
+                    raise
+                # Offline dry-run fallback: load from local product cache or snapshot
+                for cpath in (
+                    os.path.join(_MODULE_DIR, "delta_products_cache.json"),
+                    os.path.join(_MODULE_DIR, "universe_snapshot.json"),
+                ):
+                    if os.path.exists(cpath):
+                        with open(cpath, "r") as f:
+                            raw = json.load(f)
+                        if isinstance(raw, dict) and "products" in raw:
+                            self._products = {
+                                p["symbol"]: p for p in raw["products"]
+                                if p.get("contract_type") == "perpetual_futures"
+                                and p.get("trading_status") in (None, "operational")
+                            }
+                        elif isinstance(raw, dict):
+                            self._products = raw
+                        if self._products:
+                            break
+                if not self._products:
+                    raise
         return self._products
 
     def get_ticker(self, symbol: str) -> dict:
-        return self._request("GET", f"/v2/tickers/{symbol}")["result"]
+        try:
+            return self._request("GET", f"/v2/tickers/{symbol}")["result"]
+        except ExecutorError:
+            if self.live:
+                raise
+            spec = self.get_products().get(symbol, {})
+            mp = spec.get("mark_price") or spec.get("close") or 100.0
+            return {"symbol": symbol, "mark_price": float(mp), "bid": float(mp), "ask": float(mp)}
 
     def get_balances(self) -> list:
         return self._request("GET", "/v2/wallet/balances",
@@ -215,8 +255,13 @@ class DeltaOrderExecutor:
     def _tick_round(price: float, tick: float) -> str:
         if tick <= 0:
             return f"{price:.8f}".rstrip("0").rstrip(".")
-        steps = round(price / tick)
-        return f"{steps * tick:.8f}".rstrip("0").rstrip(".")
+        d_price = Decimal(str(price))
+        d_tick = Decimal(str(tick))
+        quantized = (d_price / d_tick).quantize(Decimal("1"), rounding=ROUND_HALF_UP) * d_tick
+        res = f"{quantized:f}"
+        if "." in res:
+            res = res.rstrip("0").rstrip(".")
+        return res
 
     def _risk_check(self, symbol: str, spec: dict, contracts: int,
                     entry: float, stop: float) -> None:

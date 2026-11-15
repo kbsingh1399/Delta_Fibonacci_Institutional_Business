@@ -14,6 +14,7 @@ import sys
 import json
 import time
 import glob
+import tempfile
 import argparse
 import urllib.request
 import pandas as pd
@@ -57,8 +58,11 @@ def load_active_positions():
 
 def save_active_positions(pos_dict):
     try:
-        with open(ACTIVE_POS_FILE, "w") as f:
+        dir_name = os.path.dirname(ACTIVE_POS_FILE)
+        fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
+        with open(fd, "w") as f:
             json.dump(pos_dict, f, indent=2)
+        os.replace(tmp_path, ACTIVE_POS_FILE)
     except Exception:
         pass
 
@@ -281,6 +285,7 @@ def main():
     print("="*125)
     
     found_setups = []
+    simulated_active = dict(active_positions)
     
     for sym in scan_list:
         for tf in timeframes:
@@ -289,22 +294,17 @@ def main():
                     sym, tf=tf, equity_inr=args.capital_inr, risk_pct=args.risk, leverage=args.leverage, products_dict=products
                 )
                 if setup:
-                    # Run cluster risk governance check
-                    # QR-2026-1115-R2 fix: forward the crash-tape and direction
-                    # fields the governor needs. They were computed above but
-                    # dropped from this dict, leaving the crash-replay gate and
-                    # the directional crypto cap permanently dormant on the
-                    # live path.
                     governor_candidate = {
                         'symbol': setup['symbol'],
                         'actual_risk_inr': setup['risk_inr'],
                         'margin_10x_inr': setup['margin_10x_inr'],
                         'recent_pct_change': setup['recent_pct_change'],
                         'action': setup['action'],
+                        'cluster': setup['cluster'],
                     }
                     is_gov_ok, gov_reason = validate_new_trade_entry(
                         governor_candidate,
-                        active_positions,
+                        simulated_active,
                         equity_inr=args.capital_inr
                     )
                     setup['turnover_inr'] = turnover_map.get(setup['symbol'], "N/A")
@@ -312,8 +312,17 @@ def main():
                     setup['governor_msg'] = gov_reason
                     found_setups.append(setup)
                     
-                    status_flag = "[READY]" if (is_gov_ok and setup['sizing_status'] != 'REJECTED_OVERSIZED') else "[BLOCKED]"
-                    print(f"  {status_flag} {setup['symbol']} ({setup['tf']}): {setup['action']} @ {setup['entry']} | Lots: {setup['contracts']} (10X Margin: ₹{setup['margin_10x_inr']:.1f}, Risk: ₹{setup['risk_inr']:.1f}, 24h Turn: {setup['turnover_inr']})")
+                    is_ready = is_gov_ok and setup['sizing_status'] != 'REJECTED_OVERSIZED'
+                    if is_ready:
+                        simulated_active[setup['symbol']] = {
+                            'side': setup['action'],
+                            'actual_risk_inr': setup['risk_inr'],
+                            'margin_10x_inr': setup['margin_10x_inr'],
+                            'cluster': setup['cluster'],
+                        }
+                    status_flag = "[READY]" if is_ready else "[BLOCKED]"
+                    reason_suffix = "" if is_ready else f" -> {gov_reason if not is_gov_ok else setup['sizing_status']}"
+                    print(f"  {status_flag} {setup['symbol']} ({setup['tf']}): {setup['action']} @ {setup['entry']} | Lots: {setup['contracts']} (10X Margin: ₹{setup['margin_10x_inr']:.1f}, Risk: ₹{setup['risk_inr']:.1f}, 24h Turn: {setup['turnover_inr']}){reason_suffix}")
             except Exception:
                 continue
                 
