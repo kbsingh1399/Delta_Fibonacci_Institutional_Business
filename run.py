@@ -38,7 +38,14 @@ def main():
     group.add_argument("--backtest", action="store_true", help="Run official ₹5,000 portfolio backtest")
     group.add_argument("--wyckoff", action="store_true", help="Run Institutional Wyckoff Absorption & Hybrid Chandelier Engine")
     group.add_argument("--live", action="store_true", help="Run live market scanner on Delta Exchange India")
+    group.add_argument("--trade", action="store_true", help="Start institutional trade execution and live monitor")
     group.add_argument("--screen", action="store_true", help="Screen liquid tradable assets meeting turnover floor")
+
+    parser.add_argument("--mode", choices=["demo", "paper", "live"], default="demo", help="Execution mode for --trade (default: demo)")
+    parser.add_argument("--interval", type=int, default=60, help="Polling interval in seconds for --trade (default: 60)")
+    parser.add_argument("--once", action="store_true", help="Run a single cycle and exit for --trade")
+    parser.add_argument("--live-confirm", action="store_true", help="Mandatory flag to confirm real live trading")
+    parser.add_argument("--capital", type=float, default=5000.0, help="Base trading capital in INR (default: 5000.0)")
 
     parser.add_argument("--all", action="store_true", help="Include all liquid assets (disables Alpha Basket filtering)")
     parser.add_argument("--taker-fees", action="store_true", help="Use legacy full taker fees (0.138R) instead of Maker Limit TP rebate model (0.050R)")
@@ -82,6 +89,21 @@ def main():
         if args.all:
             sys.argv.append("--include_majors")
         scanner_main()
+
+    elif args.trade:
+        from delta_trader_monitor import DeltaTraderMonitor
+        monitor = DeltaTraderMonitor(
+            mode=args.mode,
+            equity_inr=args.capital,
+            risk_pct=0.01,
+            leverage=10.0,
+            tf=args.tf,
+            poll_interval_sec=args.interval
+        )
+        if args.once:
+            monitor.run_cycle()
+        else:
+            monitor.run_loop()
 
     elif args.screen:
         from universe_screener import main as screener_main
