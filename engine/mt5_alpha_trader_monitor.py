@@ -47,7 +47,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("MT5AlphaMonitor")
 
-# Optimal 11-Asset Alpha Basket Definition
+# Optimal Multi-Cluster Alpha Basket Definition (Upgraded with live active symbols)
 OPTIMAL_ALPHA_BASKET = [
     {
         "symbol": "US30",
@@ -78,10 +78,17 @@ OPTIMAL_ALPHA_BASKET = [
         "risk_usd": 10.0,
     },
     {
-        "symbol": "ZARJPY",
+        "symbol": "DOGUSD",
+        "cluster": "Crypto",
+        "setup": "canonical",
+        "exit_mode": "fixed_3.5",
+        "risk_usd": 10.0,
+    },
+    {
+        "symbol": "CHFJPY",
         "cluster": "Forex_JPY",
-        "setup": "turbo_tri_tier",
-        "exit_mode": "fixed_2.5",
+        "setup": "canonical",
+        "exit_mode": "fixed_3.0",
         "risk_usd": 10.0,
     },
     {
@@ -102,6 +109,13 @@ OPTIMAL_ALPHA_BASKET = [
         "symbol": "CADJPY",
         "cluster": "Forex_JPY",
         "setup": "wyckoff_swing_sweep",
+        "exit_mode": "fixed_3.0",
+        "risk_usd": 10.0,
+    },
+    {
+        "symbol": "XAUUSD",
+        "cluster": "Commodity_Energy",
+        "setup": "canonical",
         "exit_mode": "fixed_3.0",
         "risk_usd": 10.0,
     },
@@ -275,15 +289,25 @@ class MT5AlphaTrader:
         l = df["low"].to_numpy(dtype=float)
         t = df["time"].to_numpy(dtype=int)
 
+        # Fetch current live tick
+        tick = mt5.symbol_info_tick(symbol)
+        if not tick or tick.bid <= 0 or tick.ask <= 0:
+            return None
+
         # Look at the most recently COMPLETED bar (prev = -2, since -1 is live forming bar)
         prev = n - 2
         candle_close_ts = t[prev] + 4 * 3600
 
-        # Bar Freshness Check: only trigger within 30 minutes of confirmed 4H close
-        now_ts = int(time.time())
-        # To avoid re-triggering repeatedly on the same bar:
+        # Bar Freshness Check: only trigger within 20 minutes of confirmed 4H close
+        # tick.time is broker server time in seconds, precisely aligned with candle timestamps
         last_eval_bar = self.trade_cooldowns.get(f"{symbol}_last_bar", 0)
         if candle_close_ts == last_eval_bar:
+            return None
+
+        elapsed_since_close = tick.time - candle_close_ts
+        if elapsed_since_close > 1200 or elapsed_since_close < 0:
+            # Bar closed more than 20 minutes ago (e.g. weekend or bot restart); mark as evaluated to avoid stale late entry
+            self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts
             return None
 
         ema34 = calculate_ema(c, 34)
@@ -366,14 +390,13 @@ class MT5AlphaTrader:
                         elif (h_bar >= ema233[prev] * 0.998) and (c_bar <= ema233[prev]):
                             sig = -1; shelf_type = "SLOW"
 
+        # Mark this bar as evaluated to prevent redundant re-evaluations
+        self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts
+
         if sig == 0:
             return None
 
-        # Mark this bar as evaluated to prevent multiple triggers
-        self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts
-
         # Determine Entry & Stop Prices
-        tick = mt5.symbol_info_tick(symbol)
         curr_price = (tick.ask if sig == 1 else tick.bid) if tick else c_bar
 
         if shelf_type == "SLOW":
