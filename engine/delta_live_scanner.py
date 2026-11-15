@@ -91,7 +91,7 @@ def fetch_recent_candles(symbol, resolution="240", count=800):
     except Exception:
         return None
 
-def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage=10.0, products_dict=None):
+def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage=10.0, products_dict=None, live_mark_price=None):
     """Scans an asset for Tiered Fibonacci Rejections enforcing Single Entry and Lot Sizing."""
     res_code = "240" if tf == "4H" else "60"
     # QR-2026-1115 fix: 800 bars so EMA233 stabilises (300 bars leave a 7.6% seed
@@ -146,14 +146,16 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
         wick_ratio = lower_wick / rng
         
         shelf = None
-        if (l <= curr_89 * 1.002 or l <= curr_55 * 1.002) and (c >= curr_89):
+        if (l <= curr_89 * 1.002) and (c >= curr_89):
             shelf = "EMA_89"
         elif (l <= curr_233 * 1.002) and (c >= curr_233):
             shelf = "EMA_233"
             
         if shelf and wick_ratio >= 0.25:
-            entry = df['close'].iloc[i] # Live market price; backtests fill at next-bar open - reconcile fills in the paper log (QR-2026-1115 note)
+            entry = float(live_mark_price) if live_mark_price is not None else float(df['close'].iloc[i])
             stop = (min(curr_233, l) - 0.35 * curr_atr) if shelf == "EMA_233" else (l - 0.30 * curr_atr)
+            if entry <= stop:
+                return None
             risk_dist = entry - stop
             if risk_dist > 0:
                 sizing = calculate_delta_order_sizing(
@@ -193,14 +195,16 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
         wick_ratio = upper_wick / rng
         
         shelf = None
-        if (h >= curr_89 * 0.998 or h >= curr_55 * 0.998) and (c <= curr_89):
+        if (h >= curr_89 * 0.998) and (c <= curr_89):
             shelf = "EMA_89"
         elif (h >= curr_233 * 0.998) and (c <= curr_233):
             shelf = "EMA_233"
             
         if shelf and wick_ratio >= 0.25:
-            entry = df['close'].iloc[i]  # live market price; see QR-2026-1115 fill-timing note
+            entry = float(live_mark_price) if live_mark_price is not None else float(df['close'].iloc[i])
             stop = (max(curr_233, h) + 0.35 * curr_atr) if shelf == "EMA_233" else (h + 0.30 * curr_atr)
+            if entry >= stop:
+                return None
             risk_dist = stop - entry
             if risk_dist > 0:
                 sizing = calculate_delta_order_sizing(

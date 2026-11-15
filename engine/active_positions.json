@@ -61,28 +61,5 @@
     "trail_stage": "INITIAL",
     "venue_order_id": "LOCAL-PAPER",
     "execution_mode": "demo"
-  },
-  "SPYXUSD": {
-    "symbol": "SPYXUSD",
-    "side": "SELL / SHORT",
-    "shelf": "EMA_89",
-    "entry_price": 750.24,
-    "current_stop": 752.0,
-    "original_stop": 752.0,
-    "target_1": 746.0,
-    "target_2": 742.33,
-    "contracts": 32,
-    "contract_value": 0.01,
-    "underlying_units": 0.32,
-    "margin_10x_inr": 2031.32,
-    "actual_risk_inr": 47.87,
-    "cluster": "US_TECH_INDICES",
-    "tf": "1H",
-    "entry_time": "2026-11-15 21:58:20",
-    "trail_stage": "INITIAL",
-    "venue_order_id": "2178409423",
-    "tp_order_id": "2178409842",
-    "sl_order_id": "2178409938",
-    "execution_mode": "delta_demo_exchange"
   }
 }
