@@ -36,6 +36,7 @@ def main():
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--verify", action="store_true", help="Run 6-point institutional readiness verification suite")
     group.add_argument("--backtest", action="store_true", help="Run official ₹5,000 portfolio backtest")
+    group.add_argument("--wyckoff", action="store_true", help="Run Institutional Wyckoff Absorption & Hybrid Chandelier Engine")
     group.add_argument("--live", action="store_true", help="Run live market scanner on Delta Exchange India")
     group.add_argument("--screen", action="store_true", help="Screen liquid tradable assets meeting turnover floor")
 
@@ -53,6 +54,26 @@ def main():
     elif args.backtest:
         from run_inr_portfolio_backtest import run_portfolio_backtest
         run_portfolio_backtest(alpha_basket=not args.all, offline=not args.live_universe)
+
+    elif args.wyckoff:
+        import institutional_wyckoff_engine as we
+        specs = we.load_deployable_specs(offline=not args.live_universe)
+        candidates, dfs = we.scan_historical_candidates("data", specs)
+        print("=" * 105)
+        print("DELTA EXCHANGE INDIA — INSTITUTIONAL WYCKOFF ABSORPTION & HYBRID RUNNER ENGINE")
+        print("4H Fib_89_233 | Aligned Body | Volume Dry-Up | 50% Maker Limit TP + 50% Chandelier Runner")
+        print("=" * 105)
+        res = we.run_event_driven_inr_portfolio(candidates, dfs, specs, compounding=True, exit_policy="hybrid")
+        print(f"Base Initial Capital:       ₹{res['starting_capital_inr']:,.2f} INR")
+        print(f"Final Realized Equity:      ₹{res['final_equity_inr']:,.2f} INR")
+        print(f"Total Realized Profit:      ₹{res['net_profit_inr']:,.2f} INR (+{res['return_pct']}%)")
+        print(f"Total Executed Trades:      {res['trades']} trades")
+        print(f"Portfolio Win Rate:         {res['win_rate_pct']}%")
+        print(f"Profit Factor:              {res['profit_factor']}")
+        print(f"Average Net R:              {res['avg_net_r']:+.3f}R")
+        print(f"Peak Drawdown:              ₹{res['max_dd_inr']:,.2f} INR ({res['max_dd_pct']}%)")
+        print(f"Calmar Ratio:               {res['calmar']}")
+        print("=" * 105)
 
     elif args.live:
         from delta_live_scanner import main as scanner_main
