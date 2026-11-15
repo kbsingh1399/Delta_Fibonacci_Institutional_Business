@@ -170,6 +170,20 @@ def _count(rows: List[dict], key: str) -> dict:
     return {f"{k}bps": v for k, v in sorted(c.items())}
 
 
+def screen_deployable_universe(min_24h_turnover_usd: float = 100_000.0,
+                               risk_cap_inr: float = 55.0,
+                               margin_cap_inr: float = 2500.0,
+                               offline: bool = False):
+    """Convenience helper returning a pandas DataFrame of eligible liquid assets."""
+    import pandas as pd
+    products, tickers = load_snapshot(offline=offline)
+    rows = screen(products, tickers, risk_cap_inr=risk_cap_inr,
+                  margin_cap_inr=margin_cap_inr,
+                  volume_floor_usd=min_24h_turnover_usd)
+    elig = [r for r in rows if r.get("eligible")]
+    return pd.DataFrame(elig)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--risk-cap", type=float, default=55.0,

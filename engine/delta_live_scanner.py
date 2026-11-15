@@ -240,6 +240,8 @@ def main():
     parser.add_argument("--risk", type=float, default=0.01, help="Risk per trade (fraction, e.g. 0.01 for 1 percent)")
     parser.add_argument("--leverage", type=float, default=10.0, help="Leverage multiplier (e.g. 10.0 for 10X)")
     parser.add_argument("--all_assets", action="store_true", help="Scan entire 242-asset universe instead of top 40")
+    parser.add_argument("--alpha_basket", action="store_true", default=True, help="Scan the optimized Alpha Basket (exclude crypto major entry signals while tracking crash tape)")
+    parser.add_argument("--include_majors", action="store_true", help="Include crypto majors in scan list")
     args = parser.parse_args()
     
     print("\nFetching live contract specs & liquidity filters from Delta Exchange India...")
@@ -267,6 +269,8 @@ def main():
         
     if args.sector != "ALL":
         symbols = [s for s in symbols if classify_asset(s) == args.sector]
+    elif args.alpha_basket and not args.include_majors:
+        symbols = [s for s in symbols if get_asset_cluster(s) != "CRYPTO_MAJORS"]
         
     timeframes = ["4H", "1H"] if args.tf == "ALL" else [args.tf]
     scan_list = symbols if args.all_assets else symbols[:40]

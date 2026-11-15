@@ -1,4 +1,13 @@
 {
+  "INITUSD": {
+    "id": 74310,
+    "symbol": "INITUSD",
+    "contract_value": 10.0,
+    "tick_size": 1e-05,
+    "initial_margin": 5.0,
+    "maintenance_margin": 2.5,
+    "quoting_asset": "USD"
+  },
   "JASMYUSD": {
     "id": 50123,
     "symbol": "JASMYUSD",
@@ -1473,15 +1482,6 @@
     "tick_size": 1e-07,
     "initial_margin": 10.0,
     "maintenance_margin": 5.0,
-    "quoting_asset": "USD"
-  },
-  "INITUSD": {
-    "id": 74310,
-    "symbol": "INITUSD",
-    "contract_value": 10.0,
-    "tick_size": 1e-05,
-    "initial_margin": 5.0,
-    "maintenance_margin": 2.5,
     "quoting_asset": "USD"
   },
   "NOTUSD": {

@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+"""run.py: Unified Master CLI Runner for Delta Fibonacci Institutional Business.
+
+Target Venue: Delta Exchange India (api.india.delta.exchange) | FIU-IND Compliant
+Base Capital: ₹5,000 INR | 10X Isolated Margin | 1R = ₹50 INR Risk
+
+Usage:
+    python run.py --verify          # Run full 6-point institutional readiness suite
+    python run.py --backtest        # Run official portfolio backtest (Alpha Basket)
+    python run.py --backtest --all  # Run baseline portfolio backtest (all liquid assets)
+    python run.py --live            # Run live 4H market scanner
+    python run.py --screen          # Run liquid asset universe screener
+"""
+
+import sys
+import os
+import argparse
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ENGINE_DIR = os.path.join(BASE_DIR, "engine")
+if ENGINE_DIR not in sys.path:
+    sys.path.insert(0, ENGINE_DIR)
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Delta Fibonacci Institutional Business Master Runner",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""Examples:
+  python run.py --verify
+  python run.py --backtest
+  python run.py --backtest --all
+  python run.py --live --tf 4H
+  python run.py --screen
+        """
+    )
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--verify", action="store_true", help="Run 6-point institutional readiness verification suite")
+    group.add_argument("--backtest", action="store_true", help="Run official ₹5,000 portfolio backtest")
+    group.add_argument("--live", action="store_true", help="Run live market scanner on Delta Exchange India")
+    group.add_argument("--screen", action="store_true", help="Screen liquid tradable assets meeting turnover floor")
+
+    parser.add_argument("--all", action="store_true", help="Include all liquid assets (disables Alpha Basket filtering)")
+    parser.add_argument("--live-universe", action="store_true", help="Refresh universe snapshot from live Delta Exchange API instead of static offline cache")
+    parser.add_argument("--tf", choices=["4H", "1H", "ALL"], default="4H", help="Timeframe for scanner (default: 4H)")
+    parser.add_argument("--sector", default="ALL", help="Sector filter for scanner")
+
+    args = parser.parse_args()
+
+    if args.verify:
+        from verify_live_readiness import main as verify_main
+        verify_main()
+
+    elif args.backtest:
+        from run_inr_portfolio_backtest import run_portfolio_backtest
+        run_portfolio_backtest(alpha_basket=not args.all, offline=not args.live_universe)
+
+    elif args.live:
+        from delta_live_scanner import main as scanner_main
+        sys.argv = [sys.argv[0], "--tf", args.tf, "--sector", args.sector]
+        if args.all:
+            sys.argv.append("--include_majors")
+        scanner_main()
+
+    elif args.screen:
+        from universe_screener import main as screener_main
+        sys.argv = [sys.argv[0]]
+        screener_main()
+
+if __name__ == "__main__":
+    main()
