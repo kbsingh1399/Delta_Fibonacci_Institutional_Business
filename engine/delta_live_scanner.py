@@ -96,8 +96,8 @@ def fetch_recent_candles(symbol, resolution="240", count=1200, use_mark=True):
             return fetch_recent_candles(symbol, resolution=resolution, count=count, use_mark=False)
         return None
 
-def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage=10.0, products_dict=None, live_mark_price=None):
-    """Scans an asset for Tiered Fibonacci Rejections enforcing Single Entry and Lot Sizing."""
+def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage=10.0, products_dict=None, live_mark_price=None, max_bar_age_sec=None):
+    """Scans an asset for Tiered Fibonacci Rejections enforcing Single Entry, Freshness, and Lot Sizing."""
     res_code = "240" if tf == "4H" else "60"
     # QR-2026-1115 fix: 1200 bars so EMA233 stabilises with maximum historical depth.
     df = fetch_recent_candles(symbol, resolution=res_code, count=1200)
@@ -120,6 +120,16 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
     i = len(df) - 1 # Forming candle
     prev = i - 1    # Confirmed closed candle
     
+    bar_duration = 14400 if tf == "4H" else 3600
+    candle_start_ts = int(df['timestamp'].iloc[prev])
+    candle_close_ts = candle_start_ts + bar_duration
+
+    # Freshness Gate: Reject stale setups from candles that closed > max_bar_age_sec ago
+    if max_bar_age_sec is not None:
+        elapsed_since_close = int(time.time()) - candle_close_ts
+        if elapsed_since_close > max_bar_age_sec:
+            return None
+
     o = df['open'].iloc[prev]
     h = df['high'].iloc[prev]
     l = df['low'].iloc[prev]
@@ -143,7 +153,6 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
         
     # Check Active Positions file to enforce Single Entry Invariant
     active_pos = load_active_positions()
-    bar_duration = 14400 if tf == "4H" else 3600
     if symbol in active_pos:
         last_entry_ts = active_pos[symbol].get('entry_ts', 0)
         if (df['timestamp'].iloc[prev] - last_entry_ts) < (12 * bar_duration):
@@ -163,7 +172,15 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
             shelf = "EMA_233"
             
         if shelf and wick_ratio >= 0.25:
-            entry = float(live_mark_price) if live_mark_price is not None else float(df['close'].iloc[i])
+            # Drift gate: ensure live execution price is within 0.5% of confirmed candle close
+            if live_mark_price is not None and live_mark_price > 0:
+                drift_pct = abs(live_mark_price - c) / c
+                if drift_pct > 0.005:
+                    return None
+                entry = float(live_mark_price)
+            else:
+                entry = float(c)
+
             stop = (min(curr_233, l) - 0.35 * curr_atr) if shelf == "EMA_233" else (l - 0.30 * curr_atr)
             if entry <= stop:
                 return None
@@ -190,6 +207,7 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
                     'contracts': sizing['contracts'],
                     'contract_value': sizing['contract_value'],
                     'underlying_units': sizing['underlying_units'],
+                    'effective_leverage': sizing.get('effective_leverage', leverage),
                     'notional_inr': sizing['notional_inr'],
                     'margin_10x_inr': sizing['margin_10x_inr'],
                     'risk_inr': sizing['actual_risk_inr'],
@@ -212,7 +230,15 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
             shelf = "EMA_233"
             
         if shelf and wick_ratio >= 0.25:
-            entry = float(live_mark_price) if live_mark_price is not None else float(df['close'].iloc[i])
+            # Drift gate: ensure live execution price is within 0.5% of confirmed candle close
+            if live_mark_price is not None and live_mark_price > 0:
+                drift_pct = abs(live_mark_price - c) / c
+                if drift_pct > 0.005:
+                    return None
+                entry = float(live_mark_price)
+            else:
+                entry = float(c)
+
             stop = (max(curr_233, h) + 0.35 * curr_atr) if shelf == "EMA_233" else (h + 0.30 * curr_atr)
             if entry >= stop:
                 return None
@@ -239,6 +265,7 @@ def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage
                     'contracts': sizing['contracts'],
                     'contract_value': sizing['contract_value'],
                     'underlying_units': sizing['underlying_units'],
+                    'effective_leverage': sizing.get('effective_leverage', leverage),
                     'notional_inr': sizing['notional_inr'],
                     'margin_10x_inr': sizing['margin_10x_inr'],
                     'risk_inr': sizing['actual_risk_inr'],

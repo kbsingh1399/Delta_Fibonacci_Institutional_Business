@@ -55,6 +55,23 @@ def fetch_delta_products(force_refresh: bool = False) -> Dict[str, Dict[str, Any
                 return json.load(f)
         raise RuntimeError(f"Failed to fetch Delta India products: {e}")
 
+def compute_safe_leverage(
+    entry_price: float,
+    stop_price: float,
+    target_leverage: float = 25.0,
+    maintenance_margin_pct: float = 0.025
+) -> float:
+    """Computes maximum safe leverage so liquidation price sits beyond stop loss with buffer.
+    Guarantees premature liquidation cannot happen before stop-loss executes.
+    """
+    if entry_price <= 0:
+        return target_leverage
+    stop_dist_pct = abs(entry_price - stop_price) / entry_price
+    required_margin_pct = stop_dist_pct + maintenance_margin_pct + 0.010
+    max_safe = 1.0 / required_margin_pct if required_margin_pct > 0 else target_leverage
+    return max(1.0, min(float(target_leverage), float(int(max_safe))))
+
+
 def calculate_delta_order_sizing(
     symbol: str,
     entry_price: float,
@@ -108,9 +125,18 @@ def calculate_delta_order_sizing(
     actual_risk_inr = contracts * contract_risk_inr
     actual_risk_pct = (actual_risk_inr / equity_inr) * 100.0
     
+    maint_margin_pct = float(spec.get('maintenance_margin', 2.5)) / 100.0 if spec else 0.025
+    safe_leverage = compute_safe_leverage(entry_price, stop_price, target_leverage=leverage, maintenance_margin_pct=maint_margin_pct)
+    if spec and spec.get('initial_margin'):
+        try:
+            prod_max_lev = 100.0 / float(spec['initial_margin'])
+            safe_leverage = min(safe_leverage, prod_max_lev)
+        except Exception:
+            pass
+
     notional_usd = contracts * contract_value * entry_price
     notional_inr = notional_usd * DELTA_FX_RATE
-    margin_required_inr = notional_inr / leverage
+    margin_required_inr = notional_inr / safe_leverage
 
     # 6. Safety & Allocation Validation
     status = "APPROVED_1R"
@@ -118,7 +144,7 @@ def calculate_delta_order_sizing(
     
     if margin_required_inr > (equity_inr * max_capital_margin_pct):
         status = "REJECTED_MARGIN_EXCEEDED"
-        reason = f"Required 10X margin (₹{margin_required_inr:.1f}) exceeds {max_capital_margin_pct*100}% of equity (₹{equity_inr*max_capital_margin_pct:.1f})"
+        reason = f"Required margin (₹{margin_required_inr:.1f} at {safe_leverage}X) exceeds {max_capital_margin_pct*100}% of equity (₹{equity_inr*max_capital_margin_pct:.1f})"
     elif actual_risk_inr > (target_risk_inr * 1.1):
         # QR-2026-1115 fix: hard cap at 1.1R (Rs 55 on the Rs 50 budget).
         # The former APPROVED_FLEX band (1.25x-2.5x target) is removed.
@@ -135,6 +161,7 @@ def calculate_delta_order_sizing(
         'entry_price': entry_price,
         'stop_price': stop_price,
         'tick_size': tick_size,
+        'effective_leverage': safe_leverage,
         'notional_usd': round(notional_usd, 2),
         'notional_inr': round(notional_inr, 2),
         'margin_10x_inr': round(margin_required_inr, 2),

@@ -359,7 +359,9 @@ class DeltaTraderMonitor:
                 setup = scan_asset_setup(
                     sym, tf=self.tf, equity_inr=self.equity_inr,
                     risk_pct=self.risk_pct, leverage=self.leverage,
-                    products_dict=self.products
+                    products_dict=self.products,
+                    live_mark_price=ticker_map.get(sym),
+                    max_bar_age_sec=900  # 15 minutes freshness gate
                 )
                 if not setup:
                     continue
@@ -413,18 +415,20 @@ class DeltaTraderMonitor:
                     try:
                         logger.warning(f"🚨 SENDING LIVE PRODUCTION ORDER FOR {sym}...")
                         prod_id = self.products.get(sym, {}).get("id")
+                        safe_lev = setup.get("effective_leverage", self.leverage)
                         if prod_id:
                             try:
-                                self.executor.set_leverage(int(prod_id), self.leverage)
+                                self.executor.set_leverage(int(prod_id), safe_lev)
+                                logger.info(f"Set {sym} leverage to safe {safe_lev}X (guaranteeing SL before Liq)")
                             except Exception as lev_err:
                                 if "max_leverage_exceeded" in str(lev_err):
                                     try:
                                         self.executor.set_leverage(int(prod_id), 20)
-                                        logger.info(f"Clamped {sym} leverage to maximum allowed 20X")
+                                        logger.info(f"Clamped {sym} leverage to venue maximum 20X")
                                     except Exception:
                                         pass
                                 else:
-                                    logger.warning(f"Could not set {self.leverage}X leverage for {sym}: {lev_err}")
+                                    logger.warning(f"Could not set {safe_lev}X leverage for {sym}: {lev_err}")
                         res = self.executor.place_bracket_order(
                             symbol=sym,
                             side=sym_side.lower(),
@@ -461,6 +465,9 @@ class DeltaTraderMonitor:
                     "entry_time": now_str,
                     "trail_stage": "INITIAL",
                     "venue_order_id": venue_order_id,
+                    "entry_order_id": venue_order_id,
+                    "client_order_id": cid,
+                    "effective_leverage": setup.get("effective_leverage", self.leverage),
                     "execution_mode": self.mode
                 }
                 active[sym] = position_record
