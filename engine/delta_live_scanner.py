@@ -290,8 +290,20 @@ def main():
                 )
                 if setup:
                     # Run cluster risk governance check
+                    # QR-2026-1115-R2 fix: forward the crash-tape and direction
+                    # fields the governor needs. They were computed above but
+                    # dropped from this dict, leaving the crash-replay gate and
+                    # the directional crypto cap permanently dormant on the
+                    # live path.
+                    governor_candidate = {
+                        'symbol': setup['symbol'],
+                        'actual_risk_inr': setup['risk_inr'],
+                        'margin_10x_inr': setup['margin_10x_inr'],
+                        'recent_pct_change': setup['recent_pct_change'],
+                        'action': setup['action'],
+                    }
                     is_gov_ok, gov_reason = validate_new_trade_entry(
-                        {'symbol': setup['symbol'], 'actual_risk_inr': setup['risk_inr'], 'margin_10x_inr': setup['margin_10x_inr']},
+                        governor_candidate,
                         active_positions,
                         equity_inr=args.capital_inr
                     )
