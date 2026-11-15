@@ -249,10 +249,13 @@ class DeltaOrderExecutor:
         return self._request("GET", "/v2/orders", query=qs,
                              requires_auth=True)["result"]
 
-    def cancel_order(self, order_id: str) -> dict:
+    def cancel_order(self, order_id: str | int, product_id: Optional[int] = None) -> dict:
         self._check_safety(True)
-        return self._request("PUT", "/v2/orders/cancel_by_id",
-                             body={"id": order_id}, requires_auth=True)
+        body = {"id": int(order_id)}
+        if product_id is not None:
+            body["product_id"] = int(product_id)
+        return self._request("DELETE", "/v2/orders",
+                             body=body, requires_auth=True)
 
     # ------------------------------------------------------------ order path
 
