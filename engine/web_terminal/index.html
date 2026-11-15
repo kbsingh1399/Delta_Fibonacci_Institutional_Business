@@ -224,18 +224,22 @@
     async function fetchState() {
       try {
         const resp = await fetch('/api/data');
-        if (!resp.ok) return;
+        if (!resp.ok) {
+          console.error('API response not ok:', resp.status);
+          return;
+        }
         globalState = await resp.json();
-        renderKPIs();
-        renderPositions();
-        renderIndicators();
-        renderKillSwitch();
+        try { renderKPIs(); } catch (err) { console.error('Error in renderKPIs:', err); }
+        try { renderPositions(); } catch (err) { console.error('Error in renderPositions:', err); }
+        try { renderIndicators(); } catch (err) { console.error('Error in renderIndicators:', err); }
+        try { renderKillSwitch(); } catch (err) { console.error('Error in renderKillSwitch:', err); }
       } catch (e) {
         console.error('Fetch error:', e);
       }
     }
 
     function renderKillSwitch() {
+      if (!globalState) return;
       const btn = document.getElementById('btnKillSwitch');
       if (globalState.kill_switch_engaged) {
         btn.className = 'btn btn-ks-engaged';
@@ -276,21 +280,23 @@
     function renderKPIs() {
       if (!globalState) return;
 
-      document.getElementById('kpiActiveCount').innerText = `${globalState.active_count} / ${globalState.max_positions}`;
-      document.getElementById('kpiSlotsSub').innerText = `${globalState.max_positions - globalState.active_count} available slots`;
-      document.getElementById('meterActive').style.width = `${(globalState.active_count / globalState.max_positions) * 100}%`;
+      document.getElementById('kpiActiveCount').innerText = `${globalState.active_count ?? 0} / ${globalState.max_positions ?? 3}`;
+      document.getElementById('kpiSlotsSub').innerText = `${(globalState.max_positions ?? 3) - (globalState.active_count ?? 0)} available slots`;
+      document.getElementById('meterActive').style.width = `${((globalState.active_count ?? 0) / (globalState.max_positions ?? 3)) * 100}%`;
 
-      document.getElementById('kpiRiskHeat').innerText = `₹${globalState.total_risk_heat_inr.toFixed(1)} / ₹${globalState.max_risk_heat_inr}`;
-      const riskPct = (globalState.total_risk_heat_inr / globalState.equity_base_inr) * 100;
+      const riskVal = (globalState.total_risk_heat_inr ?? 0);
+      document.getElementById('kpiRiskHeat').innerText = `₹${riskVal.toFixed(1)} / ₹${globalState.max_risk_heat_inr ?? 150}`;
+      const riskPct = (riskVal / (globalState.equity_base_inr || 5000)) * 100;
       document.getElementById('kpiRiskPct').innerText = `${riskPct.toFixed(1)}% of capital at risk (Max 3.0R)`;
-      document.getElementById('meterRisk').style.width = `${Math.min(100, (globalState.total_risk_heat_inr / globalState.max_risk_heat_inr) * 100)}%`;
+      document.getElementById('meterRisk').style.width = `${Math.min(100, (riskVal / (globalState.max_risk_heat_inr || 150)) * 100)}%`;
 
-      document.getElementById('kpiMargin').innerText = `₹${globalState.total_margin_inr.toFixed(1)} / ₹${globalState.max_margin_inr}`;
-      const marginPct = (globalState.total_margin_inr / globalState.equity_base_inr) * 100;
+      const marginVal = (globalState.total_margin_inr ?? 0);
+      document.getElementById('kpiMargin').innerText = `₹${marginVal.toFixed(1)} / ₹${globalState.max_margin_inr ?? 3000}`;
+      const marginPct = (marginVal / (globalState.equity_base_inr || 5000)) * 100;
       document.getElementById('kpiMarginPct').innerText = `${marginPct.toFixed(1)}% used (60% ceiling cap)`;
-      document.getElementById('meterMargin').style.width = `${Math.min(100, (globalState.total_margin_inr / globalState.max_margin_inr) * 100)}%`;
+      document.getElementById('meterMargin').style.width = `${Math.min(100, (marginVal / (globalState.max_margin_inr || 3000)) * 100)}%`;
 
-      const pnl = globalState.total_unrealized_pnl_inr;
+      const pnl = globalState.total_unrealized_pnl_inr ?? 0;
       const pnlEl = document.getElementById('kpiUnrealized');
       pnlEl.innerText = `${pnl >= 0 ? '+' : ''}₹${pnl.toFixed(2)}`;
       pnlEl.style.color = pnl > 0 ? 'var(--accent-green)' : (pnl < 0 ? 'var(--accent-red)' : 'var(--text-main)');
@@ -312,21 +318,23 @@
         const isLong = (p.side || '').toUpperCase().includes('BUY');
         const pnl = p.unrealized_pnl_inr || 0;
         const pnlClass = pnl > 0 ? 'positive' : (pnl < 0 ? 'negative' : '');
+        const dStop = p.dist_to_stop_pct ?? 0;
+        const dTP = p.dist_to_tp_pct ?? 0;
         html += `
           <tr>
-            <td><strong>${p.symbol}</strong></td>
-            <td><span class="badge ${isLong ? 'badge-bull' : 'badge-bear'}">${p.side}</span></td>
+            <td><strong>${p.symbol || '--'}</strong></td>
+            <td><span class="badge ${isLong ? 'badge-bull' : 'badge-bear'}">${p.side || '--'}</span></td>
             <td>${p.shelf || 'EMA_89'}</td>
-            <td>${p.contracts}</td>
-            <td>${p.entry_price}</td>
-            <td>${p.mark_price}</td>
-            <td style="color: var(--accent-red)">${p.current_stop} (${p.dist_to_stop_pct > 0 ? '+' : ''}${p.dist_to_stop_pct}%)</td>
-            <td style="color: var(--accent-green)">${p.target_2} (${p.dist_to_tp_pct > 0 ? '+' : ''}${p.dist_to_tp_pct}%)</td>
-            <td>₹${p.margin_inr}</td>
-            <td>₹${p.risk_inr}</td>
+            <td>${p.contracts ?? 1}</td>
+            <td>${p.entry_price ?? '--'}</td>
+            <td>${p.mark_price ?? '--'}</td>
+            <td style="color: var(--accent-red)">${p.current_stop ?? '--'} (${dStop > 0 ? '+' : ''}${dStop}%)</td>
+            <td style="color: var(--accent-green)">${p.target_2 ?? '--'} (${dTP > 0 ? '+' : ''}${dTP}%)</td>
+            <td>₹${p.margin_inr ?? 0}</td>
+            <td>₹${p.risk_inr ?? 0}</td>
             <td class="${pnlClass}"><strong>${pnl >= 0 ? '+' : ''}₹${pnl.toFixed(2)}</strong></td>
-            <td><span class="badge badge-appr">${p.trail_stage}</span></td>
-            <td><span class="badge badge-blocked">${p.mode}</span></td>
+            <td><span class="badge badge-appr">${p.trail_stage || 'INITIAL'}</span></td>
+            <td><span class="badge badge-blocked">${p.mode || 'demo'}</span></td>
           </tr>
         `;
       }
@@ -344,11 +352,12 @@
       if (!globalState) return;
       const tbody = document.getElementById('indTableBody');
       const indicators = globalState.indicators || [];
-      const query = (document.getElementById('searchBox').value || '').toUpperCase();
+      const query = (document.getElementById('searchBox').value || '').trim().toUpperCase();
 
       const filtered = indicators.filter(item => {
+        if (!item) return false;
         if (selectedSector !== 'ALL' && item.sector !== selectedSector) return false;
-        if (query && !item.symbol.includes(query)) return false;
+        if (query && !(item.symbol || '').includes(query)) return false;
         return true;
       });
 
@@ -362,27 +371,30 @@
       let html = '';
       for (const item of filtered) {
         const isBull = item.regime === 'BULLISH';
-        const d89Class = Math.abs(item.dist_ema89_pct) <= 0.6 ? 'shelf-89' : '';
-        const d233Class = Math.abs(item.dist_ema233_pct) <= 0.6 ? 'shelf-233' : '';
+        const d89Val = item.dist_ema89_pct ?? 0;
+        const d233Val = item.dist_ema233_pct ?? 0;
+        const d89Class = Math.abs(d89Val) <= 0.6 ? 'shelf-89' : '';
+        const d233Class = Math.abs(d233Val) <= 0.6 ? 'shelf-233' : '';
 
+        const statusStr = item.status || 'NO_SETUP';
         let badgeClass = 'badge-blocked';
-        if (item.status.includes('READY')) badgeClass = 'badge-ready';
-        else if (item.status.includes('APPROACHING')) badgeClass = 'badge-appr';
+        if (statusStr.includes('READY')) badgeClass = 'badge-ready';
+        else if (statusStr.includes('APPROACHING')) badgeClass = 'badge-appr';
 
         html += `
           <tr>
-            <td><strong>${item.symbol}</strong></td>
-            <td style="color: var(--text-muted)">${item.sector}</td>
-            <td><strong>${item.mark_price}</strong></td>
-            <td>${item.ema_55}</td>
-            <td class="shelf-89">${item.ema_89}</td>
-            <td class="shelf-233">${item.ema_233}</td>
-            <td>${item.atr_14}</td>
-            <td><span class="badge ${isBull ? 'badge-bull' : 'badge-bear'}">${item.regime}</span></td>
-            <td class="${d89Class}">${item.dist_ema89_pct > 0 ? '+' : ''}${item.dist_ema89_pct}%</td>
-            <td class="${d233Class}">${item.dist_ema233_pct > 0 ? '+' : ''}${item.dist_ema233_pct}%</td>
-            <td>${item.wick_pct}%</td>
-            <td><span class="badge ${badgeClass}">${item.status}</span></td>
+            <td><strong>${item.symbol || '--'}</strong></td>
+            <td style="color: var(--text-muted)">${item.sector || 'OTHER'}</td>
+            <td><strong>${item.mark_price ?? '--'}</strong></td>
+            <td>${item.ema_55 ?? '--'}</td>
+            <td class="shelf-89">${item.ema_89 ?? '--'}</td>
+            <td class="shelf-233">${item.ema_233 ?? '--'}</td>
+            <td>${item.atr_14 ?? '--'}</td>
+            <td><span class="badge ${isBull ? 'badge-bull' : 'badge-bear'}">${item.regime || 'NEUTRAL'}</span></td>
+            <td class="${d89Class}">${d89Val > 0 ? '+' : ''}${d89Val}%</td>
+            <td class="${d233Class}">${d233Val > 0 ? '+' : ''}${d233Val}%</td>
+            <td>${item.wick_pct ?? 0}%</td>
+            <td><span class="badge ${badgeClass}">${statusStr}</span></td>
           </tr>
         `;
       }

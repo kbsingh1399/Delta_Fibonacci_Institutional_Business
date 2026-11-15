@@ -15,6 +15,7 @@ import datetime
 import http.server
 import json
 import logging
+import math
 import os
 import socketserver
 import sys
@@ -240,8 +241,8 @@ class TerminalDataStore:
 
             stop = float(p.get("current_stop", 0))
             tp = float(p.get("target_2", 0))
-            dist_to_stop = ((mark - stop) / mark * 100.0) if is_long else ((stop - mark) / mark * 100.0)
-            dist_to_tp = ((tp - mark) / mark * 100.0) if is_long else ((mark - tp) / mark * 100.0)
+            dist_to_stop = (((mark - stop) / mark * 100.0) if is_long else ((stop - mark) / mark * 100.0)) if mark > 0 else 0.0
+            dist_to_tp = (((tp - mark) / mark * 100.0) if is_long else ((mark - tp) / mark * 100.0)) if mark > 0 else 0.0
 
             pos_list.append({
                 "symbol": sym,
@@ -268,6 +269,7 @@ class TerminalDataStore:
         if os.path.exists(PAPER_LEDGER_FILE):
             try:
                 df_l = pd.read_csv(PAPER_LEDGER_FILE)
+                df_l = df_l.fillna("")
                 recent_ledger = df_l.tail(10).to_dict(orient="records")
             except Exception:
                 pass
@@ -356,7 +358,19 @@ class TerminalHTTPHandler(http.server.BaseHTTPRequestHandler):
             self.send_error(404, "Not Found")
 
     def serve_json(self, data: Any):
-        content = json.dumps(data).encode("utf-8")
+        def sanitize(obj):
+            if isinstance(obj, float):
+                if math.isnan(obj) or math.isinf(obj):
+                    return None
+                return obj
+            elif isinstance(obj, dict):
+                return {k: sanitize(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [sanitize(v) for v in obj]
+            return obj
+
+        clean_data = sanitize(data)
+        content = json.dumps(clean_data, allow_nan=False).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(content)))
