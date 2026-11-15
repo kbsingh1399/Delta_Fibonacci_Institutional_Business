@@ -107,7 +107,7 @@ class TerminalDataStore:
         # Prioritize symbols
         for sym in self.deployable_symbols:
             try:
-                df = fetch_recent_candles(sym, resolution="240", count=800)
+                df = fetch_recent_candles(sym, resolution="240", count=1200)
                 if df is None or len(df) < 250:
                     continue
 

@@ -141,11 +141,35 @@ class DeltaTraderMonitor:
         self.tf = tf
         self.poll_interval = poll_interval_sec
 
+        # Auto-load local credentials from ~/.delta-exchange-mcp/config.env if available
+        cfg_path = os.path.expanduser("~/.delta-exchange-mcp/config.env")
+        if os.path.exists(cfg_path):
+            try:
+                with open(cfg_path) as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            k, v = line.split("=", 1)
+                            clean_k = k.strip()
+                            clean_v = v.strip().strip('"').strip("'")
+                            if clean_k not in os.environ:
+                                os.environ[clean_k] = clean_v
+            except Exception:
+                pass
+
         # Determine credentials & executor
         self.testnet_key = testnet_key or os.environ.get("DELTA_TESTNET_API_KEY", "LocHjRoKYpkf8CZG130tdnWK4OfgQb")
         self.testnet_secret = testnet_secret or os.environ.get("DELTA_TESTNET_API_SECRET", "Tkyxf3xrOvl8QSFvsK91XuosSq0VUxth1PikjtxsPLDfBH1Tf0KdPDHzvglX")
-        self.prod_key = prod_key or os.environ.get("DELTA_API_KEY", "")
-        self.prod_secret = prod_secret or os.environ.get("DELTA_API_SECRET", "")
+        self.prod_key = (
+            prod_key
+            or os.environ.get("DELTA_LIVE_PROD_KEY")
+            or os.environ.get("DELTA_API_KEY", "")
+        )
+        self.prod_secret = (
+            prod_secret
+            or os.environ.get("DELTA_LIVE_PROD_SECRET")
+            or os.environ.get("DELTA_API_SECRET", "")
+        )
 
         self.executor: Optional[DeltaOrderExecutor] = None
         if self.mode == "demo":
@@ -365,6 +389,7 @@ class DeltaTraderMonitor:
                 venue_order_id = "LOCAL-PAPER"
 
                 # Check if asset is supported on connected venue executor
+                cid = f"FIB4H_{int(time.time())}_{sym}"
                 if self.mode == "demo" and self.executor and sym in self.testnet_products:
                     try:
                         logger.info(f"Sending real Testnet order for {sym} to Delta Demo API...")
@@ -375,7 +400,8 @@ class DeltaTraderMonitor:
                             stop_price=setup["stop"],
                             entry_type="limit",
                             limit_price=setup["entry"],
-                            take_profit_price=setup["t2"]
+                            take_profit_price=setup["t2"],
+                            client_order_id=cid
                         )
                         venue_order_id = str(res.get("result", {}).get("id", "TESTNET-FILLED"))
                         logger.info(f"Testnet bracket order accepted: {venue_order_id}")
@@ -386,6 +412,19 @@ class DeltaTraderMonitor:
                 elif self.mode == "live" and self.executor:
                     try:
                         logger.warning(f"🚨 SENDING LIVE PRODUCTION ORDER FOR {sym}...")
+                        prod_id = self.products.get(sym, {}).get("id")
+                        if prod_id:
+                            try:
+                                self.executor.set_leverage(int(prod_id), self.leverage)
+                            except Exception as lev_err:
+                                if "max_leverage_exceeded" in str(lev_err):
+                                    try:
+                                        self.executor.set_leverage(int(prod_id), 20)
+                                        logger.info(f"Clamped {sym} leverage to maximum allowed 20X")
+                                    except Exception:
+                                        pass
+                                else:
+                                    logger.warning(f"Could not set {self.leverage}X leverage for {sym}: {lev_err}")
                         res = self.executor.place_bracket_order(
                             symbol=sym,
                             side=sym_side.lower(),
@@ -393,7 +432,8 @@ class DeltaTraderMonitor:
                             stop_price=setup["stop"],
                             entry_type="limit",
                             limit_price=setup["entry"],
-                            take_profit_price=setup["t2"]
+                            take_profit_price=setup["t2"],
+                            client_order_id=cid
                         )
                         venue_order_id = str(res.get("result", {}).get("id", "LIVE-ORDER"))
                         logger.info(f"Live order accepted: {venue_order_id}")

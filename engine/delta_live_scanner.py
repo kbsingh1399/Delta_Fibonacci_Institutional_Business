@@ -66,7 +66,7 @@ def save_active_positions(pos_dict):
     except Exception:
         pass
 
-def fetch_recent_candles(symbol, resolution="240", count=800, use_mark=True):
+def fetch_recent_candles(symbol, resolution="240", count=1200, use_mark=True):
     now = int(time.time())
     start = now - (count * 4 * 3600 if resolution == "240" else count * 3600)
     target_sym = f"MARK:{symbol}" if (use_mark and not symbol.startswith("MARK:")) else symbol
@@ -99,9 +99,8 @@ def fetch_recent_candles(symbol, resolution="240", count=800, use_mark=True):
 def scan_asset_setup(symbol, tf="4H", equity_inr=5000.0, risk_pct=0.01, leverage=10.0, products_dict=None, live_mark_price=None):
     """Scans an asset for Tiered Fibonacci Rejections enforcing Single Entry and Lot Sizing."""
     res_code = "240" if tf == "4H" else "60"
-    # QR-2026-1115 fix: 800 bars so EMA233 stabilises (300 bars leave a 7.6% seed
-    # weight = up to 3.3% EMA error on volatile names vs the backtest depth).
-    df = fetch_recent_candles(symbol, resolution=res_code, count=800)
+    # QR-2026-1115 fix: 1200 bars so EMA233 stabilises with maximum historical depth.
+    df = fetch_recent_candles(symbol, resolution=res_code, count=1200)
     if df is None or len(df) < 250:
         return None
 

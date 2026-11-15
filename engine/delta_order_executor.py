@@ -287,6 +287,12 @@ class DeltaOrderExecutor:
                 f"{self.max_risk_r:.1f}R per-trade cap (risk budget Rs "
                 f"{self.risk_budget_inr:.0f}) - re-size with the lot sizer")
 
+    def set_leverage(self, product_id: int, leverage: int | float) -> dict:
+        """Set order leverage for a specific product ID."""
+        body = {"leverage": int(leverage)}
+        return self._request("POST", f"/v2/products/{product_id}/orders/leverage",
+                             body=body, requires_auth=True)
+
     def place_bracket_order(self,
                             symbol: str,
                             side: str,
