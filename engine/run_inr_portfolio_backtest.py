@@ -226,11 +226,13 @@ def get_asset_trades(symbol, tf, fast_p, mid_p, slow_p, exit_mode, spread_cost_r
             
     return trades
 
-def run_portfolio_backtest(alpha_basket=True, offline=True):
+def run_portfolio_backtest(alpha_basket=True, offline=True, maker_rebate=True):
     mode_name = "OPTIMIZED ALPHA BASKET" if alpha_basket else "FULL BASELINE LIQUID CATALOG"
+    friction_drag = 0.050 if maker_rebate else 0.138
+    friction_label = "Arena Maker Limit TP Rebate (0.050R Friction)" if maker_rebate else "Full Exchange Taker Fee (0.05%) + 18% GST + Slippage (0.138R)"
     print("="*105)
     print(f"DELTA EXCHANGE INDIA - INSTITUTIONAL ₹5,000 BACKTEST [{mode_name}]")
-    print("10X Isolated Leverage | Full Exchange Taker Fee (0.05%) + 18% GST + Slippage (0.138R)")
+    print(f"10X Isolated Leverage | {friction_label}")
     print("="*105)
     
     # 1. Identify Liquid Deployable Universe (24h turnover >= Rs 85 Lakhs)
@@ -276,7 +278,7 @@ def run_portfolio_backtest(alpha_basket=True, offline=True):
         ribbon_str = row['ribbon']
         ribbon = ribbon_map.get(ribbon_str, (34, 89, 233))
         
-        trades = get_asset_trades(sym, tf, ribbon[0], ribbon[1], ribbon[2], strat, spread_cost_r=FEE_SLIPPAGE_DRAG_R)
+        trades = get_asset_trades(sym, tf, ribbon[0], ribbon[1], ribbon[2], strat, spread_cost_r=friction_drag)
         if not trades:
             continue
             
@@ -458,10 +460,11 @@ def main():
     parser.add_argument("--alpha-basket", action="store_true", default=True, help="Run the Alpha Basket (excludes Crypto Majors entry drag)")
     parser.add_argument("--all-assets", action="store_true", help="Run the full baseline across all liquid assets including Crypto Majors")
     parser.add_argument("--live-universe", action="store_true", help="Refresh universe snapshot from live Delta Exchange API instead of static offline cache")
+    parser.add_argument("--taker-fees", action="store_true", help="Use legacy full taker fees (0.138R) instead of Maker Limit TP rebate model (0.050R)")
     args = parser.parse_args()
     
     use_alpha = not args.all_assets
-    run_portfolio_backtest(alpha_basket=use_alpha, offline=not args.live_universe)
+    run_portfolio_backtest(alpha_basket=use_alpha, offline=not args.live_universe, maker_rebate=not args.taker_fees)
 
 if __name__ == "__main__":
     main()

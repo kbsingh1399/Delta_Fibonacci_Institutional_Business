@@ -41,6 +41,7 @@ def main():
     group.add_argument("--screen", action="store_true", help="Screen liquid tradable assets meeting turnover floor")
 
     parser.add_argument("--all", action="store_true", help="Include all liquid assets (disables Alpha Basket filtering)")
+    parser.add_argument("--taker-fees", action="store_true", help="Use legacy full taker fees (0.138R) instead of Maker Limit TP rebate model (0.050R)")
     parser.add_argument("--live-universe", action="store_true", help="Refresh universe snapshot from live Delta Exchange API instead of static offline cache")
     parser.add_argument("--tf", choices=["4H", "1H", "ALL"], default="4H", help="Timeframe for scanner (default: 4H)")
     parser.add_argument("--sector", default="ALL", help="Sector filter for scanner")
@@ -53,7 +54,7 @@ def main():
 
     elif args.backtest:
         from run_inr_portfolio_backtest import run_portfolio_backtest
-        run_portfolio_backtest(alpha_basket=not args.all, offline=not args.live_universe)
+        run_portfolio_backtest(alpha_basket=not args.all, offline=not args.live_universe, maker_rebate=not args.taker_fees)
 
     elif args.wyckoff:
         import institutional_wyckoff_engine as we
