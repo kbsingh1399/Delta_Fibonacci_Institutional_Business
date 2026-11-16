@@ -348,22 +348,21 @@ class MT5AlphaTrader:
                     sig = -1; shelf_type = "SWEEP"
 
         elif setup == "wyckoff_institutional_filtered":
-            # Priority 1: Macro 233 Shelf Direct Rejection (Price above 233, tests and rejects 233)
-            if c_bar >= ema233[prev] and (l_bar <= ema233[prev] * 1.002) and lower_wick >= 0.25 and (c_bar > o_bar):
+            # Priority 1: Macro 233 Shelf Direct Rejection (Irrespective of Green or Red)
+            if c_bar >= ema233[prev] and (l_bar <= ema233[prev] * 1.002) and lower_wick >= 0.25:
                 sig = 1; shelf_type = "SLOW"
-            elif c_bar <= ema233[prev] and (h_bar >= ema233[prev] * 0.998) and upper_wick >= 0.25 and (c_bar < o_bar):
+            elif c_bar <= ema233[prev] and (h_bar >= ema233[prev] * 0.998) and upper_wick >= 0.25:
                 sig = -1; shelf_type = "SLOW"
             else:
                 sep = abs(ema89[prev] - ema233[prev]) / a_bar
                 if 0.25 <= sep <= 2.50 and adx[prev] >= 20.0:
-                    if ema89[prev] > ema233[prev] and c_bar > o_bar:
-                        if lower_wick >= 0.25:
-                            if (l_bar <= ema89[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema89[prev]):
-                                sig = 1; shelf_type = "MID"
-                    elif ema89[prev] < ema233[prev] and c_bar < o_bar:
-                        if upper_wick >= 0.25:
-                            if (h_bar >= ema89[prev] * 0.998 or h_bar >= ema55[prev] * 0.998) and (c_bar <= ema89[prev]):
-                                sig = -1; shelf_type = "MID"
+                    # Priority 2: Mid Shelf Rejection (Irrespective of Green or Red)
+                    if ema89[prev] > ema233[prev] and lower_wick >= 0.25:
+                        if (l_bar <= ema89[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema89[prev]):
+                            sig = 1; shelf_type = "MID"
+                    elif ema89[prev] < ema233[prev] and upper_wick >= 0.25:
+                        if (h_bar >= ema89[prev] * 0.998 or h_bar >= ema55[prev] * 0.998) and (c_bar <= ema89[prev]):
+                            sig = -1; shelf_type = "MID"
 
         # Mark this bar as evaluated to prevent redundant re-evaluations
         self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts
