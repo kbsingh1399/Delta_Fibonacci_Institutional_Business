@@ -297,24 +297,30 @@ class MT5AlphaTrader:
         sig = 0
         shelf_type = "MID"
 
+        # Invariant: Institutional Pullback Origin Validation
+        # True Bullish Support Bounce: Price came from ABOVE the shelf (Open or Prior Close >= EMA89)
+        # True Bearish Ceiling Rejection: Price came from BELOW the shelf (Open or Prior Close <= EMA89)
+        came_from_above = (o_bar >= ema89[prev] * 0.998) or (c[prev - 1] >= ema89[prev - 1] * 0.998)
+        came_from_below = (o_bar <= ema89[prev] * 1.002) or (c[prev - 1] <= ema89[prev - 1] * 1.002)
+
         if setup == "canonical":
             # Mid Shelf (EMA 55/89) Rejection (Color-Agnostic Wick >= 25%, Zero EMA233 Drag)
-            if ema89[prev] > ema233[prev]:
+            if ema89[prev] > ema233[prev] and came_from_above:
                 if lower_wick >= 0.25 and (l_bar <= ema89[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema89[prev]):
                     sig = 1; shelf_type = "MID"
-            elif ema89[prev] < ema233[prev]:
+            elif ema89[prev] < ema233[prev] and came_from_below:
                 if upper_wick >= 0.25 and (h_bar >= ema89[prev] * 0.998 or h_bar >= ema55[prev] * 0.998) and (c_bar <= ema89[prev]):
                     sig = -1; shelf_type = "MID"
 
         elif setup == "turbo_tri_tier":
             # Fast Momentum (EMA 34/55) & Mid (EMA 89) Shelves (Color-Agnostic Wick >= 25%)
-            if ema89[prev] > ema233[prev] and c_bar >= ema233[prev]:
+            if ema89[prev] > ema233[prev] and c_bar >= ema233[prev] and came_from_above:
                 if lower_wick >= 0.25:
                     if adx[prev] >= 22 and (l_bar <= ema34[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema55[prev]):
                         sig = 1; shelf_type = "TURBO"
                     elif (l_bar <= ema89[prev] * 1.002) and (c_bar >= ema89[prev]):
                         sig = 1; shelf_type = "MID"
-            elif ema89[prev] < ema233[prev] and c_bar <= ema233[prev]:
+            elif ema89[prev] < ema233[prev] and c_bar <= ema233[prev] and came_from_below:
                 if upper_wick >= 0.25:
                     if adx[prev] >= 22 and (h_bar >= ema34[prev] * 0.998 or h_bar >= ema55[prev] * 0.998) and (c_bar <= ema55[prev]):
                         sig = -1; shelf_type = "TURBO"
@@ -335,10 +341,10 @@ class MT5AlphaTrader:
             sep = abs(ema89[prev] - ema233[prev]) / a_bar
             if 0.25 <= sep <= 2.50 and adx[prev] >= 20.0:
                 # Mid Shelf Rejection with Ribbon Volatility & ADX Gating (Color-Agnostic Wick >= 25%)
-                if ema89[prev] > ema233[prev] and lower_wick >= 0.25:
+                if ema89[prev] > ema233[prev] and lower_wick >= 0.25 and came_from_above:
                     if (l_bar <= ema89[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema89[prev]):
                         sig = 1; shelf_type = "MID"
-                elif ema89[prev] < ema233[prev] and upper_wick >= 0.25:
+                elif ema89[prev] < ema233[prev] and upper_wick >= 0.25 and came_from_below:
                     if (h_bar >= ema89[prev] * 0.998 or h_bar >= ema55[prev] * 0.998) and (c_bar <= ema89[prev]):
                         sig = -1; shelf_type = "MID"
 
