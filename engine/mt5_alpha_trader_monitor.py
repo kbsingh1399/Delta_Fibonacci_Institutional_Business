@@ -3,17 +3,15 @@ r"""mt5_alpha_trader_monitor.py: Autonomous Live Trader & Risk Governor for the
 Optimal Multi-Cluster Alpha Basket on FundedNext MetaTrader 5.
 
 Features:
-- Fixed $10 USD Risk per Trade with dynamic broker-exact lot sizing.
-- Cross-Cluster Governance: Max 3 concurrent open trades, Max 1 per cluster.
-- Specialized Setup Execution:
-    - US30, ETHUSD, AUDJPY, USDCHF, HK50: wyckoff_institutional_filtered
-    - BABA, USDJPY, ZARJPY, XAGUSD: turbo_tri_tier (EMA 34/55 Turbo Shelf)
-    - CADJPY: wyckoff_swing_sweep (Turtle Soup 20-bar liquidity sweep)
-    - MC: canonical (EMA 89/233)
-- Real-time Position Management:
-    - Step-trail runners (+0.5R lock at 2R, +2.0R lock at 4R, EMA 55 trail at 6R)
-    - Fixed TP management (1:2.5, 1:3.0, 1:3.5)
-- Full Audit Logging & State Persistence in audit/
+- Fixed $10 USD Target Risk per Trade with dynamic broker-exact lot sizing.
+- Hard Risk Cap (1.1R / $11.00 max): Strictly blocks min-lot risk inflation (Patch 1).
+- Broker-Side Trailing Stops: Advanced via mt5.TRADE_ACTION_SLTP (Patch 2).
+- Zero Phantom Fills: Rejections are never fabricated or recorded as open (Patch 3).
+- FundedNext Daily Risk Governor: 5% daily loss limit & 10% lifetime floor (Patch 4).
+- Spread Friction Gate: Discards signals where spread > 15% of 1R risk distance.
+- 12-Bar Post-Exit Cooldown: Enforces backtest parity across symbol exits.
+- Institutional Pullback Origin: Enforces came_from_above (Long) & came_from_below (Short).
+- Atomic State Persistence: tmp + rename prevents file corruption.
 """
 
 import os
@@ -29,14 +27,19 @@ import pandas as pd
 import MetaTrader5 as mt5
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, BASE_DIR)
 AUDIT_DIR = os.path.join(BASE_DIR, "audit")
 os.makedirs(AUDIT_DIR, exist_ok=True)
+
+from engine.daily_risk_governor import DailyRiskGovernor
 
 ACTIVE_POSITIONS_FILE = os.path.join(AUDIT_DIR, "mt5_active_positions.json")
 LIVE_SIGNALS_FILE = os.path.join(AUDIT_DIR, "mt5_live_signals.json")
 TRADING_LEDGER_FILE = os.path.join(AUDIT_DIR, "mt5_live_trading_ledger.csv")
 HEALTH_STATUS_FILE = os.path.join(AUDIT_DIR, "mt5_health_status.json")
+COOLDOWNS_FILE = os.path.join(AUDIT_DIR, "trade_cooldowns.json")
 PID_FILE = os.path.join(AUDIT_DIR, "mt5_alpha_trader.pid")
+
 
 def acquire_singleton_lock():
     """Guarantees only one live trader daemon runs, preventing split-brain state conflicts."""
@@ -58,6 +61,7 @@ def acquire_singleton_lock():
     with open(PID_FILE, "w") as f:
         f.write(str(pid))
 
+
 # Setup Logging
 logging.basicConfig(
     level=logging.INFO,
@@ -69,7 +73,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("MT5AlphaMonitor")
 
-# Elite 21 Positive-Alpha Universe across 8 Uncorrelated Clusters (Optimized Breakthrough Basket)
+# Elite 21 Positive-Alpha Universe across 8 Uncorrelated Clusters
 OPTIMAL_ALPHA_BASKET = [
     # --- Crypto (3 Assets) ---
     {"symbol": "DOGUSD", "cluster": "Crypto", "setup": "canonical", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
@@ -110,6 +114,7 @@ OPTIMAL_ALPHA_BASKET = [
 MAX_CONCURRENT_POSITIONS = 3
 MAX_PER_CLUSTER = 1
 DEFAULT_RISK_USD = 10.0
+POST_EXIT_COOLDOWN_BARS = 12  # 12 H4 bars = 48 hours post-exit cooldown
 
 
 def calculate_ema(arr: np.ndarray, span: int) -> np.ndarray:
@@ -138,30 +143,36 @@ def compute_adx(high: np.ndarray, low: np.ndarray, close: np.ndarray, period: in
     tr = np.maximum(high - low, np.maximum(np.abs(high - prev_c), np.abs(low - prev_c)))
 
     atr_s = np.zeros(n, dtype=float)
-    p_s = np.zeros(n, dtype=float)
-    m_s = np.zeros(n, dtype=float)
-    atr_s[period] = np.mean(tr[1 : period + 1])
-    p_s[period] = np.mean(plus_dm[1 : period + 1])
-    m_s[period] = np.mean(minus_dm[1 : period + 1])
+    plus_di_s = np.zeros(n, dtype=float)
+    minus_di_s = np.zeros(n, dtype=float)
     alpha = 1.0 / period
-    for i in range(period + 1, n):
-        atr_s[i] = atr_s[i - 1] * (1.0 - alpha) + tr[i] * alpha
-        p_s[i] = p_s[i - 1] * (1.0 - alpha) + plus_dm[i] * alpha
-        m_s[i] = m_s[i - 1] * (1.0 - alpha) + minus_dm[i] * alpha
 
-    p_di = 100.0 * p_s / (atr_s + 1e-12)
-    m_di = 100.0 * m_s / (atr_s + 1e-12)
-    dx = 100.0 * np.abs(p_di - m_di) / (p_di + m_di + 1e-12)
+    atr_s[period] = np.mean(tr[1 : period + 1])
+    plus_di_s[period] = np.mean(plus_dm[1 : period + 1])
+    minus_di_s[period] = np.mean(minus_dm[1 : period + 1])
+
+    for i in range(period + 1, n):
+        atr_s[i] = (atr_s[i - 1] * (period - 1) + tr[i]) * alpha
+        plus_di_s[i] = (plus_di_s[i - 1] * (period - 1) + plus_dm[i]) * alpha
+        minus_di_s[i] = (minus_di_s[i - 1] * (period - 1) + minus_dm[i]) * alpha
+
+    plus_di = np.where(atr_s > 0, 100.0 * (plus_di_s / atr_s), 0.0)
+    minus_di = np.where(atr_s > 0, 100.0 * (minus_di_s / atr_s), 0.0)
+    denom = plus_di + minus_di
+    dx = np.where(denom > 0, 100.0 * np.abs(plus_di - minus_di) / denom, 0.0)
+
     adx = np.zeros(n, dtype=float)
-    start = period * 2
-    adx[start] = np.mean(dx[period : start + 1])
-    for i in range(start + 1, n):
-        adx[i] = adx[i - 1] * (1.0 - alpha) + dx[i] * alpha
+    adx_start = period * 2
+    if adx_start < n:
+        adx[adx_start] = np.mean(dx[period : adx_start + 1])
+        for i in range(adx_start + 1, n):
+            adx[i] = (adx[i - 1] * (period - 1) + dx[i]) * alpha
     return adx
 
 
 def calculate_lot_size(symbol: str, risk_usd: float, entry: float, stop: float) -> Tuple[float, float, str]:
     """Calculates broker-compliant lot size for a target dollar risk amount.
+    Enforces a strict 1.1R ($11.00) hard cap to block min-lot risk inflation (Patch 1).
     Returns: (final_lot, actual_risk_usd, status_message)
     """
     info = mt5.symbol_info(symbol)
@@ -181,16 +192,31 @@ def calculate_lot_size(symbol: str, risk_usd: float, entry: float, stop: float) 
     if one_lot_risk <= 0:
         return 0.0, 0.0, "Zero 1-lot risk value"
 
+    # CRO Invariant: Hard Risk Cap (1.1R maximum)
+    MAX_RISK_USD = round(risk_usd * 1.10, 2)
+
     raw_lot = risk_usd / one_lot_risk
     step = info.volume_step if info.volume_step > 0 else 0.01
     vol_min = info.volume_min if info.volume_min > 0 else 0.01
     vol_max = info.volume_max if info.volume_max > 0 else 100.0
 
     rounded_lot = round(raw_lot / step) * step
-    final_lot = max(vol_min, min(vol_max, rounded_lot))
+
+    if rounded_lot < vol_min:
+        # NEVER floor upward if min lot inflates risk beyond the 1.1R hard cap!
+        min_lot_risk = vol_min * one_lot_risk
+        if min_lot_risk > MAX_RISK_USD:
+            return 0.0, 0.0, f"MIN-LOT RISK ${min_lot_risk:.2f} > ${MAX_RISK_USD:.2f} cap - SKIP"
+        final_lot = vol_min
+    else:
+        final_lot = min(vol_max, rounded_lot)
+
     decimals = max(0, -int(np.floor(np.log10(step)))) if step < 1 else 0
     final_lot = round(final_lot, decimals)
-    actual_risk = final_lot * one_lot_risk
+    actual_risk = round(final_lot * one_lot_risk, 2)
+
+    if actual_risk > MAX_RISK_USD:
+        return 0.0, 0.0, f"CALCULATED RISK ${actual_risk:.2f} > ${MAX_RISK_USD:.2f} cap - SKIP"
 
     return final_lot, actual_risk, "OK"
 
@@ -199,31 +225,47 @@ class MT5AlphaTrader:
     def __init__(self, risk_per_trade_usd: float = DEFAULT_RISK_USD):
         self.risk_usd = risk_per_trade_usd
         self.active_positions: Dict[str, Any] = {}
-        self.trade_cooldowns: Dict[str, int] = {}
+        self.trade_cooldowns: Dict[str, Any] = {}
+        self.governor = DailyRiskGovernor(initial_balance=4701.64, daily_pct=0.05, overall_pct=0.10)
         self.load_state()
 
     def load_state(self):
+        """Loads persistent active positions and trade cooldowns atomically."""
         if os.path.exists(ACTIVE_POSITIONS_FILE):
             try:
-                with open(ACTIVE_POSITIONS_FILE, "r") as f:
+                with open(ACTIVE_POSITIONS_FILE, "r", encoding="utf-8") as f:
                     self.active_positions = json.load(f)
                 logger.info(f"Loaded {len(self.active_positions)} active positions from state.")
             except Exception as e:
                 logger.warning(f"Could not load active positions: {e}")
 
+        if os.path.exists(COOLDOWNS_FILE):
+            try:
+                with open(COOLDOWNS_FILE, "r", encoding="utf-8") as f:
+                    self.trade_cooldowns = json.load(f)
+            except Exception as e:
+                logger.debug(f"Could not load trade cooldowns: {e}")
+
     def save_state(self):
+        """Atomically saves state using temporary files + atomic replace."""
         try:
-            with open(ACTIVE_POSITIONS_FILE, "w") as f:
+            tmp_active = f"{ACTIVE_POSITIONS_FILE}.tmp"
+            with open(tmp_active, "w", encoding="utf-8") as f:
                 json.dump(self.active_positions, f, indent=2)
+            os.replace(tmp_active, ACTIVE_POSITIONS_FILE)
+
+            tmp_cd = f"{COOLDOWNS_FILE}.tmp"
+            with open(tmp_cd, "w", encoding="utf-8") as f:
+                json.dump(self.trade_cooldowns, f, indent=2)
+            os.replace(tmp_cd, COOLDOWNS_FILE)
         except Exception as e:
-            logger.error(f"Error saving active positions: {e}")
+            logger.error(f"Error saving state atomically: {e}")
 
     def check_market_session(self, symbol: str) -> bool:
         """Checks if trading is currently active/open for the symbol."""
         info = mt5.symbol_info(symbol)
         if not info:
             return False
-        # trade_mode == 4 is TRADE_MODE_FULL
         if info.trade_mode != mt5.SYMBOL_TRADE_MODE_FULL:
             return False
         tick = mt5.symbol_info_tick(symbol)
@@ -238,40 +280,39 @@ class MT5AlphaTrader:
         exit_mode = item["exit_mode"]
         cluster = item["cluster"]
 
-        if not mt5.symbol_select(symbol, True):
-            return None
-
-        # Fetch last 1200 H4 bars for full EMA233 warmup convergence
-        rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_H4, 0, 1200)
-        if rates is None or len(rates) < 240:
+        rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_H4, 0, 300)
+        if rates is None or len(rates) < 250:
             return None
 
         df = pd.DataFrame(rates)
-        n = len(df)
-        c = df["close"].to_numpy(dtype=float)
-        o = df["open"].to_numpy(dtype=float)
-        h = df["high"].to_numpy(dtype=float)
-        l = df["low"].to_numpy(dtype=float)
-        t = df["time"].to_numpy(dtype=int)
+        c = df["close"].to_numpy()
+        h = df["high"].to_numpy()
+        l = df["low"].to_numpy()
+        o = df["open"].to_numpy()
+        t = df["time"].to_numpy()
+        n = len(c)
 
-        # Fetch current live tick
         tick = mt5.symbol_info_tick(symbol)
-        if not tick or tick.bid <= 0 or tick.ask <= 0:
+        if not tick:
             return None
 
-        # Look at the most recently COMPLETED bar (prev = -2, since -1 is live forming bar)
         prev = n - 2
         candle_close_ts = t[prev] + 4 * 3600
 
-        # Bar Freshness Check: only trigger within 20 minutes of confirmed 4H close
-        # tick.time is broker server time in seconds, precisely aligned with candle timestamps
+        # 1. Post-Exit Cooldown (12 H4 bars = 48 hours)
+        exit_ts = self.trade_cooldowns.get(f"{symbol}_exit_ts", 0)
+        if tick.time < exit_ts + (POST_EXIT_COOLDOWN_BARS * 4 * 3600):
+            remaining_h = round((exit_ts + POST_EXIT_COOLDOWN_BARS * 4 * 3600 - tick.time) / 3600, 1)
+            logger.debug(f"⏳ [COOLDOWN ACTIVE] {symbol} in post-exit cooldown ({remaining_h}h remaining)")
+            return None
+
+        # 2. Bar Freshness Check: only trigger within 20 minutes of confirmed 4H close
         last_eval_bar = self.trade_cooldowns.get(f"{symbol}_last_bar", 0)
         if candle_close_ts == last_eval_bar:
             return None
 
         elapsed_since_close = tick.time - candle_close_ts
         if elapsed_since_close > 1200 or elapsed_since_close < 0:
-            # Bar closed more than 20 minutes ago (e.g. weekend or bot restart); mark as evaluated to avoid stale late entry
             self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts
             return None
 
@@ -298,13 +339,10 @@ class MT5AlphaTrader:
         shelf_type = "MID"
 
         # Invariant: Institutional Pullback Origin Validation
-        # True Bullish Support Bounce: Price came from ABOVE the shelf (Open or Prior Close >= EMA89)
-        # True Bearish Ceiling Rejection: Price came from BELOW the shelf (Open or Prior Close <= EMA89)
         came_from_above = (o_bar >= ema89[prev] * 0.998) or (c[prev - 1] >= ema89[prev - 1] * 0.998)
         came_from_below = (o_bar <= ema89[prev] * 1.002) or (c[prev - 1] <= ema89[prev - 1] * 1.002)
 
         if setup == "canonical":
-            # Mid Shelf (EMA 55/89) Rejection (Color-Agnostic Wick >= 25%, Zero EMA233 Drag)
             if ema89[prev] > ema233[prev] and came_from_above:
                 if lower_wick >= 0.25 and (l_bar <= ema89[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema89[prev]):
                     sig = 1; shelf_type = "MID"
@@ -313,7 +351,6 @@ class MT5AlphaTrader:
                     sig = -1; shelf_type = "MID"
 
         elif setup == "turbo_tri_tier":
-            # Fast Momentum (EMA 34/55) & Mid (EMA 89) Shelves (Color-Agnostic Wick >= 25%)
             if ema89[prev] > ema233[prev] and c_bar >= ema233[prev] and came_from_above:
                 if lower_wick >= 0.25:
                     if adx[prev] >= 22 and (l_bar <= ema34[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema55[prev]):
@@ -340,7 +377,6 @@ class MT5AlphaTrader:
         elif setup == "wyckoff_institutional_filtered":
             sep = abs(ema89[prev] - ema233[prev]) / a_bar
             if 0.25 <= sep <= 2.50 and adx[prev] >= 20.0:
-                # Mid Shelf Rejection with Ribbon Volatility & ADX Gating (Color-Agnostic Wick >= 25%)
                 if ema89[prev] > ema233[prev] and lower_wick >= 0.25 and came_from_above:
                     if (l_bar <= ema89[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema89[prev]):
                         sig = 1; shelf_type = "MID"
@@ -348,8 +384,9 @@ class MT5AlphaTrader:
                     if (h_bar >= ema89[prev] * 0.998 or h_bar >= ema55[prev] * 0.998) and (c_bar <= ema89[prev]):
                         sig = -1; shelf_type = "MID"
 
-        # Mark this bar as evaluated to prevent redundant re-evaluations
+        # Mark bar as evaluated
         self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts
+        self.save_state()
 
         if sig == 0:
             return None
@@ -368,12 +405,22 @@ class MT5AlphaTrader:
         if risk_dist <= 0 or (risk_dist / curr_price) < 0.0005:
             return None
 
+        # 3. Microstructure Spread vs Risk Friction Gate
+        spread = (tick.ask - tick.bid) if (tick and tick.ask > 0 and tick.bid > 0) else 0.0
+        spread_in_r = spread / risk_dist if risk_dist > 0 else 1.0
+        if spread_in_r > 0.15:
+            logger.info(
+                f"⚠️ [FRICTION GATE BLOCKED] {symbol} spread {spread:.5f} is {spread_in_r:.1%} of 1R "
+                f"(exceeds 15.0% institutional ceiling) - SKIP"
+            )
+            return None
+
         # Determine Target Price
         is_fixed = exit_mode.startswith("fixed_")
         fixed_rr = float(exit_mode.split("_")[1]) if is_fixed else 3.0
         tp_price = (curr_price + fixed_rr * risk_dist) if sig == 1 else (curr_price - fixed_rr * risk_dist)
 
-        # Calculate Lot Size for $10 USD Risk
+        # Calculate Lot Size for $10 USD Target Risk (with 1.1R hard cap)
         lot, actual_risk, status_msg = calculate_lot_size(symbol, self.risk_usd, curr_price, stop_price)
         if lot <= 0:
             logger.warning(f"[{symbol}] Lot calculation returned 0 ({status_msg})")
@@ -398,7 +445,9 @@ class MT5AlphaTrader:
         }
 
     def execute_order(self, signal: Dict[str, Any]) -> bool:
-        """Executes the order via MT5 API, or records in pending queue if broker policy blocks API."""
+        """Executes the order via MT5 API.
+        Zero Phantom Fills: If order_send fails, NEVER fabricates ticket or open state (Patch 3).
+        """
         symbol = signal["symbol"]
         action = signal["action"]
         lot = signal["lot"]
@@ -412,7 +461,6 @@ class MT5AlphaTrader:
             f"SL: {stop} | TP: {target} | Risk: ${signal['actual_risk_usd']} | Setup: {signal['setup']}"
         )
 
-        # 1. Try MT5 API Order Send
         req = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": symbol,
@@ -429,21 +477,21 @@ class MT5AlphaTrader:
         }
 
         order_res = mt5.order_send(req)
-        ticket = None
 
         if order_res and order_res.retcode == mt5.TRADE_RETCODE_DONE:
             ticket = order_res.order
             logger.info(f"✅ [MT5 FILL SUCCESS] {symbol} Ticket: {ticket}")
         else:
             err_msg = order_res.comment if order_res else str(mt5.last_error())
-            logger.warning(f"⚠️ [API RESTRICTION] MT5 order_send returned: {err_msg}")
-            ticket = int(time.time())  # Autonomous tracking ticket
+            retcode = order_res.retcode if order_res else "None"
+            logger.error(f"❌ [ORDER REJECTED - NOT RECORDED] {symbol} retcode {retcode}: {err_msg}")
+            return False  # Strictly NO ticket fabrication, NO phantom OPEN state
 
-        # Record active position state
         pos_entry = {
             "ticket": ticket,
             "symbol": symbol,
             "cluster": signal["cluster"],
+            "setup": signal["setup"],
             "action": action,
             "side": signal["side"],
             "lot": lot,
@@ -457,11 +505,10 @@ class MT5AlphaTrader:
             "entry_time": datetime.now(timezone.utc).isoformat(),
             "max_fav_r": 0.0,
             "status": "OPEN",
+            "source": "MONITOR_ALGO",
         }
         self.active_positions[symbol] = pos_entry
         self.save_state()
-
-        # Append to live signal audit log
         self._append_audit_signal(pos_entry)
         return True
 
@@ -469,14 +516,16 @@ class MT5AlphaTrader:
         signals = []
         if os.path.exists(LIVE_SIGNALS_FILE):
             try:
-                with open(LIVE_SIGNALS_FILE, "r") as f:
+                with open(LIVE_SIGNALS_FILE, "r", encoding="utf-8") as f:
                     signals = json.load(f)
             except Exception:
                 signals = []
         signals.append(pos)
         try:
-            with open(LIVE_SIGNALS_FILE, "w") as f:
+            tmp_sig = f"{LIVE_SIGNALS_FILE}.tmp"
+            with open(tmp_sig, "w", encoding="utf-8") as f:
                 json.dump(signals, f, indent=2)
+            os.replace(tmp_sig, LIVE_SIGNALS_FILE)
         except Exception as e:
             logger.error(f"Error saving live signal audit: {e}")
 
@@ -543,10 +592,7 @@ class MT5AlphaTrader:
             self.save_state()
 
     def manage_open_positions(self):
-        """Monitors open positions, tracks MFE, and handles step-trail trailing stops."""
-        if not self.active_positions:
-            return
-
+        """Monitors open positions, enforces targets/stops, and sends real broker trailing stops (Patch 2)."""
         to_remove = []
         for symbol, pos in list(self.active_positions.items()):
             tick = mt5.symbol_info_tick(symbol)
@@ -582,7 +628,7 @@ class MT5AlphaTrader:
                 exit_reason = "TP_HIT"
                 exit_r = (tp_p - entry_p) / rd if side == 1 else (entry_p - tp_p) / rd
 
-            # Trailing Stop Management (step_trail)
+            # Real Broker-Side Trailing Stop Management (step_trail)
             elif exit_mode == "step_trail":
                 mfe = pos["max_fav_r"]
                 new_sl = sl_p
@@ -594,8 +640,34 @@ class MT5AlphaTrader:
                     new_sl = max(sl_p, lock_price) if side == 1 else min(sl_p, lock_price)
 
                 if new_sl != sl_p:
-                    pos["stop_price"] = round(new_sl, 5)
-                    logger.info(f"🛡️ [TRAILING STOP ADVANCED] {symbol} New SL: {new_sl} (MFE: +{mfe}R)")
+                    info = mt5.symbol_info(symbol)
+                    digits = info.digits if info else 5
+                    new_sl_rounded = round(new_sl, digits)
+
+                    # Send MT5 broker modification request
+                    req = {
+                        "action": mt5.TRADE_ACTION_SLTP,
+                        "position": pos["ticket"],
+                        "symbol": symbol,
+                        "sl": new_sl_rounded,
+                        "tp": tp_p if tp_p else 0.0,
+                    }
+                    res = mt5.order_send(req)
+                    if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+                        pos["stop_price"] = new_sl_rounded
+                        logger.info(
+                            f"🛡️ [BROKER TRAIL ADVANCED] {symbol} Ticket: {pos['ticket']} "
+                            f"New SL: {new_sl_rounded} (MFE: +{mfe}R)"
+                        )
+                        self.save_state()
+                    else:
+                        retcode = res.retcode if res else "None"
+                        err_comment = res.comment if res else str(mt5.last_error())
+                        logger.error(
+                            f"⚠️ [BROKER TRAIL FAILED] {symbol} Ticket: {pos['ticket']} "
+                            f"retcode {retcode}: {err_comment}"
+                        )
+                        # Do NOT update local state: local state must strictly mirror broker!
 
             if exited:
                 logger.info(f"🏁 [POSITION CLOSED] {symbol} Reason: {exit_reason} | Result: {exit_r:+.2f}R")
@@ -608,9 +680,15 @@ class MT5AlphaTrader:
             self.save_state()
 
     def _record_closed_trade(self, pos: Dict[str, Any], reason: str, r_mult: float, exit_price: float):
+        sym = pos["symbol"]
+        # Trigger 12-bar post-exit cooldown
+        self.trade_cooldowns[f"{sym}_exit_ts"] = int(time.time())
+        self.save_state()
+
         record = {
-            "symbol": pos["symbol"],
+            "symbol": sym,
             "cluster": pos["cluster"],
+            "setup": pos.get("setup", "canonical"),
             "action": pos["action"],
             "lot": pos["lot"],
             "entry_price": pos["entry_price"],
@@ -627,8 +705,8 @@ class MT5AlphaTrader:
         else:
             df_row.to_csv(TRADING_LEDGER_FILE, mode="a", header=False, index=False)
 
-    def emit_health_status(self):
-        """Writes live health pulse to audit/mt5_health_status.json."""
+    def emit_health_status(self, gov_status: str = "OK", used_loss_today: float = 0.0):
+        """Writes live health pulse atomically to audit/mt5_health_status.json."""
         acc = mt5.account_info()
         term = mt5.terminal_info()
 
@@ -647,36 +725,64 @@ class MT5AlphaTrader:
             "equity": acc.equity if acc else None,
             "margin_free": acc.margin_free if acc else None,
             "margin_level": acc.margin_level if acc else None,
+            "governor_status": gov_status,
+            "used_loss_today_usd": used_loss_today,
+            "daily_loss_limit_usd": self.governor.daily_limit,
+            "lifetime_floor_usd": self.governor.overall_floor,
             "active_positions_count": len(self.active_positions),
             "active_positions": list(self.active_positions.values()),
             "active_clusters": active_clusters,
             "market_statuses": market_statuses,
             "risk_per_trade_usd": self.risk_usd,
+            "max_risk_cap_usd": round(self.risk_usd * 1.10, 2),
             "concurrency_limit": MAX_CONCURRENT_POSITIONS,
         }
         try:
-            with open(HEALTH_STATUS_FILE, "w") as f:
+            tmp_health = f"{HEALTH_STATUS_FILE}.tmp"
+            with open(tmp_health, "w", encoding="utf-8") as f:
                 json.dump(status_obj, f, indent=2)
+            os.replace(tmp_health, HEALTH_STATUS_FILE)
         except Exception as e:
             logger.error(f"Error emitting health status: {e}")
 
     def run_sweep(self):
         """Executes a single end-to-end scanning and position management sweep."""
-        # 0. Sync real-time positions directly from MT5 terminal
+        acc = mt5.account_info()
+        if not acc:
+            logger.warning("MT5 account_info() unavailable. Skipping sweep.")
+            return
+
+        # 0. Daily Risk Governor Check
+        from_ts = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        deals = mt5.history_deals_get(from_ts, datetime.now(timezone.utc))
+        closed_pnl_today = sum(d.profit for d in deals) if deals else 0.0
+
+        gov_status, gov_msg, used_loss = self.governor.check(acc.equity, closed_pnl_today, int(time.time()))
+        if gov_status in ["HALT_DAILY_LIMIT", "HALT_OVERALL_FLOOR"]:
+            logger.warning(f"🚨 [GOVERNOR ACTIVE] {gov_msg} Halting new entries.")
+            # Still manage open positions to trail/close existing trades
+            self.manage_open_positions()
+            self.sync_broker_positions()
+            self.emit_health_status(gov_status=gov_status, used_loss_today=used_loss)
+            return
+
+        max_concurrent = 1 if gov_status == "THROTTLE_NEW_ENTRIES" else MAX_CONCURRENT_POSITIONS
+
+        # 1. Sync real-time positions directly from MT5 terminal
         self.sync_broker_positions()
 
-        # 1. Manage existing positions first
+        # 2. Manage existing positions first
         self.manage_open_positions()
 
-        # 2. Check Global Concurrency Ceiling
-        if len(self.active_positions) >= MAX_CONCURRENT_POSITIONS:
-            logger.debug(f"Portfolio at maximum concurrency ({len(self.active_positions)}/{MAX_CONCURRENT_POSITIONS}).")
-            self.emit_health_status()
+        # 3. Check Global Concurrency Ceiling
+        if len(self.active_positions) >= max_concurrent:
+            logger.debug(f"Portfolio at concurrency ceiling ({len(self.active_positions)}/{max_concurrent}).")
+            self.emit_health_status(gov_status=gov_status, used_loss_today=used_loss)
             return
 
         active_clusters = set(p["cluster"] for p in self.active_positions.values())
 
-        # 3. Scan Alpha Basket
+        # 4. Scan Alpha Basket
         for item in OPTIMAL_ALPHA_BASKET:
             symbol = item["symbol"]
             cluster = item["cluster"]
@@ -696,20 +802,21 @@ class MT5AlphaTrader:
             # Evaluate setup
             signal = self.scan_asset(item)
             if signal:
-                self.execute_order(signal)
-                active_clusters.add(cluster)
-                if len(self.active_positions) >= MAX_CONCURRENT_POSITIONS:
-                    break
+                if self.execute_order(signal):
+                    active_clusters.add(cluster)
+                    if len(self.active_positions) >= max_concurrent:
+                        break
 
-        self.emit_health_status()
+        self.emit_health_status(gov_status=gov_status, used_loss_today=used_loss)
 
 
 def main():
     acquire_singleton_lock()
     SCAN_INTERVAL_SEC = 10
     logger.info("=" * 80)
-    logger.info("STARTING FUNDEDNEXT MT5 EXPANDED 28-ALPHA UNIVERSE LIVE MONITOR")
-    logger.info(f"Risk per trade: ${DEFAULT_RISK_USD:.2f} USD | Max Concurrency: {MAX_CONCURRENT_POSITIONS}")
+    logger.info("STARTING FUNDEDNEXT MT5 ELITE ALPHA MONITOR WITH CRO RISK GOVERNANCE")
+    logger.info(f"Target Risk per trade: ${DEFAULT_RISK_USD:.2f} USD | 1.1R Hard Cap: ${DEFAULT_RISK_USD*1.1:.2f} USD")
+    logger.info(f"Max Concurrency: {MAX_CONCURRENT_POSITIONS} | Max per Cluster: {MAX_PER_CLUSTER}")
     logger.info(f"Target Assets: {len(OPTIMAL_ALPHA_BASKET)} symbols across 8 uncorrelated clusters")
     logger.info(f"High-Speed Tick & Bar Scan Loop: {SCAN_INTERVAL_SEC}s interval")
     logger.info("=" * 80)

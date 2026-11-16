@@ -911,11 +911,11 @@ def main():
     worker = threading.Thread(target=background_market_scanner, daemon=True)
     worker.start()
 
-    server = HTTPServer(("0.0.0.0", port), DashboardRequestHandler)
+    server = HTTPServer(("127.0.0.1", port), DashboardRequestHandler)
     print("=" * 80)
     print(f"🚀 DELTA FIBONACCI LIVE QUANT RADAR DASHBOARD RUNNING")
     print(f"👉 Localhost URL: http://localhost:{port}")
-    print(f"👉 LAN Network URL: http://127.0.0.1:{port}")
+    print(f"👉 Safe Localhost Binding: http://127.0.0.1:{port}")
     print("=" * 80)
 
     try:
