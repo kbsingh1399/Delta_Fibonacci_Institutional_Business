@@ -10,12 +10,13 @@ The codebase is engineered with strict adherence to the **Karpathy Simplicity St
 
 ```
 Delta_Fibonacci_Institutional_Business/
-├── FundedNext_Data/          # Single historical data cache (192 parquet files: 96 _1H & 96 _4H)
-├── MT5_Backtest.py           # Single Backtesting Engine (1H & 4H sweeps, dual-model, trailing SL)
-├── mt5_alpha_trader_live.py  # Single Primary Live Engine (Autonomous monitor, CRO governor, trailing SL, anti-chop)
-├── dashboard_server.py       # Single Dashboard Go Live File (Streaming web interface at http://localhost:8088)
-├── audit/                    # Runtime state tracking (positions, cooldowns, health heartbeat, ledger)
-├── .gitignore                # Excludes local binary data and transient runtime logs
+├── FundedNext_Data/                      # Single historical data cache (192 parquet files: 96 _1H & 96 _4H)
+├── MT5_Backtest.py                       # Single Backtesting Engine (100% Code Parity, 20 assets, dual-model, trailing SL)
+├── mt5_alpha_trader_live.py              # Single Primary Live Engine (Autonomous monitor, CRO governor, trailing SL, anti-chop)
+├── dashboard_server.py                   # Single Dashboard Go Live File (Streaming web interface at http://localhost:8088)
+├── STANDARDIZED_TRADING_DECISION_CHAIN.md# Institutional 10-Step Decision Protocol & Risk Mandate
+├── audit/                                # Runtime state tracking (positions, cooldowns, health heartbeat, ledger)
+├── .gitignore                            # Excludes local binary data and transient runtime logs
 └── README.md
 ```
 
@@ -53,9 +54,10 @@ Every asset in the curated universe operates on its empirical champion timeframe
 ## 3. Core Strategy Safeguards
 
 1. **Strict Champion Model Isolation**: Assets assigned to `MODEL_1` execute ONLY Model 1 (Pullback Rejection). If slope or rejection wick criteria fail, the setup terminates immediately with zero cross-model fallback.
-2. **Anti-Whipsaw / Range-Chop Gate**: Evaluates the prior 12 completed bars. If price crossed the target EMA $\ge 2$ times, the asset is classified as `RANGE_CHOP` and all setups are silenced.
-3. **Decisive Clearance Gate**: For Model 2 Reclaims, candle close must exceed the EMA by at least $\ge 0.12 \times \text{ATR}$ (or $1.5\times$ spread), eliminating 0.7-pip noise blips.
-4. **Causal Candle Closure**: All signals evaluate strictly upon completed bar close (zero lookahead).
+2. **Anti-Whipsaw Kaufman ER & Banded Crossing Gate**: Evaluates 10-bar Kaufman Efficiency Ratio ($ER \ge 0.28$). If $ER < 0.28$, market is classified as noise and skipped. Requires true penetration beyond $\pm 0.25 \times \text{ATR}$ across the EMA; $\ge 2$ band crossings in 12 bars silences all setups.
+3. **ATR-Normalized Slope Filter**: Model 1 requires normalized slope $\ge +0.02$ ATR/bar for BUY ($\le -0.02$ ATR/bar for SELL) over lookback (4 bars on 1H, 3 bars on 4H).
+4. **Decisive Clearance Gate**: For Model 1, candle close must exceed EMA by $\ge 0.05 \times \text{ATR}$. For Model 2 Reclaims, candle close must exceed EMA by $\ge 0.12 \times \text{ATR}$ (or $1.5\times$ spread), eliminating noise trap blips.
+5. **Causal Candle Closure**: All signals evaluate strictly upon completed bar close (zero lookahead).
 
 ---
 
@@ -63,22 +65,23 @@ Every asset in the curated universe operates on its empirical champion timeframe
 
 * **Dual-Mode Execution Pipeline**:
   * The engine first attempts automated Python order execution via `mt5.order_send()`.
-  * If the broker evaluation server restricts automated EA orders (`retcode 10026`), the engine outputs an actionable console alert and surfaces a flashing red notification banner on the live dashboard (`http://localhost:8088`) with a 1-click **"COPY SETUP"** button.
-  * Once punched in MT5 GUI, the background daemon auto-syncs the live ticket within 10 seconds via `sync_broker_positions()` and manages trailing SL.
-* **Prop-Firm Risk Governor**:
-  * Daily 5% loss limit ($235.08) anchored to 00:00 server time.
-  * Lifetime 10% floor ($4,231.48).
-  * 80% throttle threshold ($188.06).
-  * Max 4 global concurrency slots, max 1 open position per cluster.
+  * If the broker evaluation server restricts automated EA orders (`retcode 10026`), the engine outputs an actionable console alert and surfaces a notification banner on the live dashboard (`http://localhost:8088`) with a 1-click **"COPY SETUP"** button.
+  * Once punched in MT5 GUI, the background daemon auto-syncs the live ticket within 10 seconds via `sync_broker_positions()`, tracks MFE, and manages trailing SL.
+* **FundedNext $5,000 Challenge Risk Governor**:
+  * Lifetime 10% static floor: **$4,500.00 USD**.
+  * Daily 5% loss limit: **$250.00 USD**, anchored to 00:00 broker server time (UTC+2) to `max(balance, equity)`.
+  * 80% throttle threshold: **$200.00 USD** (halts new entries, manages open positions).
+  * 90% risk budget soft cap: `used_loss + open_risk + new_trade_risk <= $225.00`.
+  * Concurrency: Max 4 global slots, max 1 open position per cluster.
+  * Hard risk cap per trade: **$11.00 USD** (1.1R maximum).
 
 ---
 
 ## 5. Quickstart
 
-### Backtesting
+### Backtesting (100% Code-Parity on 20 Champion Assets)
 ```bash
-python MT5_Backtest.py --tf 4H --exit-mode step_trail
-python MT5_Backtest.py --tf 1H --exit-mode fixed_3.5
+python MT5_Backtest.py
 ```
 
 ### Live Engine & Dashboard

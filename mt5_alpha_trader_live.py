@@ -26,70 +26,99 @@ import numpy as np
 import pandas as pd
 import MetaTrader5 as mt5
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
 AUDIT_DIR = os.path.join(BASE_DIR, "audit")
 os.makedirs(AUDIT_DIR, exist_ok=True)
 
 # Embedded DailyRiskGovernor below
 """
-Daily Risk Governor for FundedNext MT5 Accounts.
+Daily Risk Governor for FundedNext MT5 Accounts ($5,000 tier).
 Enforces FundedNext's exact prop-firm rulebook:
-1. Daily Loss Limit: 5% of initial balance ($235.08 on $4,701.64 account).
-   - Anchored to 00:00 server time.
-   - Includes floating PnL + closed PnL today.
-2. Overall Loss Limit: 10% static floor ($4,231.48 on $4,701.64 account).
-3. Throttle Threshold: At 80% of daily limit ($188.06), throttle new entries to max 1 concurrent.
+1. Daily Loss Limit: 5% of initial $5,000 balance ($250.00).
+   - Anchored to 00:00 broker server time (UTC+2 / UTC+3).
+   - Uses equity drop from server-midnight anchor = max(0.0, anchor - equity).
+   - Persisted across process restarts in audit/governor_state.json.
+2. Overall Loss Limit: 10% static floor ($4,500.00 on $5,000 account).
+3. Throttle Threshold: At 80% of daily limit ($200.00), halt new entries.
 """
 
 from typing import Tuple, Optional
 import logging
 
 logger = logging.getLogger("DailyRiskGovernor")
+GOVERNOR_STATE_FILE = os.path.join(AUDIT_DIR, "governor_state.json")
+
+
+def get_server_offset_seconds() -> int:
+    """Calculates server time offset in seconds dynamically from broker tick."""
+    t = mt5.symbol_info_tick("BTCUSD") or mt5.symbol_info_tick("USDJPY")
+    if t and t.time > 0:
+        return int(round((t.time - time.time()) / 1800) * 1800)
+    return 7200  # Default to UTC+2 if tick unavailable
 
 
 class DailyRiskGovernor:
     def __init__(
         self,
-        initial_balance: float = 4701.64,
-        daily_pct: float = 0.05,
-        overall_pct: float = 0.10,
+        initial_balance: float = 5000.00,  # FundedNext $5,000 challenge account
+        daily_pct: float = 0.05,           # 5% daily limit ($250.00)
+        overall_pct: float = 0.10,         # 10% lifetime static floor ($4,500.00)
     ):
         self.initial = initial_balance
-        self.daily_limit = round(initial_balance * daily_pct, 2)         # $235.08
-        self.overall_floor = round(initial_balance * (1.0 - overall_pct), 2)  # $4,231.48
+        self.daily_limit = round(initial_balance * daily_pct, 2)              # $250.00
+        self.overall_floor = round(initial_balance * (1.0 - overall_pct), 2)  # $4,500.00
         self.day_anchor_equity: Optional[float] = None
         self.last_server_day: Optional[int] = None
+        self._load_state()
 
-    def check(self, current_equity: float, closed_pnl_today: float, server_ts: int) -> Tuple[str, str, float]:
-        """Evaluates live equity and closed PnL against FundedNext rules.
-        Returns: (status, message, used_loss_today)
-        status:
-          - 'OK'
-          - 'THROTTLE_NEW_ENTRIES'
-          - 'HALT_DAILY_LIMIT'
-          - 'HALT_OVERALL_FLOOR'
-        """
-        day = int(server_ts) // 86400
+    def _load_state(self):
+        if os.path.exists(GOVERNOR_STATE_FILE):
+            try:
+                with open(GOVERNOR_STATE_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    self.last_server_day = data.get("last_server_day")
+                    self.day_anchor_equity = data.get("day_anchor_equity")
+            except Exception:
+                pass
 
-        # Server midnight reset
+    def _save_state(self):
+        try:
+            tmp = f"{GOVERNOR_STATE_FILE}.tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump({
+                    "last_server_day": self.last_server_day,
+                    "day_anchor_equity": self.day_anchor_equity,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }, f, indent=2)
+            os.replace(tmp, GOVERNOR_STATE_FILE)
+        except Exception as e:
+            logger.error(f"Error saving governor state: {e}")
+
+    def check(self, current_equity: float, current_balance: float) -> Tuple[str, str, float]:
+        """Evaluates live equity against FundedNext rules using exact broker server day."""
+        offset = get_server_offset_seconds()
+        server_ts = time.time() + offset
+        day = int(server_ts // 86400)
+
+        # Server midnight reset: re-anchor to max(balance, equity) at 00:00 server time
         if self.last_server_day is None or day != self.last_server_day:
             self.last_server_day = day
-            self.day_anchor_equity = current_equity
+            self.day_anchor_equity = max(current_balance, current_equity)
+            self._save_state()
             logger.info(
-                f"🌅 [GOVERNOR 00:00 SERVER RESET] New server day {day}. "
-                f"Day anchor equity set to ${current_equity:,.2f}"
+                f"🌅 [GOVERNOR 00:00 SERVER RESET] Server Day {day}. "
+                f"Anchor set to max(balance, equity) = ${self.day_anchor_equity:,.2f}"
             )
 
         if self.day_anchor_equity is None:
-            self.day_anchor_equity = current_equity
+            self.day_anchor_equity = max(current_balance, current_equity)
+            self._save_state()
 
-        # Loss used today = equity drop from midnight + any closed losses today
-        floating_drop = max(0.0, self.day_anchor_equity - current_equity)
-        closed_loss = max(0.0, -closed_pnl_today)
-        used_loss_today = round(floating_drop + closed_loss, 2)
+        # Fix P0-2: Do NOT double-count closed losses! Equity already reflects realized PnL.
+        used_loss_today = max(0.0, round(self.day_anchor_equity - current_equity, 2))
 
-        # 1. Check Lifetime 10% Static Floor
+        # 1. Check Lifetime 10% Static Floor ($4,500.00)
         if current_equity <= self.overall_floor:
             msg = (
                 f"CRITICAL: Equity ${current_equity:,.2f} breached Lifetime Floor "
@@ -97,7 +126,7 @@ class DailyRiskGovernor:
             )
             return "HALT_OVERALL_FLOOR", msg, used_loss_today
 
-        # 2. Check Daily 5% Limit
+        # 2. Check Daily 5% Limit ($250.00)
         if used_loss_today >= self.daily_limit:
             msg = (
                 f"HALT: Today's Loss ${used_loss_today:,.2f} breached Daily 5% Limit "
@@ -105,12 +134,12 @@ class DailyRiskGovernor:
             )
             return "HALT_DAILY_LIMIT", msg, used_loss_today
 
-        # 3. Check 80% Daily Limit Throttle
+        # 3. Check 80% Daily Limit Throttle ($200.00)
         throttle_limit = round(0.80 * self.daily_limit, 2)
         if used_loss_today >= throttle_limit:
             msg = (
                 f"THROTTLE: Today's Loss ${used_loss_today:,.2f} >= 80% of Daily Limit "
-                f"(${throttle_limit:,.2f}). New entries throttled."
+                f"(${throttle_limit:,.2f}). Halting new entries."
             )
             return "THROTTLE_NEW_ENTRIES", msg, used_loss_today
 
@@ -242,10 +271,10 @@ def compute_adx(high: np.ndarray, low: np.ndarray, close: np.ndarray, period: in
         plus_di_s[i] = (plus_di_s[i - 1] * (period - 1) + plus_dm[i]) * alpha
         minus_di_s[i] = (minus_di_s[i - 1] * (period - 1) + minus_dm[i]) * alpha
 
-    plus_di = np.where(atr_s > 0, 100.0 * (plus_di_s / atr_s), 0.0)
-    minus_di = np.where(atr_s > 0, 100.0 * (minus_di_s / atr_s), 0.0)
+    plus_di = np.divide(100.0 * plus_di_s, atr_s, out=np.zeros_like(plus_di_s), where=atr_s > 0)
+    minus_di = np.divide(100.0 * minus_di_s, atr_s, out=np.zeros_like(minus_di_s), where=atr_s > 0)
     denom = plus_di + minus_di
-    dx = np.where(denom > 0, 100.0 * np.abs(plus_di - minus_di) / denom, 0.0)
+    dx = np.divide(100.0 * np.abs(plus_di - minus_di), denom, out=np.zeros_like(denom), where=denom > 0)
 
     adx = np.zeros(n, dtype=float)
     adx_start = period * 2
@@ -441,11 +470,32 @@ class MT5AlphaTrader:
         l_bar = l[prev]
         a_bar = atr[prev]
 
-        # Anti-Whipsaw Chop Filter: count crossings across EMA in last 12 bars
+        # Anti-Whipsaw Chop Filter: Kaufman Efficiency Ratio & ATR-Banded Crossings
+        er_lb = 10
+        if prev >= er_lb:
+            direction = abs(c[prev] - c[prev - er_lb])
+            volatility = sum(abs(c[i] - c[i - 1]) for i in range(prev - er_lb + 1, prev + 1))
+            er = direction / volatility if volatility > 0 else 0.0
+        else:
+            er = 0.5
+
+        if er < 0.28:
+            logger.debug(f"🔇 [CHOP FILTER ACTIVE] {symbol} Kaufman ER {er:.3f} < 0.28. Noise regime, skipping.")
+            self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts
+            return None
+
+        # ATR-Banded Crossing Count: require penetration beyond +-0.25 ATR to count true whipsaw
         ema_crossings = 0
         for b in range(max(1, prev - 12), prev):
-            if (c[b] > ema_fast[b] and c[b - 1] <= ema_fast[b - 1]) or (c[b] < ema_fast[b] and c[b - 1] >= ema_fast[b - 1]):
+            upper_band = ema_fast[b] + 0.25 * atr[b]
+            lower_band = ema_fast[b] - 0.25 * atr[b]
+            if (c[b] > upper_band and c[b - 1] <= lower_band) or (c[b] < lower_band and c[b - 1] >= upper_band):
                 ema_crossings += 1
+
+        if ema_crossings >= 2:
+            logger.debug(f"🔇 [BANDED WHIPSAW] {symbol} {ema_crossings} ATR-band crossings across EMA in 12 bars.")
+            self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts
+            return None
 
         sig = 0
         executed_model = ""
@@ -455,27 +505,27 @@ class MT5AlphaTrader:
         came_from_below = (o_bar <= ema_fast[prev] * 1.002) or (c[prev - 1] <= ema_fast[prev - 1] * 1.002)
 
         def eval_model_1():
-            # Model 1: Pullback Rejection on Champion EMA
-            if ema_crossings >= 2:
-                return 0
+            # Model 1: Pullback Rejection on Champion EMA with ATR-Normalized Slope Filter
             slope_bars = 4 if tf_str == "1H" else 3
-            if ema_fast[prev] > ema_fast[prev - slope_bars] and came_from_above and lower_wick >= 0.25:
-                if l_bar <= ema_fast[prev] * 1.002 and c_bar >= ema_fast[prev]:
+            norm_slope = (ema_fast[prev] - ema_fast[prev - slope_bars]) / (slope_bars * a_bar) if a_bar > 0 else 0.0
+
+            # Buy Pullback: Positive slope (>= +0.02 ATR/bar), lower wick >= 25%, candle close >= EMA + 0.05 ATR
+            if norm_slope >= 0.02 and came_from_above and lower_wick >= 0.25:
+                if l_bar <= ema_fast[prev] * 1.002 and c_bar >= (ema_fast[prev] + 0.05 * a_bar):
                     return 1
-            elif ema_fast[prev] < ema_fast[prev - slope_bars] and came_from_below and upper_wick >= 0.25:
-                if h_bar >= ema_fast[prev] * 0.998 and c_bar <= ema_fast[prev]:
+            # Sell Pullback: Negative slope (<= -0.02 ATR/bar), upper wick >= 25%, candle close <= EMA - 0.05 ATR
+            elif norm_slope <= -0.02 and came_from_below and upper_wick >= 0.25:
+                if h_bar >= ema_fast[prev] * 0.998 and c_bar <= (ema_fast[prev] - 0.05 * a_bar):
                     return -1
             return 0
 
         def eval_model_2():
             # Model 2: Macro Dwell & Reclaim Spring (33% pinbar threshold)
-            if ema_crossings >= 2:
-                return 0
             dwell_lb = 35 if tf_str == "4H" else 100
             min_dwell = 3 if tf_str == "4H" else 12
             max_dwell = 25 if tf_str == "4H" else 60
 
-            # Minimum Decisive Clearance: at least 0.12 ATR beyond EMA to prevent 0.7-pip noise trap
+            # Minimum Decisive Clearance: at least 0.12 ATR beyond EMA to prevent noise trap
             min_clearance = max(0.12 * a_bar, (tick.ask - tick.bid) * 1.5 if tick else 0.0)
 
             # Buy Reclaim: EMA must not be crashing, price closes decisively above EMA
@@ -717,6 +767,43 @@ class MT5AlphaTrader:
         except Exception as e:
             logger.error(f"Error saving manual pending signal: {e}")
 
+    def _close_broker_position(self, pos: Dict[str, Any], comment: str = "ALGO_CLOSE") -> bool:
+        """Sends an active broker deal order to close an open MT5 position."""
+        ticket = pos.get("ticket")
+        sym = pos.get("symbol")
+        lot = pos.get("lot", 0.01)
+        side = pos.get("side", 1)
+        order_type = mt5.ORDER_TYPE_SELL if side == 1 else mt5.ORDER_TYPE_BUY
+        tick = mt5.symbol_info_tick(sym)
+        if not tick:
+            return False
+        price = tick.bid if side == 1 else tick.ask
+        req = {
+            "action": mt5.TRADE_ACTION_DEAL,
+            "symbol": sym,
+            "volume": lot,
+            "type": order_type,
+            "position": ticket,
+            "price": price,
+            "deviation": 20,
+            "magic": 202611,
+            "comment": comment[:31],
+            "type_time": mt5.ORDER_TIME_GTC,
+            "type_filling": mt5.ORDER_FILLING_IOC,
+        }
+        res = mt5.order_send(req)
+        if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+            logger.info(f"✅ [CLOSED BROKER POSITION] {sym} Ticket: {ticket} @ {price} | Comment: {comment}")
+            return True
+        logger.warning(f"⚠️ [CLOSE BROKER POSITION FAILED] {sym} Ticket: {ticket}: {res.comment if res else mt5.last_error()}")
+        return False
+
+    def flatten_all(self, reason: str = "EMERGENCY_FLATTEN"):
+        """Emergency liquidate all open positions."""
+        logger.warning(f"🚨 [FLATTEN ALL TRIGGERED] Reason: {reason}")
+        for sym, pos in list(self.active_positions.items()):
+            self._close_broker_position(pos, comment=reason)
+
     def _clear_manual_pending(self, symbol: str):
         if os.path.exists(MANUAL_PENDING_FILE):
             try:
@@ -743,8 +830,8 @@ class MT5AlphaTrader:
             if sym not in self.active_positions or self.active_positions[sym].get("ticket") != ticket:
                 basket_item = next((item for item in OPTIMAL_ALPHA_BASKET if item["symbol"] == sym), None)
                 cluster = basket_item["cluster"] if basket_item else "External"
-                setup = basket_item["setup"] if basket_item else "Manual_MT5"
-                exit_mode = basket_item["exit_mode"] if basket_item else "fixed"
+                setup = basket_item.get("setup", f"{basket_item.get('primary_model', 'MODEL_1')}_EMA{basket_item.get('ema', 100)}") if basket_item else "Manual_MT5"
+                exit_mode = basket_item.get("exit_mode", "fixed") if basket_item else "fixed"
 
                 side = 1 if p.type == mt5.ORDER_TYPE_BUY else -1
                 info = mt5.symbol_info(sym)
@@ -790,6 +877,7 @@ class MT5AlphaTrader:
                     "stop_price": stop_p,
                     "target_price": target_p,
                     "risk_dist": rd,
+                    "initial_risk_dist": rd,
                     "target_risk_usd": self.risk_usd,
                     "actual_risk_usd": calc_risk,
                     "exit_mode": exit_mode,
@@ -804,22 +892,55 @@ class MT5AlphaTrader:
                     f"{p.volume} lots @ {p.price_open} | SL: {stop_p} | TP: {target_p} | Risk: ${calc_risk} | Cluster: {cluster}"
                 )
             else:
-                # Update SL / TP if modified on MT5 terminal
+                # Update SL / TP if modified on MT5 terminal - NEVER overwrite initial_risk_dist or risk_dist
                 pos_entry = self.active_positions[sym]
-                if p.sl > 0 and round(pos_entry.get("stop_price", 0.0), 2) != round(p.sl, 2):
+                if p.sl > 0 and abs(pos_entry.get("stop_price", 0.0) - p.sl) > 1e-5:
                     pos_entry["stop_price"] = p.sl
-                    pos_entry["risk_dist"] = abs(p.price_open - p.sl)
                     changed = True
                     logger.info(f"🔄 [SYNCED BROKER SL UPDATE] {sym} SL updated to {p.sl}")
-                if p.tp > 0 and round(pos_entry.get("target_price", 0.0), 2) != round(p.tp, 2):
+                if p.tp > 0 and abs(pos_entry.get("target_price", 0.0) - p.tp) > 1e-5:
                     pos_entry["target_price"] = p.tp
                     changed = True
                     logger.info(f"🔄 [SYNCED BROKER TP UPDATE] {sym} TP updated to {p.tp}")
 
-        # 2. Detect closed MT5 positions (strict reconciliation with broker)
+        # 2. Detect closed MT5 positions (strict reconciliation with broker deal history)
         for sym, pos in list(self.active_positions.items()):
             if pos.get("ticket") not in live_tickets:
-                logger.info(f"🏁 [BROKER POSITION CLOSED] {sym} Ticket: {pos.get('ticket')} resolved on MT5")
+                ticket = pos.get("ticket")
+                deals = mt5.history_deals_get(position=ticket)
+                exit_p = pos.get("target_price", 0.0)
+                real_pnl = 0.0
+                exit_reason = "BROKER_RESOLVED"
+
+                if deals and len(deals) > 0:
+                    exit_deal = deals[-1]
+                    if exit_deal.price > 0:
+                        exit_p = exit_deal.price
+                    real_pnl = sum(d.profit + d.commission + d.swap + getattr(d, 'fee', 0.0) for d in deals)
+                    comment = (exit_deal.comment or "").upper()
+                    if "TP" in comment or exit_deal.reason == getattr(mt5, "DEAL_REASON_TP", 4):
+                        exit_reason = "TP_HIT"
+                    elif "SL" in comment or exit_deal.reason == getattr(mt5, "DEAL_REASON_SL", 3):
+                        exit_reason = "SL_HIT"
+                    elif exit_deal.reason == getattr(mt5, "DEAL_REASON_SO", 5):
+                        exit_reason = "STOP_OUT"
+                    else:
+                        exit_reason = "BROKER_CLOSE"
+                else:
+                    tick = mt5.symbol_info_tick(sym)
+                    if tick:
+                        exit_p = tick.bid if pos.get("side") == 1 else tick.ask
+
+                rd = pos.get("initial_risk_dist") or pos.get("risk_dist") or 1.0
+                entry_p = pos.get("entry_price", exit_p)
+                side = pos.get("side", 1)
+                r_mult = ((exit_p - entry_p) / rd if side == 1 else (entry_p - exit_p) / rd) if rd > 0 else 0.0
+
+                logger.info(
+                    f"🏁 [BROKER POSITION RESOLVED] {sym} Ticket: {ticket} | Reason: {exit_reason} | "
+                    f"Exit: {exit_p} | Net PnL: ${real_pnl:.2f} | R: {r_mult:+.2f}R"
+                )
+                self._record_closed_trade(pos, exit_reason, r_mult, exit_p, real_pnl=real_pnl)
                 self.active_positions.pop(sym, None)
                 changed = True
 
@@ -827,8 +948,7 @@ class MT5AlphaTrader:
             self.save_state()
 
     def manage_open_positions(self):
-        """Monitors open positions, enforces targets/stops, and sends real broker trailing stops (Patch 2)."""
-        to_remove = []
+        """Monitors open positions, enforces targets/stops, and sends real broker trailing stops."""
         for symbol, pos in list(self.active_positions.items()):
             tick = mt5.symbol_info_tick(symbol)
             if not tick:
@@ -838,30 +958,23 @@ class MT5AlphaTrader:
             entry_p = pos["entry_price"]
             sl_p = pos["stop_price"]
             tp_p = pos["target_price"]
-            rd = pos["risk_dist"]
+            rd = pos.get("initial_risk_dist") or pos.get("risk_dist") or 1.0
             side = pos["side"]
             exit_mode = pos["exit_mode"]
 
-            # Current R-multiple
-            cur_r = (current_price - entry_p) / rd if side == 1 else (entry_p - current_price) / rd
+            # Current R-multiple (division by zero protected)
+            cur_r = ((current_price - entry_p) / rd if side == 1 else (entry_p - current_price) / rd) if rd > 0 else 0.0
             if cur_r > pos["max_fav_r"]:
                 pos["max_fav_r"] = round(cur_r, 2)
 
             exited = False
             exit_reason = ""
-            exit_r = 0.0
 
-            # Check SL Hit
-            if sl_p > 0 and ((side == 1 and current_price <= sl_p) or (side == -1 and current_price >= sl_p)):
+            # Check Virtual Trailing SL Hit if broker rejected SL modification
+            v_sl = pos.get("virtual_trailing_sl")
+            if v_sl and ((side == 1 and current_price <= v_sl) or (side == -1 and current_price >= v_sl)):
                 exited = True
-                exit_reason = "SL_HIT"
-                exit_r = (sl_p - entry_p) / rd if side == 1 else (entry_p - sl_p) / rd
-
-            # Check TP Hit
-            elif tp_p > 0 and ((side == 1 and current_price >= tp_p) or (side == -1 and current_price <= tp_p)):
-                exited = True
-                exit_reason = "TP_HIT"
-                exit_r = (tp_p - entry_p) / rd if side == 1 else (entry_p - tp_p) / rd
+                exit_reason = "VIRTUAL_SL_HIT"
 
             # Dynamic Trailing Stop Management (trail_1.5r, trail_1.0r, trail_0.5r, lock_0.5r, step_trail)
             elif exit_mode in ["trail_1.5r", "trail_1.0r", "trail_0.5r", "lock_0.5r", "step_trail"]:
@@ -923,20 +1036,19 @@ class MT5AlphaTrader:
                         pos["virtual_trailing_sl"] = new_sl_rounded
 
             if exited:
-                logger.info(f"🏁 [POSITION CLOSED] {symbol} Reason: {exit_reason} | Result: {exit_r:+.2f}R")
-                to_remove.append((symbol, exit_reason, exit_r, current_price))
+                logger.info(f"🏁 [ALGO EXIT EXECUTING] {symbol} Reason: {exit_reason} | Level: {current_price}")
+                # Real close order on broker - sync_broker_positions will handle post-close audit cleanly
+                self._close_broker_position(pos, comment=exit_reason)
 
-        for sym, reason, r_mult, exit_price in to_remove:
-            closed_pos = self.active_positions.pop(sym, None)
-            if closed_pos:
-                self._record_closed_trade(closed_pos, reason, r_mult, exit_price)
-            self.save_state()
-
-    def _record_closed_trade(self, pos: Dict[str, Any], reason: str, r_mult: float, exit_price: float):
+    def _record_closed_trade(self, pos: Dict[str, Any], reason: str, r_mult: float, exit_price: float, real_pnl: Optional[float] = None):
         sym = pos["symbol"]
-        # Trigger 12-bar post-exit cooldown
-        self.trade_cooldowns[f"{sym}_exit_ts"] = int(time.time())
+        offset = get_server_offset_seconds()
+        server_now = int(time.time() + offset)
+        # Trigger 12-bar post-exit cooldown (server-epoch)
+        self.trade_cooldowns[f"{sym}_exit_ts"] = server_now
         self.save_state()
+
+        calc_pnl = real_pnl if real_pnl is not None else round(r_mult * pos.get("actual_risk_usd", self.risk_usd), 2)
 
         record = {
             "symbol": sym,
@@ -950,7 +1062,7 @@ class MT5AlphaTrader:
             "exit_time": datetime.now(timezone.utc).isoformat(),
             "reason": reason,
             "r_multiple": round(r_mult, 2),
-            "net_pnl_usd": round(r_mult * pos["actual_risk_usd"], 2),
+            "net_pnl_usd": round(calc_pnl, 2),
         }
         df_row = pd.DataFrame([record])
         if not os.path.exists(TRADING_LEDGER_FILE):
@@ -1011,13 +1123,16 @@ class MT5AlphaTrader:
             logger.warning("MT5 account_info() unavailable. Skipping sweep.")
             return
 
-        # 0. Daily Risk Governor Check
-        from_ts = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-        deals = mt5.history_deals_get(from_ts, datetime.now(timezone.utc))
-        closed_pnl_today = sum(d.profit for d in deals) if deals else 0.0
+        # 0. Daily Risk Governor Check (Anchored to Server Midnight, max(balance, equity))
+        gov_status, gov_msg, used_loss = self.governor.check(acc.equity, acc.balance)
+        if gov_status == "HALT_OVERALL_FLOOR":
+            logger.critical(f"🚨 [GOVERNOR CRITICAL] {gov_msg} FLATTENING ALL POSITIONS.")
+            self.flatten_all("FLOOR_BREACH")
+            self.sync_broker_positions()
+            self.emit_health_status(gov_status=gov_status, used_loss_today=used_loss)
+            return
 
-        gov_status, gov_msg, used_loss = self.governor.check(acc.equity, closed_pnl_today, int(time.time()))
-        if gov_status in ["HALT_DAILY_LIMIT", "HALT_OVERALL_FLOOR"]:
+        if gov_status == "HALT_DAILY_LIMIT":
             logger.warning(f"🚨 [GOVERNOR ACTIVE] {gov_msg} Halting new entries.")
             # Still manage open positions to trail/close existing trades
             self.manage_open_positions()
@@ -1037,6 +1152,17 @@ class MT5AlphaTrader:
         if len(self.active_positions) >= max_concurrent:
             logger.debug(f"Portfolio at concurrency ceiling ({len(self.active_positions)}/{max_concurrent}).")
             self.emit_health_status(gov_status=gov_status, used_loss_today=used_loss)
+            return
+
+        # 4. Open Risk Budget Soft Cap Check (90% of daily limit)
+        open_risk = sum(p.get("actual_risk_usd", self.risk_usd) for p in self.active_positions.values())
+        budget = self.governor.daily_limit * 0.90
+        if (used_loss + open_risk + self.risk_usd) > budget:
+            logger.debug(
+                f"Risk budget full: used ${used_loss:.2f} + open ${open_risk:.2f} + new ${self.risk_usd:.2f} "
+                f"> 90% cap (${budget:.2f}). Skipping scan."
+            )
+            self.emit_health_status(gov_status="BUDGET_CAP_REACHED", used_loss_today=used_loss)
             return
 
         active_clusters = set(p["cluster"] for p in self.active_positions.values())

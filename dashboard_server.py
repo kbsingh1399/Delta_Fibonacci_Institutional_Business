@@ -18,7 +18,7 @@ import json
 import gc
 import threading
 from datetime import datetime, timezone
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import pandas as pd
 import numpy as np
 import MetaTrader5 as mt5
@@ -146,143 +146,146 @@ def background_market_scanner():
             next_close_sec = 0
 
             for sym in all_tradeable:
-                is_alpha = sym in alpha_symbols
-                b_cfg = alpha_symbols[sym] if is_alpha else {}
-                tf_str = b_cfg.get("tf", "4H")
-                target_ema_period = b_cfg.get("ema", 89)
-                exit_mode = b_cfg.get("exit_mode", "fixed_3.0")
-                primary_model = b_cfg.get("primary_model", "MODEL_1")
-                cluster = b_cfg.get("cluster", "General")
+                try:
+                    is_alpha = sym in alpha_symbols
+                    b_cfg = alpha_symbols[sym] if is_alpha else {}
+                    tf_str = b_cfg.get("tf", "4H")
+                    target_ema_period = b_cfg.get("ema", 89)
+                    exit_mode = b_cfg.get("exit_mode", "fixed_3.0")
+                    primary_model = b_cfg.get("primary_model", "MODEL_1")
+                    cluster = b_cfg.get("cluster", "General")
 
-                mt5_tf = mt5.TIMEFRAME_H1 if tf_str == "1H" else mt5.TIMEFRAME_H4
-                bar_dur = 3600 if tf_str == "1H" else 14400
+                    mt5_tf = mt5.TIMEFRAME_H1 if tf_str == "1H" else mt5.TIMEFRAME_H4
+                    bar_dur = 3600 if tf_str == "1H" else 14400
 
-                rates = mt5.copy_rates_from_pos(sym, mt5_tf, 0, 500)
-                if rates is None or len(rates) < (target_ema_period + 40):
-                    continue
-                tick = mt5.symbol_info_tick(sym)
-                if not tick or tick.bid <= 0:
-                    continue
+                    rates = mt5.copy_rates_from_pos(sym, mt5_tf, 0, 500)
+                    if rates is None or len(rates) < (target_ema_period + 40):
+                        continue
+                    tick = mt5.symbol_info_tick(sym)
+                    if not tick or tick.bid <= 0:
+                        continue
 
-                c = rates['close']
-                h = rates['high']
-                l = rates['low']
-                t = rates['time']
-                n = len(rates)
+                    c = rates['close']
+                    h = rates['high']
+                    l = rates['low']
+                    t = rates['time']
+                    n = len(rates)
 
-                # Time left in current candle
-                bar_open = int(t[-1])
-                bar_close = bar_open + bar_dur
-                time_left = max(0, int(bar_close - tick.time))
-                if next_close_sec == 0:
-                    next_close_sec = time_left
+                    # Time left in current candle
+                    bar_open = int(t[-1])
+                    bar_close = bar_open + bar_dur
+                    time_left = max(0, int(bar_close - tick.time))
+                    if next_close_sec == 0:
+                        next_close_sec = time_left
 
-                e34 = calculate_ema(c, 34)[-1]
-                e55 = calculate_ema(c, 55)[-1]
-                e89 = calculate_ema(c, 89)[-1]
-                e_target = calculate_ema(c, target_ema_period)[-1]
-                macro_p = 233 if tf_str == "4H" else 400
-                e233 = calculate_ema(c, macro_p)[-1]
-                atr = calculate_atr(h, l, c, 14)[-1]
-                adx = compute_adx(h, l, c, 14)[-1]
+                    e34 = calculate_ema(c, 34)[-1]
+                    e55 = calculate_ema(c, 55)[-1]
+                    e89 = calculate_ema(c, 89)[-1]
+                    e_target = calculate_ema(c, target_ema_period)[-1]
+                    macro_p = 233 if tf_str == "4H" else 400
+                    e233 = calculate_ema(c, macro_p)[-1]
+                    atr = calculate_atr(h, l, c, 14)[-1]
+                    adx = compute_adx(h, l, c, 14)[-1]
 
-                curr_price = tick.bid
-                d_pts = curr_price - e_target
-                d_atr = abs(d_pts) / atr if atr > 0 else 99.0
+                    curr_price = tick.bid
+                    d_pts = curr_price - e_target
+                    d_atr = abs(d_pts) / atr if atr > 0 else 99.0
 
-                target_shelf = f"EMA {target_ema_period} ({tf_str})"
-                shelf_val = e_target
-                min_dist_atr = d_atr
+                    target_shelf = f"EMA {target_ema_period} ({tf_str})"
+                    shelf_val = e_target
+                    min_dist_atr = d_atr
 
-                # Shelf Status Classification relative to EMA 89
-                if min_dist_atr <= 0.05:
-                    status = "TOUCHING"
-                    status_badge = "badge-danger"
-                elif min_dist_atr <= 0.20:
-                    status = "TESTING"
-                    status_badge = "badge-warning"
-                elif min_dist_atr <= 0.50:
-                    status = "APPROACHING"
-                    status_badge = "badge-primary"
-                elif min_dist_atr <= 1.00:
-                    status = "PULLBACK"
-                    status_badge = "badge-info"
-                else:
-                    status = "EXTENDED"
-                    status_badge = "badge-neutral"
+                    # Shelf Status Classification relative to EMA 89
+                    if min_dist_atr <= 0.05:
+                        status = "TOUCHING"
+                        status_badge = "badge-danger"
+                    elif min_dist_atr <= 0.20:
+                        status = "TESTING"
+                        status_badge = "badge-warning"
+                    elif min_dist_atr <= 0.50:
+                        status = "APPROACHING"
+                        status_badge = "badge-primary"
+                    elif min_dist_atr <= 1.00:
+                        status = "PULLBACK"
+                        status_badge = "badge-info"
+                    else:
+                        status = "EXTENDED"
+                        status_badge = "badge-neutral"
 
-                # Forming bar geometry
-                up_wick, low_wick, body, direction = calculate_candle_metrics(rates, prev_idx=-1)
-                
-                # Precise Trend & Pullback Origin Logic
-                trend_regime = "BULL" if e89 > e233 else "BEAR"
-                
-                # Pullback Origin Invariant Check
-                o_bar = rates['open'][-1]
-                c_prev = rates['close'][-2] if len(rates) >= 2 else o_bar
-                came_from_above = (o_bar >= e89 * 0.998) or (c_prev >= e89 * 0.998)
-                came_from_below = (o_bar <= e89 * 1.002) or (c_prev <= e89 * 1.002)
+                    # Forming bar geometry
+                    up_wick, low_wick, body, direction = calculate_candle_metrics(rates, prev_idx=-1)
+                    
+                    # Precise Trend & Pullback Origin Logic
+                    trend_regime = "BULL" if e89 > e233 else "BEAR"
+                    
+                    # Pullback Origin Invariant Check
+                    o_bar = rates['open'][-1]
+                    c_prev = rates['close'][-2] if len(rates) >= 2 else o_bar
+                    came_from_above = (o_bar >= e89 * 0.998) or (c_prev >= e89 * 0.998)
+                    came_from_below = (o_bar <= e89 * 1.002) or (c_prev <= e89 * 1.002)
 
-                signal_hint = "MONITORING"
-                if min_dist_atr <= 0.35:
-                    if trend_regime == "BULL":
-                        if came_from_above:
-                            if rates['low'][-1] <= e89 * 1.002 and low_wick >= 0.25:
-                                signal_hint = "READY: BULLISH EMA89 BOUNCE"
+                    signal_hint = "MONITORING"
+                    if min_dist_atr <= 0.35:
+                        if trend_regime == "BULL":
+                            if came_from_above:
+                                if rates['low'][-1] <= e89 * 1.002 and low_wick >= 0.25:
+                                    signal_hint = "READY: BULLISH EMA89 BOUNCE"
+                                else:
+                                    signal_hint = "TESTING EMA89 AS SUPPORT"
                             else:
-                                signal_hint = "TESTING EMA89 AS SUPPORT"
-                        else:
-                            signal_hint = "BELOW EMA89 (TESTING RESISTANCE - NO BUY)"
-                    else:  # BEAR
-                        if came_from_below:
-                            if rates['high'][-1] >= e89 * 0.998 and up_wick >= 0.25:
-                                signal_hint = "READY: BEARISH EMA89 CEILING"
+                                signal_hint = "BELOW EMA89 (TESTING RESISTANCE - NO BUY)"
+                        else:  # BEAR
+                            if came_from_below:
+                                if rates['high'][-1] >= e89 * 0.998 and up_wick >= 0.25:
+                                    signal_hint = "READY: BEARISH EMA89 CEILING"
+                                else:
+                                    signal_hint = "TESTING EMA89 AS RESISTANCE"
                             else:
-                                signal_hint = "TESTING EMA89 AS RESISTANCE"
-                        else:
-                            signal_hint = "ABOVE EMA89 (TESTING SUPPORT - NO SHORT)"
-                elif min_dist_atr <= 0.60:
-                    signal_hint = "APPROACHING EMA89"
-                else:
-                    signal_hint = "EXTENDED"
+                                signal_hint = "ABOVE EMA89 (TESTING SUPPORT - NO SHORT)"
+                    elif min_dist_atr <= 0.60:
+                        signal_hint = "APPROACHING EMA89"
+                    else:
+                        signal_hint = "EXTENDED"
 
-                sym_record = {
-                    "symbol": sym,
-                    "cluster": cluster,
-                    "setup": f"{primary_model}_{tf_str}",
-                    "is_alpha": is_alpha,
-                    "tf": tf_str,
-                    "target_ema": target_ema_period,
-                    "exit_mode": exit_mode,
-                    "time_left_sec": time_left,
-                    "price": curr_price,
-                    "bid": tick.bid,
-                    "ask": tick.ask,
-                    "spread_pts": round((tick.ask - tick.bid) / (mt5.symbol_info(sym).point or 0.01), 1),
-                    "ema34": round(e34, 4),
-                    "ema55": round(e55, 4),
-                    "ema89": round(e89, 4),
-                    "ema_target": round(e_target, 4),
-                    "ema233": round(e233, 4),
-                    "atr": round(atr, 4),
-                    "adx": round(adx, 1),
-                    "nearest_shelf": target_shelf,
-                    "shelf_price": round(shelf_val, 4),
-                    "dist_atr": round(min_dist_atr, 2),
-                    "dist_pts": round(curr_price - shelf_val, 4),
-                    "status": status,
-                    "status_badge": status_badge,
-                    "up_wick_pct": round(up_wick * 100, 1),
-                    "low_wick_pct": round(low_wick * 100, 1),
-                    "body_pct": round(body * 100, 1),
-                    "direction": direction,
-                    "trend_regime": trend_regime,
-                    "signal_hint": signal_hint,
-                }
+                    sym_record = {
+                        "symbol": sym,
+                        "cluster": cluster,
+                        "setup": f"{primary_model}_{tf_str}",
+                        "is_alpha": is_alpha,
+                        "tf": tf_str,
+                        "target_ema": target_ema_period,
+                        "exit_mode": exit_mode,
+                        "time_left_sec": time_left,
+                        "price": curr_price,
+                        "bid": tick.bid,
+                        "ask": tick.ask,
+                        "spread_pts": round((tick.ask - tick.bid) / (mt5.symbol_info(sym).point or 0.01), 1),
+                        "ema34": round(e34, 4),
+                        "ema55": round(e55, 4),
+                        "ema89": round(e89, 4),
+                        "ema_target": round(e_target, 4),
+                        "ema233": round(e233, 4),
+                        "atr": round(atr, 4),
+                        "adx": round(adx, 1),
+                        "nearest_shelf": target_shelf,
+                        "shelf_price": round(shelf_val, 4),
+                        "dist_atr": round(min_dist_atr, 2),
+                        "dist_pts": round(curr_price - shelf_val, 4),
+                        "status": status,
+                        "status_badge": status_badge,
+                        "up_wick_pct": round(up_wick * 100, 1),
+                        "low_wick_pct": round(low_wick * 100, 1),
+                        "body_pct": round(body * 100, 1),
+                        "direction": direction,
+                        "trend_regime": trend_regime,
+                        "signal_hint": signal_hint,
+                    }
 
-                radar_all_list.append(sym_record)
-                if is_alpha:
-                    radar_28_list.append(sym_record)
+                    radar_all_list.append(sym_record)
+                    if is_alpha:
+                        radar_28_list.append(sym_record)
+                except Exception:
+                    continue
 
             # Sort both by proximity (closest to EMA first)
             radar_all_list.sort(key=lambda x: x["dist_atr"])
@@ -942,7 +945,7 @@ class DashboardRequestHandler(BaseHTTPRequestHandler):
         elif self.path == "/api/data":
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
-            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Origin", "http://localhost:8088")
             self.end_headers()
             with CACHE_LOCK:
                 payload = json.dumps(LIVE_DATA_CACHE, default=default_json_serializer)
@@ -961,7 +964,7 @@ def main():
     worker = threading.Thread(target=background_market_scanner, daemon=True)
     worker.start()
 
-    server = HTTPServer(("127.0.0.1", port), DashboardRequestHandler)
+    server = ThreadingHTTPServer(("127.0.0.1", port), DashboardRequestHandler)
     print("=" * 80)
     print(f"🚀 DELTA FIBONACCI LIVE QUANT RADAR DASHBOARD RUNNING")
     print(f"👉 Localhost URL: http://localhost:{port}")
