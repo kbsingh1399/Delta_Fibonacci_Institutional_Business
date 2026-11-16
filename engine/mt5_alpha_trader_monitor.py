@@ -68,49 +68,42 @@ logging.basicConfig(
 )
 logger = logging.getLogger("MT5AlphaMonitor")
 
-# Expanded 28 Positive-Alpha Universe across 8 Uncorrelated Clusters
+# Elite 21 Positive-Alpha Universe across 8 Uncorrelated Clusters (Optimized Breakthrough Basket)
 OPTIMAL_ALPHA_BASKET = [
-    # --- Crypto ---
+    # --- Crypto (3 Assets) ---
     {"symbol": "DOGUSD", "cluster": "Crypto", "setup": "canonical", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
     {"symbol": "ETHUSD", "cluster": "Crypto", "setup": "wyckoff_institutional_filtered", "exit_mode": "step_trail", "risk_usd": 10.0},
-    {"symbol": "LNKUSD", "cluster": "Crypto", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "XLMUSD", "cluster": "Crypto", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
 
-    # --- Commodities ---
+    # --- Commodities (1 Asset) ---
     {"symbol": "XAUUSD", "cluster": "Commodity_Energy", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
-    {"symbol": "XAGUSD", "cluster": "Commodity_Energy", "setup": "turbo_tri_tier", "exit_mode": "step_trail", "risk_usd": 10.0},
 
-    # --- Equity Indices ---
+    # --- Equity Indices (4 Assets) ---
     {"symbol": "US30", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
     {"symbol": "EUSTX50", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "FRA40", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
-    {"symbol": "US2000", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_2.5", "risk_usd": 10.0},
     {"symbol": "HK50", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_2.5", "risk_usd": 10.0},
 
-    # --- Forex JPY Crosses ---
+    # --- Forex JPY Crosses (4 Assets) ---
     {"symbol": "CHFJPY", "cluster": "Forex_JPY", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "EURJPY", "cluster": "Forex_JPY", "setup": "wyckoff_swing_sweep", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "USDJPY", "cluster": "Forex_JPY", "setup": "turbo_tri_tier", "exit_mode": "fixed_2.5", "risk_usd": 10.0},
     {"symbol": "CADJPY", "cluster": "Forex_JPY", "setup": "wyckoff_swing_sweep", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
-    {"symbol": "AUDJPY", "cluster": "Forex_JPY", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_2.5", "risk_usd": 10.0},
 
-    # --- Forex USD & EUR Pairs ---
+    # --- Forex USD & EUR Pairs (3 Assets) ---
     {"symbol": "USDCHF", "cluster": "Forex_USD", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "USDCNH", "cluster": "Forex_USD", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "EURNOK", "cluster": "Forex_EUR", "setup": "wyckoff_swing_sweep", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
 
-    # --- US Equities ---
+    # --- US Equities (5 Assets) ---
     {"symbol": "MSFT", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "AMD", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
-    {"symbol": "NVDA", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "BABA", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "step_trail", "risk_usd": 10.0},
     {"symbol": "NFLX", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
-    {"symbol": "GOOG", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "NKE", "cluster": "US_Equities", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
 
-    # --- European Equities ---
+    # --- European Equities (1 Asset) ---
     {"symbol": "MC", "cluster": "EU_Equities", "setup": "canonical", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
-    {"symbol": "MBG", "cluster": "EU_Equities", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
 ]
 
 MAX_CONCURRENT_POSITIONS = 3
@@ -304,13 +297,8 @@ class MT5AlphaTrader:
         shelf_type = "MID"
 
         if setup == "canonical":
-            # Priority 1: Macro 233 Shelf Direct Rejection (Price above 233, tests and rejects 233)
-            if c_bar >= ema233[prev] and (l_bar <= ema233[prev] * 1.002) and lower_wick >= 0.25:
-                sig = 1; shelf_type = "SLOW"
-            elif c_bar <= ema233[prev] and (h_bar >= ema233[prev] * 0.998) and upper_wick >= 0.25:
-                sig = -1; shelf_type = "SLOW"
-            # Priority 2: Mid Shelf (EMA 55/89) when trend stack aligned
-            elif ema89[prev] > ema233[prev]:
+            # Mid Shelf (EMA 55/89) Rejection (Color-Agnostic Wick >= 25%, Zero EMA233 Drag)
+            if ema89[prev] > ema233[prev]:
                 if lower_wick >= 0.25 and (l_bar <= ema89[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema89[prev]):
                     sig = 1; shelf_type = "MID"
             elif ema89[prev] < ema233[prev]:
@@ -318,13 +306,8 @@ class MT5AlphaTrader:
                     sig = -1; shelf_type = "MID"
 
         elif setup == "turbo_tri_tier":
-            # Priority 1: Macro 233 Shelf Direct Rejection (Price above 233, tests and rejects 233)
-            if c_bar >= ema233[prev] and (l_bar <= ema233[prev] * 1.002) and lower_wick >= 0.25:
-                sig = 1; shelf_type = "SLOW"
-            elif c_bar <= ema233[prev] and (h_bar >= ema233[prev] * 0.998) and upper_wick >= 0.25:
-                sig = -1; shelf_type = "SLOW"
-            # Priority 2: Momentum Turbo & Mid Shelves
-            elif ema89[prev] > ema233[prev] and c_bar >= ema233[prev]:
+            # Fast Momentum (EMA 34/55) & Mid (EMA 89) Shelves (Color-Agnostic Wick >= 25%)
+            if ema89[prev] > ema233[prev] and c_bar >= ema233[prev]:
                 if lower_wick >= 0.25:
                     if adx[prev] >= 22 and (l_bar <= ema34[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema55[prev]):
                         sig = 1; shelf_type = "TURBO"
@@ -348,21 +331,15 @@ class MT5AlphaTrader:
                     sig = -1; shelf_type = "SWEEP"
 
         elif setup == "wyckoff_institutional_filtered":
-            # Priority 1: Macro 233 Shelf Direct Rejection (Irrespective of Green or Red)
-            if c_bar >= ema233[prev] and (l_bar <= ema233[prev] * 1.002) and lower_wick >= 0.25:
-                sig = 1; shelf_type = "SLOW"
-            elif c_bar <= ema233[prev] and (h_bar >= ema233[prev] * 0.998) and upper_wick >= 0.25:
-                sig = -1; shelf_type = "SLOW"
-            else:
-                sep = abs(ema89[prev] - ema233[prev]) / a_bar
-                if 0.25 <= sep <= 2.50 and adx[prev] >= 20.0:
-                    # Priority 2: Mid Shelf Rejection (Irrespective of Green or Red)
-                    if ema89[prev] > ema233[prev] and lower_wick >= 0.25:
-                        if (l_bar <= ema89[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema89[prev]):
-                            sig = 1; shelf_type = "MID"
-                    elif ema89[prev] < ema233[prev] and upper_wick >= 0.25:
-                        if (h_bar >= ema89[prev] * 0.998 or h_bar >= ema55[prev] * 0.998) and (c_bar <= ema89[prev]):
-                            sig = -1; shelf_type = "MID"
+            sep = abs(ema89[prev] - ema233[prev]) / a_bar
+            if 0.25 <= sep <= 2.50 and adx[prev] >= 20.0:
+                # Mid Shelf Rejection with Ribbon Volatility & ADX Gating (Color-Agnostic Wick >= 25%)
+                if ema89[prev] > ema233[prev] and lower_wick >= 0.25:
+                    if (l_bar <= ema89[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema89[prev]):
+                        sig = 1; shelf_type = "MID"
+                elif ema89[prev] < ema233[prev] and upper_wick >= 0.25:
+                    if (h_bar >= ema89[prev] * 0.998 or h_bar >= ema55[prev] * 0.998) and (c_bar <= ema89[prev]):
+                        sig = -1; shelf_type = "MID"
 
         # Mark this bar as evaluated to prevent redundant re-evaluations
         self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts

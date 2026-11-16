@@ -652,7 +652,7 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
     <!-- Full Radar Controls -->
     <div class="controls">
         <div class="btn-group">
-            <button class="btn active" id="btn-alpha" onclick="setUniverseFilter('alpha')">⭐ 28 Alpha Universe</button>
+            <button class="btn active" id="btn-alpha" onclick="setUniverseFilter('alpha')">⭐ 21 Elite Alpha Universe</button>
             <button class="btn" id="btn-all" onclick="setUniverseFilter('all')">🌐 All 90 MT5 Symbols</button>
             <button class="btn" id="btn-touching" onclick="setApproachFilter('touching')">🔥 Approaching / Touching (≤ 0.5 ATR)</button>
         </div>
