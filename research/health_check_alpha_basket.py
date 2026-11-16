@@ -124,7 +124,7 @@ def main():
         spread_pts = (tick.ask - tick.bid) / info.point if info.point > 0 else 0
 
         # Rates
-        rates = mt5.copy_rates_from_pos(sym, mt5.TIMEFRAME_H4, 0, 250)
+        rates = mt5.copy_rates_from_pos(sym, mt5.TIMEFRAME_H4, 0, 1200)
         if rates is not None and len(rates) >= 240:
             df = pd.DataFrame(rates)
             c = df["close"].to_numpy(dtype=float)

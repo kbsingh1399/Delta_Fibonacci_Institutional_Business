@@ -144,7 +144,7 @@ def background_market_scanner():
             next_close_sec = 0
 
             for sym in all_tradeable:
-                rates = mt5.copy_rates_from_pos(sym, mt5.TIMEFRAME_H4, 0, 250)
+                rates = mt5.copy_rates_from_pos(sym, mt5.TIMEFRAME_H4, 0, 1200)
                 if rates is None or len(rates) < 240:
                     continue
                 tick = mt5.symbol_info_tick(sym)

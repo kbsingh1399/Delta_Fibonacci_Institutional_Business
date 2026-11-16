@@ -247,8 +247,8 @@ class MT5AlphaTrader:
         if not mt5.symbol_select(symbol, True):
             return None
 
-        # Fetch last 300 H4 bars
-        rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_H4, 0, 300)
+        # Fetch last 1200 H4 bars for full EMA233 warmup convergence
+        rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_H4, 0, 1200)
         if rates is None or len(rates) < 240:
             return None
 

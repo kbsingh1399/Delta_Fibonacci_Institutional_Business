@@ -35,7 +35,7 @@ def main():
     t0 = time.time()
     for s in all_symbols:
         mt5.symbol_select(s, True)
-        rates = mt5.copy_rates_from_pos(s, mt5.TIMEFRAME_H4, 0, 260)
+        rates = mt5.copy_rates_from_pos(s, mt5.TIMEFRAME_H4, 0, 1200)
         if rates is None or len(rates) < 240:
             continue
         tick = mt5.symbol_info_tick(s)
