@@ -75,29 +75,33 @@ logger = logging.getLogger("MT5AlphaMonitor")
 
 # Elite 21 Positive-Alpha Universe across 8 Uncorrelated Clusters
 OPTIMAL_ALPHA_BASKET = [
-    # --- Crypto (3 Assets) ---
+    # --- Crypto (4 Assets) ---
     {"symbol": "DOGUSD", "cluster": "Crypto", "setup": "canonical", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
     {"symbol": "ETHUSD", "cluster": "Crypto", "setup": "wyckoff_institutional_filtered", "exit_mode": "step_trail", "risk_usd": 10.0},
+    {"symbol": "ADAUSD", "cluster": "Crypto", "setup": "macro_reclaim_spring", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
     {"symbol": "XLMUSD", "cluster": "Crypto", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
 
     # --- Commodities (1 Asset) ---
     {"symbol": "XAUUSD", "cluster": "Commodity_Energy", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
 
-    # --- Equity Indices (4 Assets) ---
+    # --- Equity Indices (5 Assets) ---
     {"symbol": "US30", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
+    {"symbol": "NDX100", "cluster": "Indices", "setup": "macro_reclaim_spring", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
     {"symbol": "EUSTX50", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "FRA40", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "HK50", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_2.5", "risk_usd": 10.0},
 
-    # --- Forex JPY Crosses (4 Assets) ---
+    # --- Forex JPY Crosses (5 Assets) ---
+    {"symbol": "NZDJPY", "cluster": "Forex_JPY", "setup": "macro_reclaim_spring", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
     {"symbol": "CHFJPY", "cluster": "Forex_JPY", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "EURJPY", "cluster": "Forex_JPY", "setup": "wyckoff_swing_sweep", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "USDJPY", "cluster": "Forex_JPY", "setup": "turbo_tri_tier", "exit_mode": "fixed_2.5", "risk_usd": 10.0},
     {"symbol": "CADJPY", "cluster": "Forex_JPY", "setup": "wyckoff_swing_sweep", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
 
-    # --- Forex USD & EUR Pairs (3 Assets) ---
+    # --- Forex USD, EUR & Exotic Pairs (4 Assets) ---
     {"symbol": "USDCHF", "cluster": "Forex_USD", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "USDCNH", "cluster": "Forex_USD", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "NZDSGD", "cluster": "Forex_Exotic", "setup": "macro_reclaim_spring", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
     {"symbol": "EURNOK", "cluster": "Forex_EUR", "setup": "wyckoff_swing_sweep", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
 
     # --- US Equities (5 Assets) ---
@@ -398,7 +402,7 @@ class MT5AlphaTrader:
                         sig = -1; shelf_type = "RECLAIM_SPRING"
 
         # Dual-Model Engine: If primary model produced no signal, check Model 2 for elite reclaim assets
-        RECLAIM_SPRING_UNIVERSE = ["US30", "DOGUSD", "ETHUSD", "USDCNH", "FRA40", "BABA", "ADAUSD"]
+        RECLAIM_SPRING_UNIVERSE = ["US30", "DOGUSD", "ETHUSD", "USDCNH", "FRA40", "BABA", "ADAUSD", "NZDJPY", "NDX100", "NZDSGD"]
         if sig == 0 and symbol in RECLAIM_SPRING_UNIVERSE:
             if ema89[prev] > ema233[prev] and came_from_above and lower_wick >= 0.25:
                 if (l_bar <= ema89[prev] * 1.002) and (c_bar >= ema89[prev]):
