@@ -202,27 +202,33 @@ def background_market_scanner():
                 up_wick, low_wick, body, direction = calculate_candle_metrics(rates, prev_idx=-1)
                 
                 # Precise Trend & Shelf Geometry Check
-                # Bullish regime: EMA89 > EMA233 AND price >= EMA233
-                # Bearish regime: EMA89 < EMA233 AND price <= EMA233
                 trend_regime = "BULL" if e89 > e233 and curr_price >= e233 else ("BEAR" if e89 < e233 and curr_price <= e233 else "MIXED")
                 is_above_shelf = curr_price >= shelf_val
+                is_above_233 = curr_price >= e233
 
                 signal_hint = "MONITORING"
                 if min_dist_atr <= 0.35:
-                    if trend_regime == "BULL" and is_above_shelf:
-                        # Pulling back from above to test shelf as support
+                    # Priority 1: Macro 233 Rejection (Price above 233 and 233 gives rejection)
+                    if nearest_shelf == "EMA233":
+                        if is_above_233 and rates['low'][-1] <= e233 * 1.003 and low_wick >= 0.25:
+                            signal_hint = "BULLISH REJECTION (EMA233 BOUNCE)"
+                        elif not is_above_233 and rates['high'][-1] >= e233 * 0.997 and up_wick >= 0.25:
+                            signal_hint = "BEARISH REJECTION (EMA233 CEILING)"
+                        elif is_above_233:
+                            signal_hint = "TESTING EMA233 AS SUPPORT"
+                        else:
+                            signal_hint = "TESTING EMA233 AS RESISTANCE"
+                    elif is_above_shelf and trend_regime == "BULL":
                         if rates['low'][-1] <= shelf_val * 1.003 and low_wick >= 0.25:
-                            signal_hint = "BULLISH REJECTION (SUPPORT BOUNCE)"
+                            signal_hint = f"BULLISH REJECTION ({nearest_shelf} BOUNCE)"
                         else:
                             signal_hint = f"TESTING {nearest_shelf} AS SUPPORT"
-                    elif trend_regime == "BEAR" and not is_above_shelf:
-                        # Rallying from below to test shelf as resistance
+                    elif not is_above_shelf and trend_regime == "BEAR":
                         if rates['high'][-1] >= shelf_val * 0.997 and up_wick >= 0.25:
-                            signal_hint = "BEARISH REJECTION (RESISTANCE)"
+                            signal_hint = f"BEARISH REJECTION ({nearest_shelf} CEILING)"
                         else:
                             signal_hint = f"TESTING {nearest_shelf} AS RESISTANCE"
                     else:
-                        # Price is on counter side of shelf
                         side = "ABOVE" if is_above_shelf else "BELOW"
                         signal_hint = f"{side} {nearest_shelf} (CONSOLIDATING)"
                 elif min_dist_atr <= 0.60:
