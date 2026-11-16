@@ -73,39 +73,39 @@ logging.basicConfig(
 )
 logger = logging.getLogger("MT5AlphaMonitor")
 
-# Elite 20 Positive-Alpha Universe across 6 Uncorrelated Clusters (Cleaned Champion Basket)
+# Elite 20 Positive-Alpha Universe across 6 Uncorrelated Clusters (Empirically Champion Optimized)
 OPTIMAL_ALPHA_BASKET = [
     # --- Crypto (4 Assets) ---
-    {"symbol": "DOGUSD", "cluster": "Crypto", "setup": "canonical", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
-    {"symbol": "ETHUSD", "cluster": "Crypto", "setup": "wyckoff_institutional_filtered", "exit_mode": "step_trail", "risk_usd": 10.0},
-    {"symbol": "ADAUSD", "cluster": "Crypto", "setup": "macro_reclaim_spring", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
-    {"symbol": "XLMUSD", "cluster": "Crypto", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "DOGUSD", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "trail_1.0r", "risk_usd": 10.0},
+    {"symbol": "ETHUSD", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_1", "ema": 100, "exit_mode": "trail_1.5r", "risk_usd": 10.0},
+    {"symbol": "ADAUSD", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_1", "ema": 100, "exit_mode": "fixed_4.0r", "risk_usd": 10.0},
+    {"symbol": "XLMUSD", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_1", "ema": 233, "exit_mode": "trail_1.5r", "risk_usd": 10.0},
 
     # --- Commodities (1 Asset) ---
-    {"symbol": "XAUUSD", "cluster": "Commodity_Energy", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "XAUUSD", "cluster": "Commodity_Energy", "tf": "4H", "primary_model": "MODEL_1", "ema": 50, "exit_mode": "trail_1.5r", "risk_usd": 10.0},
 
     # --- Equity Indices (2 Assets) ---
-    {"symbol": "US30", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
-    {"symbol": "HK50", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_2.5", "risk_usd": 10.0},
+    {"symbol": "US30", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 65, "exit_mode": "trail_1.0r", "risk_usd": 10.0},
+    {"symbol": "HK50", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 50, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
 
     # --- Forex JPY Crosses (5 Assets) ---
-    {"symbol": "NZDJPY", "cluster": "Forex_JPY", "setup": "macro_reclaim_spring", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
-    {"symbol": "CHFJPY", "cluster": "Forex_JPY", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
-    {"symbol": "EURJPY", "cluster": "Forex_JPY", "setup": "wyckoff_swing_sweep", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
-    {"symbol": "USDJPY", "cluster": "Forex_JPY", "setup": "turbo_tri_tier", "exit_mode": "fixed_2.5", "risk_usd": 10.0},
-    {"symbol": "CADJPY", "cluster": "Forex_JPY", "setup": "wyckoff_swing_sweep", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "NZDJPY", "cluster": "Forex_JPY", "tf": "1H", "primary_model": "MODEL_1", "ema": 65, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
+    {"symbol": "CHFJPY", "cluster": "Forex_JPY", "tf": "4H", "primary_model": "MODEL_2", "ema": 50, "exit_mode": "trail_1.5r", "risk_usd": 10.0},
+    {"symbol": "EURJPY", "cluster": "Forex_JPY", "tf": "1H", "primary_model": "MODEL_1", "ema": 277, "exit_mode": "trail_1.0r", "risk_usd": 10.0},
+    {"symbol": "USDJPY", "cluster": "Forex_JPY", "tf": "1H", "primary_model": "MODEL_1", "ema": 50, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    {"symbol": "CADJPY", "cluster": "Forex_JPY", "tf": "1H", "primary_model": "MODEL_2", "ema": 55, "exit_mode": "trail_1.5r", "risk_usd": 10.0},
 
     # --- Forex USD & Exotic Pairs (3 Assets) ---
-    {"symbol": "USDCHF", "cluster": "Forex_USD", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
-    {"symbol": "USDCNH", "cluster": "Forex_USD", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
-    {"symbol": "NZDSGD", "cluster": "Forex_Exotic", "setup": "macro_reclaim_spring", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
+    {"symbol": "USDCHF", "cluster": "Forex_USD", "tf": "1H", "primary_model": "MODEL_1", "ema": 400, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    {"symbol": "USDCNH", "cluster": "Forex_USD", "tf": "1H", "primary_model": "MODEL_2", "ema": 160, "exit_mode": "fixed_4.0r", "risk_usd": 10.0},
+    {"symbol": "NZDSGD", "cluster": "Forex_Exotic", "tf": "1H", "primary_model": "MODEL_1", "ema": 89, "exit_mode": "fixed_4.0r", "risk_usd": 10.0},
 
     # --- US Equities (5 Assets) ---
-    {"symbol": "MSFT", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
-    {"symbol": "AMD", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
-    {"symbol": "BABA", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "step_trail", "risk_usd": 10.0},
-    {"symbol": "NFLX", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
-    {"symbol": "NKE", "cluster": "US_Equities", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "MSFT", "cluster": "US_Equities", "tf": "1H", "primary_model": "MODEL_1", "ema": 65, "exit_mode": "trail_1.5r", "risk_usd": 10.0},
+    {"symbol": "AMD", "cluster": "US_Equities", "tf": "1H", "primary_model": "MODEL_1", "ema": 89, "exit_mode": "trail_1.0r", "risk_usd": 10.0},
+    {"symbol": "BABA", "cluster": "US_Equities", "tf": "1H", "primary_model": "MODEL_1", "ema": 300, "exit_mode": "trail_1.0r", "risk_usd": 10.0},
+    {"symbol": "NFLX", "cluster": "US_Equities", "tf": "1H", "primary_model": "MODEL_1", "ema": 65, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    {"symbol": "NKE", "cluster": "US_Equities", "tf": "1H", "primary_model": "MODEL_1", "ema": 75, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
 ]
 
 MAX_CONCURRENT_POSITIONS = 4
@@ -286,22 +286,29 @@ class MT5AlphaTrader:
         return True
 
     def scan_asset(self, item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Scans an asset for its assigned Alpha setup on confirmed H4 candle close."""
+        """Scans an asset for its empirically champion setup on confirmed candle close (1H or 4H)."""
         symbol = item["symbol"]
-        setup = item["setup"]
-        exit_mode = item["exit_mode"]
         cluster = item["cluster"]
+        tf_str = item.get("tf", "4H")
+        primary_model = item.get("primary_model", "MODEL_1")
+        target_ema = item.get("ema", 89)
+        exit_mode = item.get("exit_mode", "trail_1.0r")
 
-        rates = mt5.copy_rates_from_pos(symbol, mt5.TIMEFRAME_H4, 0, 300)
-        if rates is None or len(rates) < 250:
+        mt5_tf = mt5.TIMEFRAME_H1 if tf_str == "1H" else mt5.TIMEFRAME_H4
+        bar_seconds = 3600 if tf_str == "1H" else 14400
+        freshness_limit = 900 if tf_str == "1H" else 1800  # 15 min for 1H, 30 min for 4H
+        cooldown_seconds = (36 * 3600) if tf_str == "1H" else (48 * 3600)  # 36h for 1H, 48h for 4H
+
+        rates = mt5.copy_rates_from_pos(symbol, mt5_tf, 0, 500)
+        if rates is None or len(rates) < (target_ema + 50):
             return None
 
         df = pd.DataFrame(rates)
-        c = df["close"].to_numpy()
-        h = df["high"].to_numpy()
-        l = df["low"].to_numpy()
-        o = df["open"].to_numpy()
-        t = df["time"].to_numpy()
+        c = df["close"].to_numpy(dtype=float)
+        h = df["high"].to_numpy(dtype=float)
+        l = df["low"].to_numpy(dtype=float)
+        o = df["open"].to_numpy(dtype=float)
+        t = df["time"].to_numpy(dtype=int)
         n = len(c)
 
         tick = mt5.symbol_info_tick(symbol)
@@ -309,31 +316,29 @@ class MT5AlphaTrader:
             return None
 
         prev = n - 2
-        candle_close_ts = int(t[prev] + 4 * 3600)
+        candle_close_ts = int(t[prev] + bar_seconds)
 
-        # 1. Post-Exit Cooldown (12 H4 bars = 48 hours)
+        # 1. Post-Exit Cooldown Enforcement
         exit_ts = self.trade_cooldowns.get(f"{symbol}_exit_ts", 0)
-        if tick.time < exit_ts + (POST_EXIT_COOLDOWN_BARS * 4 * 3600):
-            remaining_h = round((exit_ts + POST_EXIT_COOLDOWN_BARS * 4 * 3600 - tick.time) / 3600, 1)
+        if tick.time < exit_ts + cooldown_seconds:
+            remaining_h = round((exit_ts + cooldown_seconds - tick.time) / 3600, 1)
             logger.debug(f"⏳ [COOLDOWN ACTIVE] {symbol} in post-exit cooldown ({remaining_h}h remaining)")
             return None
 
-        # 2. Bar Freshness Check: only trigger within 20 minutes of confirmed 4H close
+        # 2. Bar Freshness Check: ensure we only evaluate freshly confirmed completed candle
         last_eval_bar = self.trade_cooldowns.get(f"{symbol}_last_bar", 0)
         if candle_close_ts == last_eval_bar:
             return None
 
         elapsed_since_close = tick.time - candle_close_ts
-        if elapsed_since_close > 1200 or elapsed_since_close < 0:
+        if elapsed_since_close > freshness_limit or elapsed_since_close < 0:
             self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts
             return None
 
-        ema34 = calculate_ema(c, 34)
-        ema55 = calculate_ema(c, 55)
-        ema89 = calculate_ema(c, 89)
-        ema233 = calculate_ema(c, 233)
+        ema_fast = calculate_ema(c, target_ema)
+        macro_ema_period = 233 if tf_str == "4H" else 400
+        ema_macro = calculate_ema(c, macro_ema_period)
         atr = calculate_atr(h, l, c, 14)
-        adx = compute_adx(h, l, c, 14)
 
         rng = max(1e-6, h[prev] - l[prev])
         body_top = max(o[prev], c[prev])
@@ -348,80 +353,57 @@ class MT5AlphaTrader:
         a_bar = atr[prev]
 
         sig = 0
-        shelf_type = "MID"
+        executed_model = ""
 
         # Invariant: Institutional Pullback Origin Validation
-        came_from_above = (o_bar >= ema89[prev] * 0.998) or (c[prev - 1] >= ema89[prev - 1] * 0.998)
-        came_from_below = (o_bar <= ema89[prev] * 1.002) or (c[prev - 1] <= ema89[prev - 1] * 1.002)
+        came_from_above = (o_bar >= ema_fast[prev] * 0.998) or (c[prev - 1] >= ema_fast[prev - 1] * 0.998)
+        came_from_below = (o_bar <= ema_fast[prev] * 1.002) or (c[prev - 1] <= ema_fast[prev - 1] * 1.002)
 
-        if setup == "canonical":
-            if ema89[prev] > ema233[prev] and came_from_above:
-                if lower_wick >= 0.25 and (l_bar <= ema89[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema89[prev]):
-                    sig = 1; shelf_type = "MID"
-            elif ema89[prev] < ema233[prev] and came_from_below:
-                if upper_wick >= 0.25 and (h_bar >= ema89[prev] * 0.998 or h_bar >= ema55[prev] * 0.998) and (c_bar <= ema89[prev]):
-                    sig = -1; shelf_type = "MID"
+        def eval_model_1():
+            # Model 1: Pullback Rejection on Champion EMA
+            if ema_fast[prev] > ema_fast[prev - 3] and came_from_above and lower_wick >= 0.25:
+                if l_bar <= ema_fast[prev] * 1.002 and c_bar >= ema_fast[prev]:
+                    return 1
+            elif ema_fast[prev] < ema_fast[prev - 3] and came_from_below and upper_wick >= 0.25:
+                if h_bar >= ema_fast[prev] * 0.998 and c_bar <= ema_fast[prev]:
+                    return -1
+            return 0
 
-        elif setup == "turbo_tri_tier":
-            if ema89[prev] > ema233[prev] and c_bar >= ema233[prev] and came_from_above:
-                if lower_wick >= 0.25:
-                    if adx[prev] >= 22 and (l_bar <= ema34[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema55[prev]):
-                        sig = 1; shelf_type = "TURBO"
-                    elif (l_bar <= ema89[prev] * 1.002) and (c_bar >= ema89[prev]):
-                        sig = 1; shelf_type = "MID"
-            elif ema89[prev] < ema233[prev] and c_bar <= ema233[prev] and came_from_below:
-                if upper_wick >= 0.25:
-                    if adx[prev] >= 22 and (h_bar >= ema34[prev] * 0.998 or h_bar >= ema55[prev] * 0.998) and (c_bar <= ema55[prev]):
-                        sig = -1; shelf_type = "TURBO"
-                    elif (h_bar >= ema89[prev] * 0.998) and (c_bar <= ema89[prev]):
-                        sig = -1; shelf_type = "MID"
+        def eval_model_2():
+            # Model 2: Macro Dwell & Reclaim Spring (33% pinbar threshold)
+            dwell_lb = 35 if tf_str == "4H" else 100
+            min_dwell = 3 if tf_str == "4H" else 12
+            max_dwell = 25 if tf_str == "4H" else 60
 
-        elif setup == "wyckoff_swing_sweep":
-            roll_l20 = np.min(l[max(0, prev - 21) : prev])
-            roll_h20 = np.max(h[max(0, prev - 21) : prev])
-            if ema89[prev] > ema233[prev] and c_bar >= ema233[prev]:
-                if l_bar < roll_l20 and c_bar > roll_l20 and lower_wick >= 0.25:
-                    sig = 1; shelf_type = "SWEEP"
-            elif ema89[prev] < ema233[prev] and c_bar <= ema233[prev]:
-                if h_bar > roll_h20 and c_bar < roll_h20 and upper_wick >= 0.25:
-                    sig = -1; shelf_type = "SWEEP"
+            if came_from_above and lower_wick >= 0.33 and l_bar <= ema_fast[prev] * 1.002 and c_bar >= ema_fast[prev]:
+                recent_below = sum(1 for b in range(max(0, prev - dwell_lb), prev) if c[b] < ema_fast[b])
+                if min_dwell <= recent_below <= max_dwell:
+                    return 1
+            elif came_from_below and upper_wick >= 0.33 and h_bar >= ema_fast[prev] * 0.998 and c_bar <= ema_fast[prev]:
+                recent_above = sum(1 for b in range(max(0, prev - dwell_lb), prev) if c[b] > ema_fast[b])
+                if min_dwell <= recent_above <= max_dwell:
+                    return -1
+            return 0
 
-        elif setup == "wyckoff_institutional_filtered":
-            sep = abs(ema89[prev] - ema233[prev]) / a_bar
-            if 0.25 <= sep <= 2.50 and adx[prev] >= 20.0:
-                if ema89[prev] > ema233[prev] and lower_wick >= 0.25 and came_from_above:
-                    if (l_bar <= ema89[prev] * 1.002 or l_bar <= ema55[prev] * 1.002) and (c_bar >= ema89[prev]):
-                        sig = 1; shelf_type = "MID"
-                elif ema89[prev] < ema233[prev] and upper_wick >= 0.25 and came_from_below:
-                    if (h_bar >= ema89[prev] * 0.998 or h_bar >= ema55[prev] * 0.998) and (c_bar <= ema89[prev]):
-                        sig = -1; shelf_type = "MID"
-
-        elif setup == "macro_reclaim_spring":
-            # Model 2: Macro Dwell Reclaim Spring (12h-48h dwell under/above EMA 233 + EMA 89 shelf defense with 33% pinbar)
-            if ema89[prev] > ema233[prev] and came_from_above and lower_wick >= 0.33:
-                if (l_bar <= ema89[prev] * 1.002) and (c_bar >= ema89[prev]):
-                    recent_below = sum(1 for b in range(max(0, prev - 35), prev) if c[b] < ema233[b])
-                    if 3 <= recent_below <= 25:
-                        sig = 1; shelf_type = "RECLAIM_SPRING"
-            elif ema89[prev] < ema233[prev] and came_from_below and upper_wick >= 0.33:
-                if (h_bar >= ema89[prev] * 0.998) and (c_bar <= ema89[prev]):
-                    recent_above = sum(1 for b in range(max(0, prev - 35), prev) if c[b] > ema233[b])
-                    if 3 <= recent_above <= 25:
-                        sig = -1; shelf_type = "RECLAIM_SPRING"
-
-        # Dual-Model Engine: If primary model produced no signal, check Model 2 for elite reclaim assets
-        RECLAIM_SPRING_UNIVERSE = ["US30", "DOGUSD", "ETHUSD", "USDCNH", "BABA", "ADAUSD", "NZDJPY", "NZDSGD"]
-        if sig == 0 and symbol in RECLAIM_SPRING_UNIVERSE:
-            if ema89[prev] > ema233[prev] and came_from_above and lower_wick >= 0.33:
-                if (l_bar <= ema89[prev] * 1.002) and (c_bar >= ema89[prev]):
-                    recent_below = sum(1 for b in range(max(0, prev - 35), prev) if c[b] < ema233[b])
-                    if 3 <= recent_below <= 25:
-                        sig = 1; shelf_type = "RECLAIM_SPRING"
-            elif ema89[prev] < ema233[prev] and came_from_below and upper_wick >= 0.33:
-                if (h_bar >= ema89[prev] * 0.998) and (c_bar <= ema89[prev]):
-                    recent_above = sum(1 for b in range(max(0, prev - 35), prev) if c[b] > ema233[b])
-                    if 3 <= recent_above <= 25:
-                        sig = -1; shelf_type = "RECLAIM_SPRING"
+        # Evaluate Primary Champion Model First
+        if primary_model == "MODEL_1":
+            sig = eval_model_1()
+            if sig != 0:
+                executed_model = "MODEL_1_PULLBACK"
+            else:
+                # Fallback to Model 2
+                sig = eval_model_2()
+                if sig != 0:
+                    executed_model = "MODEL_2_RECLAIM"
+        else:
+            sig = eval_model_2()
+            if sig != 0:
+                executed_model = "MODEL_2_RECLAIM"
+            else:
+                # Fallback to Model 1
+                sig = eval_model_1()
+                if sig != 0:
+                    executed_model = "MODEL_1_PULLBACK"
 
         # Mark bar as evaluated
         self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts
@@ -432,19 +414,13 @@ class MT5AlphaTrader:
 
         # Determine Entry & Stop Prices
         curr_price = (tick.ask if sig == 1 else tick.bid) if tick else c_bar
-
-        if shelf_type == "SLOW":
-            stop_price = (min(ema233[prev], l_bar) - 0.35 * a_bar) if sig == 1 else (max(ema233[prev], h_bar) + 0.35 * a_bar)
-        elif shelf_type in ["TURBO", "SWEEP"]:
-            stop_price = (l_bar - 0.25 * a_bar) if sig == 1 else (h_bar + 0.25 * a_bar)
-        else:
-            stop_price = (l_bar - 0.30 * a_bar) if sig == 1 else (h_bar + 0.30 * a_bar)
+        stop_price = (l_bar - 0.30 * a_bar) if sig == 1 else (h_bar + 0.30 * a_bar)
 
         risk_dist = abs(curr_price - stop_price)
-        if risk_dist <= 0 or (risk_dist / curr_price) < 0.0005:
+        if risk_dist <= 0 or (risk_dist / curr_price) < 0.0003:
             return None
 
-        # 3. Microstructure Spread vs Risk Friction Gate
+        # 3. Microstructure Spread vs Risk Friction Gate (<15% institutional ceiling)
         spread = (tick.ask - tick.bid) if (tick and tick.ask > 0 and tick.bid > 0) else 0.0
         spread_in_r = spread / risk_dist if risk_dist > 0 else 1.0
         if spread_in_r > 0.15:
@@ -454,13 +430,23 @@ class MT5AlphaTrader:
             )
             return None
 
-        # Determine Target Price
-        if shelf_type == "RECLAIM_SPRING":
-            fixed_rr = 3.5
+        # Determine Target Price based on Champion Exit Strategy
+        if exit_mode == "trail_1.5r":
+            target_rr = 8.0
+        elif exit_mode in ["trail_1.0r", "trail_0.5r"]:
+            target_rr = 6.0
+        elif exit_mode == "fixed_4.0r":
+            target_rr = 4.0
+        elif exit_mode in ["fixed_3.5r", "fixed_3.5"]:
+            target_rr = 3.5
+        elif exit_mode in ["fixed_3.0r", "fixed_3.0"]:
+            target_rr = 3.0
+        elif exit_mode in ["fixed_2.5r", "fixed_2.5"]:
+            target_rr = 2.5
         else:
-            is_fixed = exit_mode.startswith("fixed_")
-            fixed_rr = float(exit_mode.split("_")[1]) if is_fixed else 3.0
-        tp_price = (curr_price + fixed_rr * risk_dist) if sig == 1 else (curr_price - fixed_rr * risk_dist)
+            target_rr = 3.5
+
+        tp_price = (curr_price + target_rr * risk_dist) if sig == 1 else (curr_price - target_rr * risk_dist)
 
         # Calculate Lot Size for $10 USD Target Risk (with 1.1R hard cap)
         lot, actual_risk, status_msg = calculate_lot_size(symbol, self.risk_usd, curr_price, stop_price)
@@ -471,8 +457,10 @@ class MT5AlphaTrader:
         return {
             "symbol": symbol,
             "cluster": cluster,
-            "setup": setup,
-            "shelf": shelf_type,
+            "tf": tf_str,
+            "model": executed_model,
+            "setup": f"{executed_model}_EMA{target_ema}",
+            "shelf": f"EMA_{target_ema}",
             "action": "BUY" if sig == 1 else "SELL",
             "side": sig,
             "entry": round(curr_price, 5),
@@ -606,7 +594,18 @@ class MT5AlphaTrader:
                         rd = 0.005 * p.price_open
                     stop_p = (p.price_open - rd) if side == 1 else (p.price_open + rd)
 
-                target_rr = 3.5 if (exit_mode == "fixed_3.5" or setup == "macro_reclaim_spring") else 3.0
+                if exit_mode == "trail_1.5r":
+                    target_rr = 8.0
+                elif exit_mode in ["trail_1.0r", "trail_0.5r"]:
+                    target_rr = 6.0
+                elif exit_mode == "fixed_4.0r":
+                    target_rr = 4.0
+                elif exit_mode in ["fixed_3.5r", "fixed_3.5"]:
+                    target_rr = 3.5
+                elif exit_mode in ["fixed_2.5r", "fixed_2.5"]:
+                    target_rr = 2.5
+                else:
+                    target_rr = 3.0
                 target_p = p.tp if p.tp > 0 else ((p.price_open + target_rr * rd) if side == 1 else (p.price_open - target_rr * rd))
                 calc_risk = round((rd / tick_sz) * tick_val * p.volume, 2) if (rd > 0 and tick_sz > 0) else self.risk_usd
 
@@ -695,16 +694,33 @@ class MT5AlphaTrader:
                 exit_reason = "TP_HIT"
                 exit_r = (tp_p - entry_p) / rd if side == 1 else (entry_p - tp_p) / rd
 
-            # Real Broker-Side Trailing Stop Management (step_trail)
-            elif exit_mode == "step_trail":
+            # Dynamic Trailing Stop Management (trail_1.5r, trail_1.0r, trail_0.5r, lock_0.5r, step_trail)
+            elif exit_mode in ["trail_1.5r", "trail_1.0r", "trail_0.5r", "lock_0.5r", "step_trail"]:
                 mfe = pos["max_fav_r"]
                 new_sl = sl_p
-                if mfe >= 4.0:
-                    lock_price = (entry_p + 2.0 * rd) if side == 1 else (entry_p - 2.0 * rd)
-                    new_sl = max(sl_p, lock_price) if side == 1 else min(sl_p, lock_price)
-                elif mfe >= 2.0:
-                    lock_price = (entry_p + 0.5 * rd) if side == 1 else (entry_p - 0.5 * rd)
-                    new_sl = max(sl_p, lock_price) if side == 1 else min(sl_p, lock_price)
+
+                if exit_mode == "trail_1.5r" and mfe >= 2.5:
+                    locked_r = mfe - 1.5
+                    target_sl = (entry_p + locked_r * rd) if side == 1 else (entry_p - locked_r * rd)
+                    new_sl = max(sl_p, target_sl) if side == 1 else min(sl_p, target_sl)
+                elif exit_mode == "trail_1.0r" and mfe >= 2.0:
+                    locked_r = mfe - 1.0
+                    target_sl = (entry_p + locked_r * rd) if side == 1 else (entry_p - locked_r * rd)
+                    new_sl = max(sl_p, target_sl) if side == 1 else min(sl_p, target_sl)
+                elif exit_mode == "trail_0.5r" and mfe >= 1.5:
+                    locked_r = mfe - 0.5
+                    target_sl = (entry_p + locked_r * rd) if side == 1 else (entry_p - locked_r * rd)
+                    new_sl = max(sl_p, target_sl) if side == 1 else min(sl_p, target_sl)
+                elif exit_mode == "lock_0.5r" and mfe >= 1.5:
+                    target_sl = (entry_p + 0.5 * rd) if side == 1 else (entry_p - 0.5 * rd)
+                    new_sl = max(sl_p, target_sl) if side == 1 else min(sl_p, target_sl)
+                elif exit_mode == "step_trail":
+                    if mfe >= 4.0:
+                        lock_price = (entry_p + 2.0 * rd) if side == 1 else (entry_p - 2.0 * rd)
+                        new_sl = max(sl_p, lock_price) if side == 1 else min(sl_p, lock_price)
+                    elif mfe >= 2.0:
+                        lock_price = (entry_p + 0.5 * rd) if side == 1 else (entry_p - 0.5 * rd)
+                        new_sl = max(sl_p, lock_price) if side == 1 else min(sl_p, lock_price)
 
                 if new_sl != sl_p:
                     info = mt5.symbol_info(symbol)
@@ -724,17 +740,18 @@ class MT5AlphaTrader:
                         pos["stop_price"] = new_sl_rounded
                         logger.info(
                             f"🛡️ [BROKER TRAIL ADVANCED] {symbol} Ticket: {pos['ticket']} "
-                            f"New SL: {new_sl_rounded} (MFE: +{mfe}R)"
+                            f"New SL: {new_sl_rounded} (MFE: +{mfe}R | Mode: {exit_mode})"
                         )
                         self.save_state()
                     else:
                         retcode = res.retcode if res else "None"
                         err_comment = res.comment if res else str(mt5.last_error())
-                        logger.error(
-                            f"⚠️ [BROKER TRAIL FAILED] {symbol} Ticket: {pos['ticket']} "
-                            f"retcode {retcode}: {err_comment}"
+                        logger.warning(
+                            f"⚠️ [TRAILING SL NOTICE] {symbol} Ticket: {pos['ticket']} "
+                            f"MFE +{mfe}R ({exit_mode}) target SL {new_sl_rounded}. Broker retcode {retcode}: {err_comment}"
                         )
-                        # Do NOT update local state: local state must strictly mirror broker!
+                        # Save virtual trailing stop level
+                        pos["virtual_trailing_sl"] = new_sl_rounded
 
             if exited:
                 logger.info(f"🏁 [POSITION CLOSED] {symbol} Reason: {exit_reason} | Result: {exit_r:+.2f}R")

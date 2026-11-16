@@ -146,8 +146,19 @@ def background_market_scanner():
             next_close_sec = 0
 
             for sym in all_tradeable:
-                rates = mt5.copy_rates_from_pos(sym, mt5.TIMEFRAME_H4, 0, 1200)
-                if rates is None or len(rates) < 240:
+                is_alpha = sym in alpha_symbols
+                b_cfg = alpha_symbols[sym] if is_alpha else {}
+                tf_str = b_cfg.get("tf", "4H")
+                target_ema_period = b_cfg.get("ema", 89)
+                exit_mode = b_cfg.get("exit_mode", "fixed_3.0")
+                primary_model = b_cfg.get("primary_model", "MODEL_1")
+                cluster = b_cfg.get("cluster", "General")
+
+                mt5_tf = mt5.TIMEFRAME_H1 if tf_str == "1H" else mt5.TIMEFRAME_H4
+                bar_dur = 3600 if tf_str == "1H" else 14400
+
+                rates = mt5.copy_rates_from_pos(sym, mt5_tf, 0, 500)
+                if rates is None or len(rates) < (target_ema_period + 40):
                     continue
                 tick = mt5.symbol_info_tick(sym)
                 if not tick or tick.bid <= 0:
@@ -159,9 +170,9 @@ def background_market_scanner():
                 t = rates['time']
                 n = len(rates)
 
-                # Time left in 4H bar
+                # Time left in current candle
                 bar_open = int(t[-1])
-                bar_close = bar_open + 4 * 3600
+                bar_close = bar_open + bar_dur
                 time_left = max(0, int(bar_close - tick.time))
                 if next_close_sec == 0:
                     next_close_sec = time_left
@@ -169,18 +180,19 @@ def background_market_scanner():
                 e34 = calculate_ema(c, 34)[-1]
                 e55 = calculate_ema(c, 55)[-1]
                 e89 = calculate_ema(c, 89)[-1]
-                e233 = calculate_ema(c, 233)[-1]
+                e_target = calculate_ema(c, target_ema_period)[-1]
+                macro_p = 233 if tf_str == "4H" else 400
+                e233 = calculate_ema(c, macro_p)[-1]
                 atr = calculate_atr(h, l, c, 14)[-1]
                 adx = compute_adx(h, l, c, 14)[-1]
 
                 curr_price = tick.bid
-                d89_pts = curr_price - e89
-                d89_atr = abs(d89_pts) / atr if atr > 0 else 99.0
+                d_pts = curr_price - e_target
+                d_atr = abs(d_pts) / atr if atr > 0 else 99.0
 
-                # Target execution shelf is strictly EMA 89 (Mid Shelf)
-                target_shelf = "EMA 89"
-                shelf_val = e89
-                min_dist_atr = d89_atr
+                target_shelf = f"EMA {target_ema_period} ({tf_str})"
+                shelf_val = e_target
+                min_dist_atr = d_atr
 
                 # Shelf Status Classification relative to EMA 89
                 if min_dist_atr <= 0.05:
@@ -234,15 +246,15 @@ def background_market_scanner():
                 else:
                     signal_hint = "EXTENDED"
 
-                is_alpha = sym in alpha_symbols
-                cluster = alpha_symbols[sym]["cluster"] if is_alpha else "General"
-                setup = alpha_symbols[sym]["setup"] if is_alpha else "canonical"
-
                 sym_record = {
                     "symbol": sym,
                     "cluster": cluster,
-                    "setup": setup,
+                    "setup": f"{primary_model}_{tf_str}",
                     "is_alpha": is_alpha,
+                    "tf": tf_str,
+                    "target_ema": target_ema_period,
+                    "exit_mode": exit_mode,
+                    "time_left_sec": time_left,
                     "price": curr_price,
                     "bid": tick.bid,
                     "ask": tick.ask,
@@ -250,10 +262,11 @@ def background_market_scanner():
                     "ema34": round(e34, 4),
                     "ema55": round(e55, 4),
                     "ema89": round(e89, 4),
+                    "ema_target": round(e_target, 4),
                     "ema233": round(e233, 4),
                     "atr": round(atr, 4),
                     "adx": round(adx, 1),
-                    "nearest_shelf": "EMA89",
+                    "nearest_shelf": target_shelf,
                     "shelf_price": round(shelf_val, 4),
                     "dist_atr": round(min_dist_atr, 2),
                     "dist_pts": round(curr_price - shelf_val, 4),
