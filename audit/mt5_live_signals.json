@@ -16,5 +16,23 @@
     "entry_time": "2026-11-16T09:59:58.858963+00:00",
     "max_fav_r": 0.0,
     "status": "OPEN"
+  },
+  {
+    "ticket": 1794837598,
+    "symbol": "USDCNH",
+    "cluster": "Forex_USD",
+    "action": "SELL",
+    "side": -1,
+    "lot": 0.17,
+    "entry_price": 6.66587,
+    "stop_price": 6.66968,
+    "target_price": 6.65444,
+    "risk_dist": 0.00381,
+    "target_risk_usd": 10.0,
+    "actual_risk_usd": 9.72,
+    "exit_mode": "fixed_3.0",
+    "entry_time": "2026-11-16T13:59:58.115625+00:00",
+    "max_fav_r": 0.0,
+    "status": "OPEN"
   }
 ]

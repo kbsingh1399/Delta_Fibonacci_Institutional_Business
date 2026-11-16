@@ -248,13 +248,28 @@ class MT5AlphaTrader:
         try:
             tmp_active = f"{ACTIVE_POSITIONS_FILE}.tmp"
             with open(tmp_active, "w", encoding="utf-8") as f:
-                json.dump(self.active_positions, f, indent=2)
-            os.replace(tmp_active, ACTIVE_POSITIONS_FILE)
+                json.dump(self.active_positions, f, indent=2, default=str)
+            for _ in range(3):
+                try:
+                    os.replace(tmp_active, ACTIVE_POSITIONS_FILE)
+                    break
+                except Exception:
+                    time.sleep(0.05)
 
             tmp_cd = f"{COOLDOWNS_FILE}.tmp"
             with open(tmp_cd, "w", encoding="utf-8") as f:
-                json.dump(self.trade_cooldowns, f, indent=2)
-            os.replace(tmp_cd, COOLDOWNS_FILE)
+                json.dump(
+                    self.trade_cooldowns,
+                    f,
+                    indent=2,
+                    default=lambda x: int(x) if isinstance(x, (np.integer, int)) else str(x),
+                )
+            for _ in range(3):
+                try:
+                    os.replace(tmp_cd, COOLDOWNS_FILE)
+                    break
+                except Exception:
+                    time.sleep(0.05)
         except Exception as e:
             logger.error(f"Error saving state atomically: {e}")
 
@@ -294,7 +309,7 @@ class MT5AlphaTrader:
             return None
 
         prev = n - 2
-        candle_close_ts = t[prev] + 4 * 3600
+        candle_close_ts = int(t[prev] + 4 * 3600)
 
         # 1. Post-Exit Cooldown (12 H4 bars = 48 hours)
         exit_ts = self.trade_cooldowns.get(f"{symbol}_exit_ts", 0)
@@ -579,7 +594,20 @@ class MT5AlphaTrader:
                 tick_val = info.trade_tick_value if info else 1.0
                 tick_sz = info.trade_tick_size if (info and info.trade_tick_size > 0) else (info.point if info else 0.01)
 
-                rd = abs(p.price_open - p.sl) if p.sl > 0 else 0.01 * p.price_open
+                if p.sl > 0:
+                    rd = abs(p.price_open - p.sl)
+                    stop_p = p.sl
+                else:
+                    # Default institutional stop: 1.5 H4 ATR
+                    rates = mt5.copy_rates_from_pos(sym, mt5.TIMEFRAME_H4, 0, 20)
+                    if rates is not None and len(rates) >= 14:
+                        rd = float(np.mean(rates['high'][-14:] - rates['low'][-14:])) * 1.5
+                    else:
+                        rd = 0.005 * p.price_open
+                    stop_p = (p.price_open - rd) if side == 1 else (p.price_open + rd)
+
+                target_rr = 3.5 if (exit_mode == "fixed_3.5" or setup == "macro_reclaim_spring") else 3.0
+                target_p = p.tp if p.tp > 0 else ((p.price_open + target_rr * rd) if side == 1 else (p.price_open - target_rr * rd))
                 calc_risk = round((rd / tick_sz) * tick_val * p.volume, 2) if (rd > 0 and tick_sz > 0) else self.risk_usd
 
                 self.active_positions[sym] = {
@@ -591,8 +619,8 @@ class MT5AlphaTrader:
                     "side": side,
                     "lot": p.volume,
                     "entry_price": p.price_open,
-                    "stop_price": p.sl,
-                    "target_price": p.tp,
+                    "stop_price": stop_p,
+                    "target_price": target_p,
                     "risk_dist": rd,
                     "target_risk_usd": self.risk_usd,
                     "actual_risk_usd": calc_risk,
@@ -644,13 +672,13 @@ class MT5AlphaTrader:
             exit_r = 0.0
 
             # Check SL Hit
-            if (side == 1 and current_price <= sl_p) or (side == -1 and current_price >= sl_p):
+            if sl_p > 0 and ((side == 1 and current_price <= sl_p) or (side == -1 and current_price >= sl_p)):
                 exited = True
                 exit_reason = "SL_HIT"
                 exit_r = (sl_p - entry_p) / rd if side == 1 else (entry_p - sl_p) / rd
 
             # Check TP Hit
-            elif (side == 1 and current_price >= tp_p) or (side == -1 and current_price <= tp_p):
+            elif tp_p > 0 and ((side == 1 and current_price >= tp_p) or (side == -1 and current_price <= tp_p)):
                 exited = True
                 exit_reason = "TP_HIT"
                 exit_r = (tp_p - entry_p) / rd if side == 1 else (entry_p - tp_p) / rd
@@ -767,10 +795,15 @@ class MT5AlphaTrader:
         try:
             tmp_health = f"{HEALTH_STATUS_FILE}.tmp"
             with open(tmp_health, "w", encoding="utf-8") as f:
-                json.dump(status_obj, f, indent=2)
-            os.replace(tmp_health, HEALTH_STATUS_FILE)
+                json.dump(status_obj, f, indent=2, default=str)
+            for _ in range(3):
+                try:
+                    os.replace(tmp_health, HEALTH_STATUS_FILE)
+                    break
+                except Exception:
+                    time.sleep(0.05)
         except Exception as e:
-            logger.error(f"Error emitting health status: {e}")
+            logger.debug(f"Health emit notice: {e}")
 
     def run_sweep(self):
         """Executes a single end-to-end scanning and position management sweep."""
