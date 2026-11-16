@@ -16,21 +16,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AUDIT_DIR = os.path.join(BASE_DIR, "audit")
 HEALTH_STATUS_FILE = os.path.join(AUDIT_DIR, "mt5_health_status.json")
 
-BASKET = [
-    {"symbol": "US30", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit": "fixed_3.5"},
-    {"symbol": "BABA", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit": "step_trail"},
-    {"symbol": "USDJPY", "cluster": "Forex_JPY", "setup": "turbo_tri_tier", "exit": "fixed_2.5"},
-    {"symbol": "ETHUSD", "cluster": "Crypto", "setup": "wyckoff_institutional_filtered", "exit": "step_trail"},
-    {"symbol": "DOGUSD", "cluster": "Crypto", "setup": "canonical", "exit": "fixed_3.5"},
-    {"symbol": "CHFJPY", "cluster": "Forex_JPY", "setup": "canonical", "exit": "fixed_3.0"},
-    {"symbol": "AUDJPY", "cluster": "Forex_JPY", "setup": "wyckoff_institutional_filtered", "exit": "fixed_2.5"},
-    {"symbol": "USDCHF", "cluster": "Forex_USD", "setup": "wyckoff_institutional_filtered", "exit": "fixed_3.0"},
-    {"symbol": "CADJPY", "cluster": "Forex_JPY", "setup": "wyckoff_swing_sweep", "exit": "fixed_3.0"},
-    {"symbol": "XAUUSD", "cluster": "Commodity_Energy", "setup": "canonical", "exit": "fixed_3.0"},
-    {"symbol": "XAGUSD", "cluster": "Commodity_Energy", "setup": "turbo_tri_tier", "exit": "step_trail"},
-    {"symbol": "MC", "cluster": "EU_Equities", "setup": "canonical", "exit": "fixed_3.5"},
-    {"symbol": "HK50", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit": "fixed_2.5"},
-]
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+from engine.mt5_alpha_trader_monitor import OPTIMAL_ALPHA_BASKET as BASKET
 
 def calculate_ema(arr: np.ndarray, span: int) -> np.ndarray:
     return pd.Series(arr).ewm(span=span, adjust=False).mean().to_numpy()

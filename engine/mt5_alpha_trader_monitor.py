@@ -68,99 +68,49 @@ logging.basicConfig(
 )
 logger = logging.getLogger("MT5AlphaMonitor")
 
-# Optimal Multi-Cluster Alpha Basket Definition (Upgraded with live active symbols)
+# Expanded 28 Positive-Alpha Universe across 8 Uncorrelated Clusters
 OPTIMAL_ALPHA_BASKET = [
-    {
-        "symbol": "US30",
-        "cluster": "Indices",
-        "setup": "wyckoff_institutional_filtered",
-        "exit_mode": "fixed_3.5",
-        "risk_usd": 10.0,
-    },
-    {
-        "symbol": "BABA",
-        "cluster": "US_Equities",
-        "setup": "turbo_tri_tier",
-        "exit_mode": "step_trail",
-        "risk_usd": 10.0,
-    },
-    {
-        "symbol": "USDJPY",
-        "cluster": "Forex_JPY",
-        "setup": "turbo_tri_tier",
-        "exit_mode": "fixed_2.5",
-        "risk_usd": 10.0,
-    },
-    {
-        "symbol": "ETHUSD",
-        "cluster": "Crypto",
-        "setup": "wyckoff_institutional_filtered",
-        "exit_mode": "step_trail",
-        "risk_usd": 10.0,
-    },
-    {
-        "symbol": "DOGUSD",
-        "cluster": "Crypto",
-        "setup": "canonical",
-        "exit_mode": "fixed_3.5",
-        "risk_usd": 10.0,
-    },
-    {
-        "symbol": "CHFJPY",
-        "cluster": "Forex_JPY",
-        "setup": "canonical",
-        "exit_mode": "fixed_3.0",
-        "risk_usd": 10.0,
-    },
-    {
-        "symbol": "AUDJPY",
-        "cluster": "Forex_JPY",
-        "setup": "wyckoff_institutional_filtered",
-        "exit_mode": "fixed_2.5",
-        "risk_usd": 10.0,
-    },
-    {
-        "symbol": "USDCHF",
-        "cluster": "Forex_USD",
-        "setup": "wyckoff_institutional_filtered",
-        "exit_mode": "fixed_3.0",
-        "risk_usd": 10.0,
-    },
-    {
-        "symbol": "CADJPY",
-        "cluster": "Forex_JPY",
-        "setup": "wyckoff_swing_sweep",
-        "exit_mode": "fixed_3.0",
-        "risk_usd": 10.0,
-    },
-    {
-        "symbol": "XAUUSD",
-        "cluster": "Commodity_Energy",
-        "setup": "canonical",
-        "exit_mode": "fixed_3.0",
-        "risk_usd": 10.0,
-    },
-    {
-        "symbol": "XAGUSD",
-        "cluster": "Commodity_Energy",
-        "setup": "turbo_tri_tier",
-        "exit_mode": "step_trail",
-        "risk_usd": 10.0,
-    },
-    {
-        "symbol": "MC",
-        "cluster": "EU_Equities",
-        "setup": "canonical",
-        "exit_mode": "fixed_3.5",
-        "risk_usd": 10.0,
-    },
-    {
-        "symbol": "HK50",
-        "cluster": "Indices",
-        "setup": "wyckoff_institutional_filtered",
-        "exit_mode": "fixed_2.5",
-        "risk_usd": 10.0,
-    },
+    # --- Crypto ---
+    {"symbol": "DOGUSD", "cluster": "Crypto", "setup": "canonical", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
+    {"symbol": "ETHUSD", "cluster": "Crypto", "setup": "wyckoff_institutional_filtered", "exit_mode": "step_trail", "risk_usd": 10.0},
+    {"symbol": "LNKUSD", "cluster": "Crypto", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "XLMUSD", "cluster": "Crypto", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+
+    # --- Commodities ---
+    {"symbol": "XAUUSD", "cluster": "Commodity_Energy", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "XAGUSD", "cluster": "Commodity_Energy", "setup": "turbo_tri_tier", "exit_mode": "step_trail", "risk_usd": 10.0},
+
+    # --- Equity Indices ---
+    {"symbol": "US30", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
+    {"symbol": "EUSTX50", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "FRA40", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "US2000", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_2.5", "risk_usd": 10.0},
+    {"symbol": "HK50", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_2.5", "risk_usd": 10.0},
+
+    # --- Forex JPY Crosses ---
+    {"symbol": "CHFJPY", "cluster": "Forex_JPY", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "EURJPY", "cluster": "Forex_JPY", "setup": "wyckoff_swing_sweep", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "USDJPY", "cluster": "Forex_JPY", "setup": "turbo_tri_tier", "exit_mode": "fixed_2.5", "risk_usd": 10.0},
+    {"symbol": "CADJPY", "cluster": "Forex_JPY", "setup": "wyckoff_swing_sweep", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "AUDJPY", "cluster": "Forex_JPY", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_2.5", "risk_usd": 10.0},
+
+    # --- Forex USD & EUR Pairs ---
+    {"symbol": "USDCHF", "cluster": "Forex_USD", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "USDCNH", "cluster": "Forex_USD", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "EURNOK", "cluster": "Forex_EUR", "setup": "wyckoff_swing_sweep", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+
+    # --- US Equities ---
+    {"symbol": "MSFT", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "AMD", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "NVDA", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "BABA", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "step_trail", "risk_usd": 10.0},
+    {"symbol": "NFLX", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "GOOG", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+    {"symbol": "NKE", "cluster": "US_Equities", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
+
+    # --- European Equities ---
+    {"symbol": "MC", "cluster": "EU_Equities", "setup": "canonical", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
+    {"symbol": "MBG", "cluster": "EU_Equities", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
 ]
 
 MAX_CONCURRENT_POSITIONS = 3
@@ -769,10 +719,12 @@ class MT5AlphaTrader:
 
 def main():
     acquire_singleton_lock()
+    SCAN_INTERVAL_SEC = 10
     logger.info("=" * 80)
-    logger.info("STARTING FUNDEDNEXT MT5 OPTIMAL ALPHA BASKET LIVE MONITOR")
+    logger.info("STARTING FUNDEDNEXT MT5 EXPANDED 28-ALPHA UNIVERSE LIVE MONITOR")
     logger.info(f"Risk per trade: ${DEFAULT_RISK_USD:.2f} USD | Max Concurrency: {MAX_CONCURRENT_POSITIONS}")
-    logger.info(f"Target Assets: {len(OPTIMAL_ALPHA_BASKET)} symbols across 7 uncorrelated clusters")
+    logger.info(f"Target Assets: {len(OPTIMAL_ALPHA_BASKET)} symbols across 8 uncorrelated clusters")
+    logger.info(f"High-Speed Tick & Bar Scan Loop: {SCAN_INTERVAL_SEC}s interval")
     logger.info("=" * 80)
 
     if not mt5.initialize():
@@ -785,13 +737,13 @@ def main():
 
     trader = MT5AlphaTrader(risk_per_trade_usd=DEFAULT_RISK_USD)
 
-    logger.info("Entering continuous 60-second autonomous scanning loop...")
+    logger.info(f"Entering continuous {SCAN_INTERVAL_SEC}-second autonomous scanning loop...")
     while True:
         try:
             trader.run_sweep()
         except Exception as e:
             logger.error(f"Error during sweep: {e}", exc_info=True)
-        time.sleep(60)
+        time.sleep(SCAN_INTERVAL_SEC)
 
 
 if __name__ == "__main__":
