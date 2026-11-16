@@ -38,6 +38,7 @@ LIVE_SIGNALS_FILE = os.path.join(AUDIT_DIR, "mt5_live_signals.json")
 TRADING_LEDGER_FILE = os.path.join(AUDIT_DIR, "mt5_live_trading_ledger.csv")
 HEALTH_STATUS_FILE = os.path.join(AUDIT_DIR, "mt5_health_status.json")
 COOLDOWNS_FILE = os.path.join(AUDIT_DIR, "trade_cooldowns.json")
+MANUAL_PENDING_FILE = os.path.join(AUDIT_DIR, "manual_action_pending.json")
 PID_FILE = os.path.join(AUDIT_DIR, "mt5_alpha_trader.pid")
 
 
@@ -352,6 +353,12 @@ class MT5AlphaTrader:
         l_bar = l[prev]
         a_bar = atr[prev]
 
+        # Anti-Whipsaw Chop Filter: count crossings across EMA in last 12 bars
+        ema_crossings = 0
+        for b in range(max(1, prev - 12), prev):
+            if (c[b] > ema_fast[b] and c[b - 1] <= ema_fast[b - 1]) or (c[b] < ema_fast[b] and c[b - 1] >= ema_fast[b - 1]):
+                ema_crossings += 1
+
         sig = 0
         executed_model = ""
 
@@ -361,49 +368,54 @@ class MT5AlphaTrader:
 
         def eval_model_1():
             # Model 1: Pullback Rejection on Champion EMA
-            if ema_fast[prev] > ema_fast[prev - 3] and came_from_above and lower_wick >= 0.25:
+            if ema_crossings >= 2:
+                return 0
+            slope_bars = 4 if tf_str == "1H" else 3
+            if ema_fast[prev] > ema_fast[prev - slope_bars] and came_from_above and lower_wick >= 0.25:
                 if l_bar <= ema_fast[prev] * 1.002 and c_bar >= ema_fast[prev]:
                     return 1
-            elif ema_fast[prev] < ema_fast[prev - 3] and came_from_below and upper_wick >= 0.25:
+            elif ema_fast[prev] < ema_fast[prev - slope_bars] and came_from_below and upper_wick >= 0.25:
                 if h_bar >= ema_fast[prev] * 0.998 and c_bar <= ema_fast[prev]:
                     return -1
             return 0
 
         def eval_model_2():
             # Model 2: Macro Dwell & Reclaim Spring (33% pinbar threshold)
+            if ema_crossings >= 2:
+                return 0
             dwell_lb = 35 if tf_str == "4H" else 100
             min_dwell = 3 if tf_str == "4H" else 12
             max_dwell = 25 if tf_str == "4H" else 60
 
-            if came_from_above and lower_wick >= 0.33 and l_bar <= ema_fast[prev] * 1.002 and c_bar >= ema_fast[prev]:
-                recent_below = sum(1 for b in range(max(0, prev - dwell_lb), prev) if c[b] < ema_fast[b])
-                if min_dwell <= recent_below <= max_dwell:
-                    return 1
-            elif came_from_below and upper_wick >= 0.33 and h_bar >= ema_fast[prev] * 0.998 and c_bar <= ema_fast[prev]:
-                recent_above = sum(1 for b in range(max(0, prev - dwell_lb), prev) if c[b] > ema_fast[b])
-                if min_dwell <= recent_above <= max_dwell:
-                    return -1
+            # Minimum Decisive Clearance: at least 0.12 ATR beyond EMA to prevent 0.7-pip noise trap
+            min_clearance = max(0.12 * a_bar, (tick.ask - tick.bid) * 1.5 if tick else 0.0)
+
+            # Buy Reclaim: EMA must not be crashing, price closes decisively above EMA
+            if ema_fast[prev] >= ema_fast[prev - 3] * 0.999 and lower_wick >= 0.33:
+                if l_bar <= ema_fast[prev] and c_bar >= (ema_fast[prev] + min_clearance):
+                    recent_below = sum(1 for b in range(max(0, prev - dwell_lb), prev) if c[b] < ema_fast[b])
+                    if min_dwell <= recent_below <= max_dwell:
+                        return 1
+            # Sell Reclaim: EMA must not be surging, price closes decisively below EMA
+            elif ema_fast[prev] <= ema_fast[prev - 3] * 1.001 and upper_wick >= 0.33:
+                if h_bar >= ema_fast[prev] and c_bar <= (ema_fast[prev] - min_clearance):
+                    recent_above = sum(1 for b in range(max(0, prev - dwell_lb), prev) if c[b] > ema_fast[b])
+                    if min_dwell <= recent_above <= max_dwell:
+                        return -1
             return 0
 
-        # Evaluate Primary Champion Model First
+        # Strict Champion Model Isolation: Execute ONLY the designated champion model for this asset (No blind cross-model fallback)
         if primary_model == "MODEL_1":
             sig = eval_model_1()
             if sig != 0:
                 executed_model = "MODEL_1_PULLBACK"
-            else:
-                # Fallback to Model 2
-                sig = eval_model_2()
-                if sig != 0:
-                    executed_model = "MODEL_2_RECLAIM"
-        else:
+        elif primary_model == "MODEL_2":
             sig = eval_model_2()
             if sig != 0:
                 executed_model = "MODEL_2_RECLAIM"
-            else:
-                # Fallback to Model 1
-                sig = eval_model_1()
-                if sig != 0:
-                    executed_model = "MODEL_1_PULLBACK"
+        else:
+            sig = 0
+            executed_model = ""
 
         # Mark bar as evaluated
         self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts
@@ -491,6 +503,16 @@ class MT5AlphaTrader:
             f"SL: {stop} | TP: {target} | Risk: ${signal['actual_risk_usd']} | Setup: {signal['setup']}"
         )
 
+        info = mt5.symbol_info(symbol)
+        filling = mt5.ORDER_FILLING_IOC
+        if info:
+            if info.filling_mode & 2:
+                filling = mt5.ORDER_FILLING_IOC
+            elif info.filling_mode & 1:
+                filling = mt5.ORDER_FILLING_FOK
+            else:
+                filling = mt5.ORDER_FILLING_RETURN
+
         req = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": symbol,
@@ -503,18 +525,57 @@ class MT5AlphaTrader:
             "magic": 89233,
             "comment": f"AlphaBasket_{signal['cluster'][:6]}",
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
+            "type_filling": filling,
         }
 
         order_res = mt5.order_send(req)
 
         if order_res and order_res.retcode == mt5.TRADE_RETCODE_DONE:
             ticket = order_res.order
-            logger.info(f"✅ [MT5 FILL SUCCESS] {symbol} Ticket: {ticket}")
+            logger.info(f"✅ [MT5 AUTO-FILL SUCCESS] {symbol} Ticket: {ticket}")
+            self._clear_manual_pending(symbol)
         else:
             err_msg = order_res.comment if order_res else str(mt5.last_error())
             retcode = order_res.retcode if order_res else "None"
-            logger.error(f"❌ [ORDER REJECTED - NOT RECORDED] {symbol} retcode {retcode}: {err_msg}")
+            logger.warning(f"⚠️ [AUTO-EXECUTION REJECTED] {symbol} retcode {retcode}: {err_msg}")
+            
+            # Print prominent actionable alert for manual MT5 punching
+            border = "=" * 80
+            manual_msg = (
+                f"\n{border}\n"
+                f"🚨 [ACTION REQUIRED: MANUAL PUNCH SETUP IN MT5]\n"
+                f"   Asset:       {symbol}\n"
+                f"   Action:      {action} (BUY / SELL)\n"
+                f"   Volume:      {lot} Lots\n"
+                f"   Entry Level: {entry}\n"
+                f"   Stop Loss:   {stop}\n"
+                f"   Take Profit: {target}\n"
+                f"   Risk USD:    ${signal['actual_risk_usd']:.2f} (Target: ${signal['target_risk_usd']:.2f})\n"
+                f"   Setup:       {signal['setup']} ({signal['tf']} TF | Exit: {exit_mode})\n"
+                f"   Reason:      AutoTrading restricted by broker (retcode {retcode}: {err_msg})\n"
+                f"👉 PUNCH THIS ORDER MANUALLY IN MT5 GUI. The daemon will auto-sync and manage trailing SL!\n"
+                f"{border}\n"
+            )
+            print(manual_msg, flush=True)
+            logger.critical(manual_msg)
+
+            pending_entry = {
+                "symbol": symbol,
+                "action": action,
+                "lot": lot,
+                "entry": entry,
+                "stop": stop,
+                "target": target,
+                "risk_usd": signal["actual_risk_usd"],
+                "target_risk_usd": signal["target_risk_usd"],
+                "setup": signal["setup"],
+                "tf": signal["tf"],
+                "exit_mode": exit_mode,
+                "cluster": signal["cluster"],
+                "detected_at": datetime.now(timezone.utc).isoformat(),
+                "status": "AWAITING_MANUAL_PUNCH"
+            }
+            self._save_manual_pending(pending_entry)
             return False  # Strictly NO ticket fabrication, NO phantom OPEN state
 
         pos_entry = {
@@ -559,6 +620,25 @@ class MT5AlphaTrader:
         except Exception as e:
             logger.error(f"Error saving live signal audit: {e}")
 
+    def _save_manual_pending(self, entry: Dict[str, Any]):
+        try:
+            tmp = f"{MANUAL_PENDING_FILE}.tmp"
+            with open(tmp, "w", encoding="utf-8") as f:
+                json.dump(entry, f, indent=2)
+            os.replace(tmp, MANUAL_PENDING_FILE)
+        except Exception as e:
+            logger.error(f"Error saving manual pending signal: {e}")
+
+    def _clear_manual_pending(self, symbol: str):
+        if os.path.exists(MANUAL_PENDING_FILE):
+            try:
+                with open(MANUAL_PENDING_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                if data.get("symbol") == symbol:
+                    os.remove(MANUAL_PENDING_FILE)
+            except Exception:
+                pass
+
     def sync_broker_positions(self):
         """Synchronizes open positions directly from MT5 terminal into active state."""
         mt5_pos = mt5.positions_get()
@@ -571,6 +651,7 @@ class MT5AlphaTrader:
         # 1. Sync live MT5 positions into active_positions
         for ticket, p in live_tickets.items():
             sym = p.symbol
+            self._clear_manual_pending(sym)
             if sym not in self.active_positions or self.active_positions[sym].get("ticket") != ticket:
                 basket_item = next((item for item in OPTIMAL_ALPHA_BASKET if item["symbol"] == sym), None)
                 cluster = basket_item["cluster"] if basket_item else "External"
@@ -820,6 +901,7 @@ class MT5AlphaTrader:
             "risk_per_trade_usd": self.risk_usd,
             "max_risk_cap_usd": round(self.risk_usd * 1.10, 2),
             "concurrency_limit": MAX_CONCURRENT_POSITIONS,
+            "manual_pending_signal": json.load(open(MANUAL_PENDING_FILE, "r", encoding="utf-8")) if os.path.exists(MANUAL_PENDING_FILE) else None,
         }
         try:
             tmp_health = f"{HEALTH_STATUS_FILE}.tmp"

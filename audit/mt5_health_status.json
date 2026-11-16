@@ -1,42 +1,19 @@
 {
-  "timestamp": "2026-11-16T15:23:40.989332+00:00",
+  "timestamp": "2026-11-16T18:34:22.592263+00:00",
   "terminal_connected": true,
   "account_login": 11808165,
   "server": "FundedNext-Server",
-  "balance": 4701.64,
-  "equity": 4670.36,
-  "margin_free": 4461.21,
-  "margin_level": 2233.019364092756,
+  "balance": 4667.91,
+  "equity": 4667.91,
+  "margin_free": 4667.91,
+  "margin_level": 0.0,
   "governor_status": "OK",
-  "used_loss_today_usd": 0.05,
+  "used_loss_today_usd": 0.0,
   "daily_loss_limit_usd": 235.08,
   "lifetime_floor_usd": 4231.48,
-  "active_positions_count": 1,
-  "active_positions": [
-    {
-      "ticket": 210389716,
-      "symbol": "US30",
-      "cluster": "Indices",
-      "setup": "wyckoff_institutional_filtered",
-      "action": "BUY",
-      "side": 1,
-      "lot": 0.01,
-      "entry_price": 52288.6,
-      "stop_price": 51952.19,
-      "target_price": 52859.83,
-      "risk_dist": 336.4099999999962,
-      "target_risk_usd": 10.0,
-      "actual_risk_usd": 39.94,
-      "exit_mode": "fixed_3.5",
-      "entry_time": "2026-11-16T16:23:22+00:00",
-      "max_fav_r": 0.0,
-      "status": "OPEN",
-      "source": "MT5_TERMINAL"
-    }
-  ],
-  "active_clusters": [
-    "Indices"
-  ],
+  "active_positions_count": 0,
+  "active_positions": [],
+  "active_clusters": [],
   "market_statuses": {
     "DOGUSD": "OPEN",
     "ETHUSD": "OPEN",
@@ -61,5 +38,6 @@
   },
   "risk_per_trade_usd": 10.0,
   "max_risk_cap_usd": 11.0,
-  "concurrency_limit": 4
+  "concurrency_limit": 4,
+  "manual_pending_signal": null
 }

@@ -4,5 +4,25 @@
     "exit_time_str": "2026-11-16 01:35:57",
     "candle_ts": 1794773157,
     "reason": "MANUAL_CLOSE"
-  }
+  },
+  "DOGUSD_last_bar": 1794859200,
+  "ETHUSD_last_bar": 1794859200,
+  "ADAUSD_last_bar": 1794859200,
+  "XLMUSD_last_bar": 1794859200,
+  "XAUUSD_last_bar": 1794859200,
+  "NZDJPY_last_bar": 1794859200,
+  "CHFJPY_last_bar": 1794859200,
+  "EURJPY_last_bar": 1794859200,
+  "USDJPY_last_bar": 1794859200,
+  "CADJPY_last_bar": 1794859200,
+  "USDCHF_last_bar": 1794859200,
+  "USDCNH_last_bar": 1794859200,
+  "NZDSGD_last_bar": 1794859200,
+  "MSFT_last_bar": 1794859200,
+  "AMD_last_bar": 1794859200,
+  "BABA_last_bar": 1794859200,
+  "NFLX_last_bar": 1794859200,
+  "NKE_last_bar": 1794859200,
+  "US30_last_bar": 1794859200,
+  "HK50_last_bar": 1794859200
 }

@@ -288,6 +288,15 @@ def background_market_scanner():
             radar_all_list.sort(key=lambda x: x["dist_atr"])
             radar_28_list.sort(key=lambda x: x["dist_atr"])
 
+            manual_pending_file = os.path.join(BASE_DIR, "audit", "manual_action_pending.json")
+            manual_pending = None
+            if os.path.exists(manual_pending_file):
+                try:
+                    with open(manual_pending_file, "r", encoding="utf-8") as f:
+                        manual_pending = json.load(f)
+                except Exception:
+                    pass
+
             with CACHE_LOCK:
                 LIVE_DATA_CACHE["timestamp"] = datetime.now(timezone.utc).isoformat()
                 LIVE_DATA_CACHE["account"] = account_data
@@ -296,6 +305,7 @@ def background_market_scanner():
                 LIVE_DATA_CACHE["radar_28"] = radar_28_list
                 LIVE_DATA_CACHE["radar_all"] = radar_all_list
                 LIVE_DATA_CACHE["next_4h_close_sec"] = next_close_sec
+                LIVE_DATA_CACHE["manual_pending"] = manual_pending
                 LIVE_DATA_CACHE["last_update"] = time.time()
 
             # Periodic Garbage Collection for RAM optimization
@@ -609,6 +619,21 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
         </div>
     </div>
 
+    <!-- Action Alert Banner for Manual Punching -->
+    <div id="manual-alert-container" style="display: none; margin-bottom: 20px;">
+        <div style="background: rgba(255, 23, 68, 0.15); border: 2px solid var(--accent-crimson); border-radius: 12px; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 0 20px rgba(255, 23, 68, 0.3);">
+            <div>
+                <div style="color: var(--accent-crimson); font-weight: 800; font-size: 15px; letter-spacing: 0.5px; margin-bottom: 4px;">
+                    🚨 ACTION REQUIRED: PUNCH ORDER MANUALLY IN MT5
+                </div>
+                <div id="manual-alert-details" class="mono" style="font-size: 13px; color: #fff;"></div>
+            </div>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('manual-alert-details').innerText); alert('Copied setup to clipboard!');" class="btn" style="background: var(--accent-crimson); color: #fff; border: none; padding: 10px 18px; font-weight: 700; cursor: pointer;">
+                📋 COPY SETUP
+            </button>
+        </div>
+    </div>
+
     <!-- Top Two Cards: Live Positions & Proximity Highlights -->
     <div class="top-grid">
         <!-- Live Open Positions Card -->
@@ -754,6 +779,17 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
             let mins = Math.floor((sec % 3600) / 60);
             let s = Math.floor(sec % 60);
             document.getElementById('time-countdown').textContent = `${hrs}h ${mins.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+
+            // Handle Manual Punch Alert Banner
+            const alertCont = document.getElementById('manual-alert-container');
+            const alertDetails = document.getElementById('manual-alert-details');
+            if (rawData.manual_pending && alertCont && alertDetails) {
+                const mp = rawData.manual_pending;
+                alertCont.style.display = 'block';
+                alertDetails.innerText = `${mp.action} ${mp.symbol} | Volume: ${mp.lot} Lots | Entry: ${mp.entry} | SL: ${mp.stop} | TP: ${mp.target} | Risk: $${mp.risk_usd} (Target: $${mp.target_risk_usd}) | Setup: ${mp.setup} (${mp.tf} TF | ${mp.exit_mode})`;
+            } else if (alertCont) {
+                alertCont.style.display = 'none';
+            }
 
             // Positions Table
             const pos = rawData.positions || [];
