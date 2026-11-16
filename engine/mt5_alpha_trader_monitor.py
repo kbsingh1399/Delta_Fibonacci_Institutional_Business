@@ -20,6 +20,7 @@ import os
 import sys
 import time
 import json
+import gc
 import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional, Tuple, List
@@ -718,9 +719,13 @@ def main():
     trader = MT5AlphaTrader(risk_per_trade_usd=DEFAULT_RISK_USD)
 
     logger.info(f"Entering continuous {SCAN_INTERVAL_SEC}-second autonomous scanning loop...")
+    sweep_count = 0
     while True:
         try:
             trader.run_sweep()
+            sweep_count += 1
+            if sweep_count % 15 == 0:
+                gc.collect()
         except Exception as e:
             logger.error(f"Error during sweep: {e}", exc_info=True)
         time.sleep(SCAN_INTERVAL_SEC)

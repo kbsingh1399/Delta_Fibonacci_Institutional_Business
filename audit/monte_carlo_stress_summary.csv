@@ -1,4 +1,0 @@
-,Monthly PnL Median (₹),Monthly PnL 5th %ile (₹),Monthly PnL 95th %ile (₹),Median Max DD (₹),95th %ile Max DD (₹),Median Max DD (%),95th %ile Max DD (%),"Ruin Probability (< ₹2,500)"
-Base Case,1600.0,595.0000000000001,2605.0000000000005,309.0,566.5,6.18,11.33,0.0
-Cluster Shock (3R Bunching),1020.0000000000002,-487.49999999999983,3030.0000000000005,600.0,1350.0,12.0,27.0,0.0
-Regime Switch (36.5% WR),595.0000000000002,-409.99999999999994,1600.0,432.5,850.0,8.649999999999999,17.0,0.0

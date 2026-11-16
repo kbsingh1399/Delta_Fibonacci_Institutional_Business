@@ -15,6 +15,7 @@ import os
 import sys
 import time
 import json
+import gc
 import threading
 from datetime import datetime, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -77,6 +78,7 @@ def background_market_scanner():
 
     print(">> [DASHBOARD SCANNER] Background market calculation thread started.")
     alpha_symbols = {item["symbol"]: item for item in OPTIMAL_ALPHA_BASKET}
+    scan_cycle = 0
 
     while True:
         try:
@@ -287,10 +289,15 @@ def background_market_scanner():
                 LIVE_DATA_CACHE["next_4h_close_sec"] = next_close_sec
                 LIVE_DATA_CACHE["last_update"] = time.time()
 
+            # Periodic Garbage Collection for RAM optimization
+            scan_cycle += 1
+            if scan_cycle % 12 == 0:
+                gc.collect()
+
         except Exception as e:
             print(f"[ERROR in dashboard scanner loop]: {e}")
 
-        time.sleep(2)  # High-speed refresh cycle
+        time.sleep(5)  # Optimized 5s cycle (reduces CPU/RAM churn on H4 radar)
 
 DASHBOARD_HTML = r"""<!DOCTYPE html>
 <html lang="en">

@@ -1,0 +1,20 @@
+[
+  {
+    "ticket": 1794823198,
+    "symbol": "USDJPY",
+    "cluster": "Forex_JPY",
+    "action": "BUY",
+    "side": 1,
+    "lot": 0.05,
+    "entry_price": 159.564,
+    "stop_price": 159.26588,
+    "target_price": 160.30931,
+    "risk_dist": 0.29812,
+    "target_risk_usd": 10.0,
+    "actual_risk_usd": 9.34,
+    "exit_mode": "fixed_2.5",
+    "entry_time": "2026-11-16T09:59:58.858963+00:00",
+    "max_fav_r": 0.0,
+    "status": "OPEN"
+  }
+]
