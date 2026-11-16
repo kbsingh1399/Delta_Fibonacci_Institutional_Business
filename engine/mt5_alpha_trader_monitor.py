@@ -384,6 +384,19 @@ class MT5AlphaTrader:
                     if (h_bar >= ema89[prev] * 0.998 or h_bar >= ema55[prev] * 0.998) and (c_bar <= ema89[prev]):
                         sig = -1; shelf_type = "MID"
 
+        elif setup == "macro_reclaim_spring":
+            # Model 2: Macro Dwell Reclaim Spring (12h-48h dwell under/above EMA 233 + EMA 89 shelf defense)
+            if ema89[prev] > ema233[prev] and came_from_above and lower_wick >= 0.25:
+                if (l_bar <= ema89[prev] * 1.002) and (c_bar >= ema89[prev]):
+                    recent_below = sum(1 for b in range(max(0, prev - 35), prev) if c[b] < ema233[b])
+                    if 3 <= recent_below <= 25:
+                        sig = 1; shelf_type = "RECLAIM_SPRING"
+            elif ema89[prev] < ema233[prev] and came_from_below and upper_wick >= 0.25:
+                if (h_bar >= ema89[prev] * 0.998) and (c_bar <= ema89[prev]):
+                    recent_above = sum(1 for b in range(max(0, prev - 35), prev) if c[b] > ema233[b])
+                    if 3 <= recent_above <= 25:
+                        sig = -1; shelf_type = "RECLAIM_SPRING"
+
         # Mark bar as evaluated
         self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts
         self.save_state()
@@ -581,9 +594,9 @@ class MT5AlphaTrader:
                     f"{p.volume} lots @ {p.price_open} | SL: {p.sl} | TP: {p.tp} | Risk: ${calc_risk} | Cluster: {cluster}"
                 )
 
-        # 2. Detect closed MT5 positions
+        # 2. Detect closed MT5 positions (strict reconciliation with broker)
         for sym, pos in list(self.active_positions.items()):
-            if pos.get("source") == "MT5_TERMINAL" and pos.get("ticket") not in live_tickets:
+            if pos.get("ticket") not in live_tickets:
                 logger.info(f"🏁 [BROKER POSITION CLOSED] {sym} Ticket: {pos.get('ticket')} resolved on MT5")
                 self.active_positions.pop(sym, None)
                 changed = True
