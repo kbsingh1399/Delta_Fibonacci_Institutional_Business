@@ -397,6 +397,20 @@ class MT5AlphaTrader:
                     if 3 <= recent_above <= 25:
                         sig = -1; shelf_type = "RECLAIM_SPRING"
 
+        # Dual-Model Engine: If primary model produced no signal, check Model 2 for elite reclaim assets
+        RECLAIM_SPRING_UNIVERSE = ["US30", "DOGUSD", "ETHUSD", "USDCNH", "FRA40", "BABA", "ADAUSD"]
+        if sig == 0 and symbol in RECLAIM_SPRING_UNIVERSE:
+            if ema89[prev] > ema233[prev] and came_from_above and lower_wick >= 0.25:
+                if (l_bar <= ema89[prev] * 1.002) and (c_bar >= ema89[prev]):
+                    recent_below = sum(1 for b in range(max(0, prev - 35), prev) if c[b] < ema233[b])
+                    if 3 <= recent_below <= 25:
+                        sig = 1; shelf_type = "RECLAIM_SPRING"
+            elif ema89[prev] < ema233[prev] and came_from_below and upper_wick >= 0.25:
+                if (h_bar >= ema89[prev] * 0.998) and (c_bar <= ema89[prev]):
+                    recent_above = sum(1 for b in range(max(0, prev - 35), prev) if c[b] > ema233[b])
+                    if 3 <= recent_above <= 25:
+                        sig = -1; shelf_type = "RECLAIM_SPRING"
+
         # Mark bar as evaluated
         self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts
         self.save_state()
@@ -429,8 +443,11 @@ class MT5AlphaTrader:
             return None
 
         # Determine Target Price
-        is_fixed = exit_mode.startswith("fixed_")
-        fixed_rr = float(exit_mode.split("_")[1]) if is_fixed else 3.0
+        if shelf_type == "RECLAIM_SPRING":
+            fixed_rr = 3.5
+        else:
+            is_fixed = exit_mode.startswith("fixed_")
+            fixed_rr = float(exit_mode.split("_")[1]) if is_fixed else 3.0
         tp_price = (curr_price + fixed_rr * risk_dist) if sig == 1 else (curr_price - fixed_rr * risk_dist)
 
         # Calculate Lot Size for $10 USD Target Risk (with 1.1R hard cap)
