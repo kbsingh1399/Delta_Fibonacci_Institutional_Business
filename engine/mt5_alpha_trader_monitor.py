@@ -73,7 +73,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("MT5AlphaMonitor")
 
-# Elite 21 Positive-Alpha Universe across 8 Uncorrelated Clusters
+# Elite 20 Positive-Alpha Universe across 6 Uncorrelated Clusters (Cleaned Champion Basket)
 OPTIMAL_ALPHA_BASKET = [
     # --- Crypto (4 Assets) ---
     {"symbol": "DOGUSD", "cluster": "Crypto", "setup": "canonical", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
@@ -84,11 +84,8 @@ OPTIMAL_ALPHA_BASKET = [
     # --- Commodities (1 Asset) ---
     {"symbol": "XAUUSD", "cluster": "Commodity_Energy", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
 
-    # --- Equity Indices (5 Assets) ---
+    # --- Equity Indices (2 Assets) ---
     {"symbol": "US30", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
-    {"symbol": "NDX100", "cluster": "Indices", "setup": "macro_reclaim_spring", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
-    {"symbol": "EUSTX50", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
-    {"symbol": "FRA40", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "HK50", "cluster": "Indices", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_2.5", "risk_usd": 10.0},
 
     # --- Forex JPY Crosses (5 Assets) ---
@@ -98,11 +95,10 @@ OPTIMAL_ALPHA_BASKET = [
     {"symbol": "USDJPY", "cluster": "Forex_JPY", "setup": "turbo_tri_tier", "exit_mode": "fixed_2.5", "risk_usd": 10.0},
     {"symbol": "CADJPY", "cluster": "Forex_JPY", "setup": "wyckoff_swing_sweep", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
 
-    # --- Forex USD, EUR & Exotic Pairs (4 Assets) ---
+    # --- Forex USD & Exotic Pairs (3 Assets) ---
     {"symbol": "USDCHF", "cluster": "Forex_USD", "setup": "wyckoff_institutional_filtered", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "USDCNH", "cluster": "Forex_USD", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "NZDSGD", "cluster": "Forex_Exotic", "setup": "macro_reclaim_spring", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
-    {"symbol": "EURNOK", "cluster": "Forex_EUR", "setup": "wyckoff_swing_sweep", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
 
     # --- US Equities (5 Assets) ---
     {"symbol": "MSFT", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
@@ -110,12 +106,9 @@ OPTIMAL_ALPHA_BASKET = [
     {"symbol": "BABA", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "step_trail", "risk_usd": 10.0},
     {"symbol": "NFLX", "cluster": "US_Equities", "setup": "turbo_tri_tier", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
     {"symbol": "NKE", "cluster": "US_Equities", "setup": "canonical", "exit_mode": "fixed_3.0", "risk_usd": 10.0},
-
-    # --- European Equities (1 Asset) ---
-    {"symbol": "MC", "cluster": "EU_Equities", "setup": "canonical", "exit_mode": "fixed_3.5", "risk_usd": 10.0},
 ]
 
-MAX_CONCURRENT_POSITIONS = 3
+MAX_CONCURRENT_POSITIONS = 4
 MAX_PER_CLUSTER = 1
 DEFAULT_RISK_USD = 10.0
 POST_EXIT_COOLDOWN_BARS = 12  # 12 H4 bars = 48 hours post-exit cooldown
@@ -389,27 +382,27 @@ class MT5AlphaTrader:
                         sig = -1; shelf_type = "MID"
 
         elif setup == "macro_reclaim_spring":
-            # Model 2: Macro Dwell Reclaim Spring (12h-48h dwell under/above EMA 233 + EMA 89 shelf defense)
-            if ema89[prev] > ema233[prev] and came_from_above and lower_wick >= 0.25:
+            # Model 2: Macro Dwell Reclaim Spring (12h-48h dwell under/above EMA 233 + EMA 89 shelf defense with 33% pinbar)
+            if ema89[prev] > ema233[prev] and came_from_above and lower_wick >= 0.33:
                 if (l_bar <= ema89[prev] * 1.002) and (c_bar >= ema89[prev]):
                     recent_below = sum(1 for b in range(max(0, prev - 35), prev) if c[b] < ema233[b])
                     if 3 <= recent_below <= 25:
                         sig = 1; shelf_type = "RECLAIM_SPRING"
-            elif ema89[prev] < ema233[prev] and came_from_below and upper_wick >= 0.25:
+            elif ema89[prev] < ema233[prev] and came_from_below and upper_wick >= 0.33:
                 if (h_bar >= ema89[prev] * 0.998) and (c_bar <= ema89[prev]):
                     recent_above = sum(1 for b in range(max(0, prev - 35), prev) if c[b] > ema233[b])
                     if 3 <= recent_above <= 25:
                         sig = -1; shelf_type = "RECLAIM_SPRING"
 
         # Dual-Model Engine: If primary model produced no signal, check Model 2 for elite reclaim assets
-        RECLAIM_SPRING_UNIVERSE = ["US30", "DOGUSD", "ETHUSD", "USDCNH", "FRA40", "BABA", "ADAUSD", "NZDJPY", "NDX100", "NZDSGD"]
+        RECLAIM_SPRING_UNIVERSE = ["US30", "DOGUSD", "ETHUSD", "USDCNH", "BABA", "ADAUSD", "NZDJPY", "NZDSGD"]
         if sig == 0 and symbol in RECLAIM_SPRING_UNIVERSE:
-            if ema89[prev] > ema233[prev] and came_from_above and lower_wick >= 0.25:
+            if ema89[prev] > ema233[prev] and came_from_above and lower_wick >= 0.33:
                 if (l_bar <= ema89[prev] * 1.002) and (c_bar >= ema89[prev]):
                     recent_below = sum(1 for b in range(max(0, prev - 35), prev) if c[b] < ema233[b])
                     if 3 <= recent_below <= 25:
                         sig = 1; shelf_type = "RECLAIM_SPRING"
-            elif ema89[prev] < ema233[prev] and came_from_below and upper_wick >= 0.25:
+            elif ema89[prev] < ema233[prev] and came_from_below and upper_wick >= 0.33:
                 if (h_bar >= ema89[prev] * 0.998) and (c_bar <= ema89[prev]):
                     recent_above = sum(1 for b in range(max(0, prev - 35), prev) if c[b] > ema233[b])
                     if 3 <= recent_above <= 25:

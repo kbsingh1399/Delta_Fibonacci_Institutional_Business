@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-16T11:55:41.505064+00:00",
+  "timestamp": "2026-11-16T13:29:17.506665+00:00",
   "terminal_connected": true,
   "account_login": 11808165,
   "server": "FundedNext-Server",
@@ -11,54 +11,32 @@
   "used_loss_today_usd": 0.0,
   "daily_loss_limit_usd": 235.08,
   "lifetime_floor_usd": 4231.48,
-  "active_positions_count": 1,
-  "active_positions": [
-    {
-      "ticket": 1794823198,
-      "symbol": "USDJPY",
-      "cluster": "Forex_JPY",
-      "action": "BUY",
-      "side": 1,
-      "lot": 0.05,
-      "entry_price": 159.564,
-      "stop_price": 159.26588,
-      "target_price": 160.30931,
-      "risk_dist": 0.29812,
-      "target_risk_usd": 10.0,
-      "actual_risk_usd": 9.34,
-      "exit_mode": "fixed_2.5",
-      "entry_time": "2026-11-16T09:59:58.858963+00:00",
-      "max_fav_r": 0.29,
-      "status": "OPEN"
-    }
-  ],
-  "active_clusters": [
-    "Forex_JPY"
-  ],
+  "active_positions_count": 0,
+  "active_positions": [],
+  "active_clusters": [],
   "market_statuses": {
     "DOGUSD": "OPEN",
     "ETHUSD": "OPEN",
+    "ADAUSD": "OPEN",
     "XLMUSD": "OPEN",
     "XAUUSD": "OPEN",
     "US30": "OPEN",
-    "EUSTX50": "OPEN",
-    "FRA40": "OPEN",
     "HK50": "OPEN",
+    "NZDJPY": "OPEN",
     "CHFJPY": "OPEN",
     "EURJPY": "OPEN",
     "USDJPY": "OPEN",
     "CADJPY": "OPEN",
     "USDCHF": "OPEN",
     "USDCNH": "OPEN",
-    "EURNOK": "OPEN",
+    "NZDSGD": "OPEN",
     "MSFT": "OPEN",
     "AMD": "OPEN",
     "BABA": "OPEN",
     "NFLX": "OPEN",
-    "NKE": "OPEN",
-    "MC": "OPEN"
+    "NKE": "OPEN"
   },
   "risk_per_trade_usd": 10.0,
   "max_risk_cap_usd": 11.0,
-  "concurrency_limit": 3
+  "concurrency_limit": 4
 }

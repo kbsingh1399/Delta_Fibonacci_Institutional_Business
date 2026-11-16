@@ -22,7 +22,7 @@ sys.path.insert(0, BASE_DIR)
 from engine.mt5_alpha_trader_monitor import OPTIMAL_ALPHA_BASKET, calculate_ema, calculate_atr, compute_adx
 
 JAN_2026_TS = int(datetime(2026, 1, 1, tzinfo=timezone.utc).timestamp())
-RECLAIM_SPRING_UNIVERSE = ["US30", "DOGUSD", "ETHUSD", "USDCNH", "FRA40", "BABA", "ADAUSD", "NZDJPY", "NDX100", "NZDSGD"]
+RECLAIM_SPRING_UNIVERSE = ["US30", "DOGUSD", "ETHUSD", "USDCNH", "BABA", "ADAUSD", "NZDJPY", "NZDSGD"]
 
 
 def backtest_dual_asset_2026(item, cooldown_bars=12, friction_r=0.05):
@@ -179,12 +179,12 @@ def backtest_dual_asset_2026(item, cooldown_bars=12, friction_r=0.05):
 
         # --- MODEL 2 CASCADE: Macro Dwell & Reclaim Spring ---
         if sig == 0 and symbol in RECLAIM_SPRING_UNIVERSE:
-            if ema89[i] > ema233[i] and came_from_above and lower_wicks[i] >= 0.25:
+            if ema89[i] > ema233[i] and came_from_above and lower_wicks[i] >= 0.33:
                 if (l_bar <= ema89[i] * 1.002) and (c_bar >= ema89[i]):
                     recent_below = np.max(bars_below_macro[max(0, i - 35) : i])
                     if 3 <= recent_below <= 25:
                         sig = 1; current_model = "MODEL_2_RECLAIM"
-            elif ema89[i] < ema233[i] and came_from_below and upper_wicks[i] >= 0.25:
+            elif ema89[i] < ema233[i] and came_from_below and upper_wicks[i] >= 0.33:
                 if (h_bar >= ema89[i] * 0.998) and (c_bar <= ema89[i]):
                     recent_above = np.max(bars_above_macro[max(0, i - 35) : i])
                     if 3 <= recent_above <= 25:
@@ -264,7 +264,7 @@ def main():
     print(f"\nTotal Candidate Trade Signals Generated in 2026: {len(all_trades)}")
 
     # Portfolio simulation
-    res = simulate_portfolio_2026(all_trades, max_concurrent=3, max_per_cluster=1)
+    res = simulate_portfolio_2026(all_trades, max_concurrent=4, max_per_cluster=1)
     if not res:
         print("No executed trades.")
         return
