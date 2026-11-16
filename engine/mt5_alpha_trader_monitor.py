@@ -633,8 +633,20 @@ class MT5AlphaTrader:
                 changed = True
                 logger.info(
                     f"🔄 [SYNCED BROKER POSITION] {sym} Ticket: {ticket} | {'BUY' if side == 1 else 'SELL'} "
-                    f"{p.volume} lots @ {p.price_open} | SL: {p.sl} | TP: {p.tp} | Risk: ${calc_risk} | Cluster: {cluster}"
+                    f"{p.volume} lots @ {p.price_open} | SL: {stop_p} | TP: {target_p} | Risk: ${calc_risk} | Cluster: {cluster}"
                 )
+            else:
+                # Update SL / TP if modified on MT5 terminal
+                pos_entry = self.active_positions[sym]
+                if p.sl > 0 and round(pos_entry.get("stop_price", 0.0), 2) != round(p.sl, 2):
+                    pos_entry["stop_price"] = p.sl
+                    pos_entry["risk_dist"] = abs(p.price_open - p.sl)
+                    changed = True
+                    logger.info(f"🔄 [SYNCED BROKER SL UPDATE] {sym} SL updated to {p.sl}")
+                if p.tp > 0 and round(pos_entry.get("target_price", 0.0), 2) != round(p.tp, 2):
+                    pos_entry["target_price"] = p.tp
+                    changed = True
+                    logger.info(f"🔄 [SYNCED BROKER TP UPDATE] {sym} TP updated to {p.tp}")
 
         # 2. Detect closed MT5 positions (strict reconciliation with broker)
         for sym, pos in list(self.active_positions.items()):
