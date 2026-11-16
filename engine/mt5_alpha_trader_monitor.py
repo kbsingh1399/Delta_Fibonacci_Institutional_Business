@@ -35,6 +35,27 @@ ACTIVE_POSITIONS_FILE = os.path.join(AUDIT_DIR, "mt5_active_positions.json")
 LIVE_SIGNALS_FILE = os.path.join(AUDIT_DIR, "mt5_live_signals.json")
 TRADING_LEDGER_FILE = os.path.join(AUDIT_DIR, "mt5_live_trading_ledger.csv")
 HEALTH_STATUS_FILE = os.path.join(AUDIT_DIR, "mt5_health_status.json")
+PID_FILE = os.path.join(AUDIT_DIR, "mt5_alpha_trader.pid")
+
+def acquire_singleton_lock():
+    """Guarantees only one live trader daemon runs, preventing split-brain state conflicts."""
+    pid = os.getpid()
+    if os.path.exists(PID_FILE):
+        try:
+            with open(PID_FILE, "r") as f:
+                old_pid = int(f.read().strip())
+            if old_pid != pid:
+                import psutil
+                if psutil.pid_exists(old_pid):
+                    proc = psutil.Process(old_pid)
+                    if "python" in proc.name().lower():
+                        logger.warning(f"⚠️ Terminating old daemon instance PID {old_pid} to prevent split-brain collision.")
+                        proc.kill()
+                        time.sleep(1)
+        except Exception as e:
+            logger.debug(f"PID check notice: {e}")
+    with open(PID_FILE, "w") as f:
+        f.write(str(pid))
 
 # Setup Logging
 logging.basicConfig(
@@ -522,6 +543,68 @@ class MT5AlphaTrader:
         except Exception as e:
             logger.error(f"Error saving live signal audit: {e}")
 
+    def sync_broker_positions(self):
+        """Synchronizes open positions directly from MT5 terminal into active state."""
+        mt5_pos = mt5.positions_get()
+        if mt5_pos is None:
+            return
+
+        live_tickets = {p.ticket: p for p in mt5_pos}
+        changed = False
+
+        # 1. Sync live MT5 positions into active_positions
+        for ticket, p in live_tickets.items():
+            sym = p.symbol
+            if sym not in self.active_positions or self.active_positions[sym].get("ticket") != ticket:
+                basket_item = next((item for item in OPTIMAL_ALPHA_BASKET if item["symbol"] == sym), None)
+                cluster = basket_item["cluster"] if basket_item else "External"
+                setup = basket_item["setup"] if basket_item else "Manual_MT5"
+                exit_mode = basket_item["exit_mode"] if basket_item else "fixed"
+
+                side = 1 if p.type == mt5.ORDER_TYPE_BUY else -1
+                info = mt5.symbol_info(sym)
+                tick_val = info.trade_tick_value if info else 1.0
+                tick_sz = info.trade_tick_size if (info and info.trade_tick_size > 0) else (info.point if info else 0.01)
+
+                rd = abs(p.price_open - p.sl) if p.sl > 0 else 0.01 * p.price_open
+                calc_risk = round((rd / tick_sz) * tick_val * p.volume, 2) if (rd > 0 and tick_sz > 0) else self.risk_usd
+
+                self.active_positions[sym] = {
+                    "ticket": ticket,
+                    "symbol": sym,
+                    "cluster": cluster,
+                    "setup": setup,
+                    "action": "BUY" if side == 1 else "SELL",
+                    "side": side,
+                    "lot": p.volume,
+                    "entry_price": p.price_open,
+                    "stop_price": p.sl,
+                    "target_price": p.tp,
+                    "risk_dist": rd,
+                    "target_risk_usd": self.risk_usd,
+                    "actual_risk_usd": calc_risk,
+                    "exit_mode": exit_mode,
+                    "entry_time": datetime.fromtimestamp(p.time, tz=timezone.utc).isoformat(),
+                    "max_fav_r": 0.0,
+                    "status": "OPEN",
+                    "source": "MT5_TERMINAL",
+                }
+                changed = True
+                logger.info(
+                    f"🔄 [SYNCED BROKER POSITION] {sym} Ticket: {ticket} | {'BUY' if side == 1 else 'SELL'} "
+                    f"{p.volume} lots @ {p.price_open} | SL: {p.sl} | TP: {p.tp} | Risk: ${calc_risk} | Cluster: {cluster}"
+                )
+
+        # 2. Detect closed MT5 positions
+        for sym, pos in list(self.active_positions.items()):
+            if pos.get("source") == "MT5_TERMINAL" and pos.get("ticket") not in live_tickets:
+                logger.info(f"🏁 [BROKER POSITION CLOSED] {sym} Ticket: {pos.get('ticket')} resolved on MT5")
+                self.active_positions.pop(sym, None)
+                changed = True
+
+        if changed:
+            self.save_state()
+
     def manage_open_positions(self):
         """Monitors open positions, tracks MFE, and handles step-trail trailing stops."""
         if not self.active_positions:
@@ -642,6 +725,9 @@ class MT5AlphaTrader:
 
     def run_sweep(self):
         """Executes a single end-to-end scanning and position management sweep."""
+        # 0. Sync real-time positions directly from MT5 terminal
+        self.sync_broker_positions()
+
         # 1. Manage existing positions first
         self.manage_open_positions()
 
@@ -682,6 +768,7 @@ class MT5AlphaTrader:
 
 
 def main():
+    acquire_singleton_lock()
     logger.info("=" * 80)
     logger.info("STARTING FUNDEDNEXT MT5 OPTIMAL ALPHA BASKET LIVE MONITOR")
     logger.info(f"Risk per trade: ${DEFAULT_RISK_USD:.2f} USD | Max Concurrency: {MAX_CONCURRENT_POSITIONS}")
