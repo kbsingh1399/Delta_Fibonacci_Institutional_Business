@@ -380,15 +380,17 @@ def backtest_single_asset(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="FundedNext MT5 H4 Fibonacci Wick Rejection Backtester")
+    parser = argparse.ArgumentParser(description="FundedNext MT5 H4/H1 Fibonacci Wick Rejection Backtester")
+    parser.add_argument("--tf", type=str, default="4H", choices=["4H", "1H", "all"], help="Timeframe to backtest (default: 4H)")
     parser.add_argument("--exit-mode", type=str, default="fixed_3.0", choices=["fixed_2.5", "fixed_3.0", "fixed_3.5", "step_trail"], help="Exit strategy mode")
     parser.add_argument("--friction", type=float, default=0.05, help="Friction per trade in R (default: 0.05R for spread/commissions)")
     parser.add_argument("--sort-by", type=str, default="net_r", choices=["net_r", "profit_factor", "win_rate", "expectancy", "trades"], help="Metric to sort by")
     args = parser.parse_args()
 
-    parquet_files = sorted(glob.glob(os.path.join(DATA_DIR, "*.parquet")))
+    pattern = f"*_{args.tf}.parquet" if args.tf != "all" else "*.parquet"
+    parquet_files = sorted(glob.glob(os.path.join(DATA_DIR, pattern)))
     if not parquet_files:
-        print(f"[ERROR] No parquet files found in {DATA_DIR}. Please run dump_fundednext_data.py first.")
+        print(f"[ERROR] No parquet files matching {pattern} found in {DATA_DIR}.")
         sys.exit(1)
 
     print("=" * 120)

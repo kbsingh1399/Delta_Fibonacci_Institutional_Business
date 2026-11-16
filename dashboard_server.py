@@ -28,7 +28,7 @@ if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 try:
-    from engine.mt5_alpha_trader_monitor import (
+    from mt5_alpha_trader_live import (
         OPTIMAL_ALPHA_BASKET,
         calculate_ema,
         calculate_atr,
