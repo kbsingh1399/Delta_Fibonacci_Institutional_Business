@@ -201,16 +201,34 @@ def background_market_scanner():
                 # Forming bar geometry
                 up_wick, low_wick, body, direction = calculate_candle_metrics(rates, prev_idx=-1)
                 
-                # Signal readiness check
+                # Precise Trend & Shelf Geometry Check
+                # Bullish regime: EMA89 > EMA233 AND price >= EMA233
+                # Bearish regime: EMA89 < EMA233 AND price <= EMA233
                 trend_regime = "BULL" if e89 > e233 and curr_price >= e233 else ("BEAR" if e89 < e233 and curr_price <= e233 else "MIXED")
-                signal_hint = "NONE"
+                is_above_shelf = curr_price >= shelf_val
+
+                signal_hint = "MONITORING"
                 if min_dist_atr <= 0.35:
-                    if trend_regime == "BULL" and low_wick >= 0.20:
-                        signal_hint = "BULLISH REJECTION READY"
-                    elif trend_regime == "BEAR" and up_wick >= 0.20:
-                        signal_hint = "BEARISH REJECTION READY"
+                    if trend_regime == "BULL" and is_above_shelf:
+                        # Pulling back from above to test shelf as support
+                        if rates['low'][-1] <= shelf_val * 1.003 and low_wick >= 0.25:
+                            signal_hint = "BULLISH REJECTION (SUPPORT BOUNCE)"
+                        else:
+                            signal_hint = f"TESTING {nearest_shelf} AS SUPPORT"
+                    elif trend_regime == "BEAR" and not is_above_shelf:
+                        # Rallying from below to test shelf as resistance
+                        if rates['high'][-1] >= shelf_val * 0.997 and up_wick >= 0.25:
+                            signal_hint = "BEARISH REJECTION (RESISTANCE)"
+                        else:
+                            signal_hint = f"TESTING {nearest_shelf} AS RESISTANCE"
                     else:
-                        signal_hint = f"TESTING {nearest_shelf}"
+                        # Price is on counter side of shelf
+                        side = "ABOVE" if is_above_shelf else "BELOW"
+                        signal_hint = f"{side} {nearest_shelf} (CONSOLIDATING)"
+                elif min_dist_atr <= 0.60:
+                    signal_hint = f"APPROACHING {nearest_shelf}"
+                else:
+                    signal_hint = "EXTENDED"
 
                 is_alpha = sym in alpha_symbols
                 cluster = alpha_symbols[sym]["cluster"] if is_alpha else "General"
