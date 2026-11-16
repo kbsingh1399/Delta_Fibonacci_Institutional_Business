@@ -175,15 +175,14 @@ def background_market_scanner():
 
                 curr_price = tick.bid
                 d89_pts = curr_price - e89
-                d233_pts = curr_price - e233
                 d89_atr = abs(d89_pts) / atr if atr > 0 else 99.0
-                d233_atr = abs(d233_pts) / atr if atr > 0 else 99.0
 
-                min_dist_atr = min(d89_atr, d233_atr)
-                nearest_shelf = "EMA89" if d89_atr < d233_atr else "EMA233"
-                shelf_val = e89 if nearest_shelf == "EMA89" else e233
+                # Target execution shelf is strictly EMA 89 (Mid Shelf)
+                target_shelf = "EMA 89"
+                shelf_val = e89
+                min_dist_atr = d89_atr
 
-                # Shelf Status Classification
+                # Shelf Status Classification relative to EMA 89
                 if min_dist_atr <= 0.05:
                     status = "TOUCHING"
                     status_badge = "badge-danger"
@@ -203,38 +202,35 @@ def background_market_scanner():
                 # Forming bar geometry
                 up_wick, low_wick, body, direction = calculate_candle_metrics(rates, prev_idx=-1)
                 
-                # Precise Trend & Shelf Geometry Check
-                trend_regime = "BULL" if e89 > e233 and curr_price >= e233 else ("BEAR" if e89 < e233 and curr_price <= e233 else "MIXED")
-                is_above_shelf = curr_price >= shelf_val
-                is_above_233 = curr_price >= e233
+                # Precise Trend & Pullback Origin Logic
+                trend_regime = "BULL" if e89 > e233 else "BEAR"
+                
+                # Pullback Origin Invariant Check
+                o_bar = rates['open'][-1]
+                c_prev = rates['close'][-2] if len(rates) >= 2 else o_bar
+                came_from_above = (o_bar >= e89 * 0.998) or (c_prev >= e89 * 0.998)
+                came_from_below = (o_bar <= e89 * 1.002) or (c_prev <= e89 * 1.002)
 
                 signal_hint = "MONITORING"
                 if min_dist_atr <= 0.35:
-                    # Priority 1: Macro 233 Rejection (Price above 233 and 233 gives rejection)
-                    if nearest_shelf == "EMA233":
-                        if is_above_233 and rates['low'][-1] <= e233 * 1.003 and low_wick >= 0.25:
-                            signal_hint = "BULLISH REJECTION (EMA233 BOUNCE)"
-                        elif not is_above_233 and rates['high'][-1] >= e233 * 0.997 and up_wick >= 0.25:
-                            signal_hint = "BEARISH REJECTION (EMA233 CEILING)"
-                        elif is_above_233:
-                            signal_hint = "TESTING EMA233 AS SUPPORT"
+                    if trend_regime == "BULL":
+                        if came_from_above:
+                            if rates['low'][-1] <= e89 * 1.002 and low_wick >= 0.25:
+                                signal_hint = "READY: BULLISH EMA89 BOUNCE"
+                            else:
+                                signal_hint = "TESTING EMA89 AS SUPPORT"
                         else:
-                            signal_hint = "TESTING EMA233 AS RESISTANCE"
-                    elif is_above_shelf and trend_regime == "BULL":
-                        if rates['low'][-1] <= shelf_val * 1.003 and low_wick >= 0.25:
-                            signal_hint = f"BULLISH REJECTION ({nearest_shelf} BOUNCE)"
+                            signal_hint = "BELOW EMA89 (TESTING RESISTANCE - NO BUY)"
+                    else:  # BEAR
+                        if came_from_below:
+                            if rates['high'][-1] >= e89 * 0.998 and up_wick >= 0.25:
+                                signal_hint = "READY: BEARISH EMA89 CEILING"
+                            else:
+                                signal_hint = "TESTING EMA89 AS RESISTANCE"
                         else:
-                            signal_hint = f"TESTING {nearest_shelf} AS SUPPORT"
-                    elif not is_above_shelf and trend_regime == "BEAR":
-                        if rates['high'][-1] >= shelf_val * 0.997 and up_wick >= 0.25:
-                            signal_hint = f"BEARISH REJECTION ({nearest_shelf} CEILING)"
-                        else:
-                            signal_hint = f"TESTING {nearest_shelf} AS RESISTANCE"
-                    else:
-                        side = "ABOVE" if is_above_shelf else "BELOW"
-                        signal_hint = f"{side} {nearest_shelf} (CONSOLIDATING)"
+                            signal_hint = "ABOVE EMA89 (TESTING SUPPORT - NO SHORT)"
                 elif min_dist_atr <= 0.60:
-                    signal_hint = f"APPROACHING {nearest_shelf}"
+                    signal_hint = "APPROACHING EMA89"
                 else:
                     signal_hint = "EXTENDED"
 
@@ -257,7 +253,7 @@ def background_market_scanner():
                     "ema233": round(e233, 4),
                     "atr": round(atr, 4),
                     "adx": round(adx, 1),
-                    "nearest_shelf": nearest_shelf,
+                    "nearest_shelf": "EMA89",
                     "shelf_price": round(shelf_val, 4),
                     "dist_atr": round(min_dist_atr, 2),
                     "dist_pts": round(curr_price - shelf_val, 4),
@@ -677,8 +673,8 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
                         <th>Live Price</th>
                         <th>EMA 34</th>
                         <th>EMA 55</th>
-                        <th>EMA 89</th>
-                        <th>EMA 233</th>
+                        <th>EMA 89 (Entry Shelf)</th>
+                        <th>EMA 233 (Macro Regime)</th>
                         <th>Target Shelf</th>
                         <th>Shelf Proximity</th>
                         <th>ATR (14)</th>
@@ -828,10 +824,15 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
                         <td style="color: #bbb;">${x.ema34.toFixed(4)}</td>
                         <td style="color: #bbb;">${x.ema55.toFixed(4)}</td>
                         <td style="color: var(--accent-cyan); font-weight: 600;">${x.ema89.toFixed(4)}</td>
-                        <td style="color: var(--accent-purple); font-weight: 600;">${x.ema233.toFixed(4)}</td>
+                        <td style="color: var(--accent-purple); font-weight: 600;">
+                            ${x.ema233.toFixed(4)}
+                            <span class="badge ${x.trend_regime === 'BULL' ? 'badge-primary' : 'badge-danger'}" style="font-size: 9px; padding: 1px 4px; margin-left: 3px;">
+                                ${x.trend_regime}
+                            </span>
+                        </td>
                         <td>
-                            <span class="badge ${x.nearest_shelf === 'EMA89' ? 'badge-primary' : 'badge-info'}">
-                                ${x.nearest_shelf}
+                            <span class="badge badge-primary">
+                                EMA 89
                             </span>
                         </td>
                         <td>
