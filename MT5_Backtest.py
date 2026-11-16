@@ -255,8 +255,16 @@ def backtest_single_asset(
         sig = 0
         shelf_type = ""
 
+        # Institutional Pullback Origin Invariant:
+        # Bullish support bounce must originate from ABOVE the shelf
+        # Bearish ceiling rejection must originate from BELOW the shelf
+        o_bar = opens[i]
+        c_prev = closes[i - 1]
+        came_from_above = (o_bar >= ema89[i] * 0.998) or (c_prev >= ema89[i - 1] * 0.998)
+        came_from_below = (o_bar <= ema89[i] * 1.002) or (c_prev <= ema89[i - 1] * 1.002)
+
         # Bullish Regime: EMA 89 > EMA 233
-        if ema89[i] > ema233[i]:
+        if ema89[i] > ema233[i] and came_from_above:
             if lower_wicks[i] >= min_wick_ratio:
                 # Shelf 1 (Mid): Sweeps EMA 89/55 and closes above EMA 89
                 if (l_bar <= ema89[i] * 1.002 or l_bar <= ema55[i] * 1.002) and (c_bar >= ema89[i]):
@@ -268,7 +276,7 @@ def backtest_single_asset(
                     shelf_type = "EMA_233"
 
         # Bearish Regime: EMA 89 < EMA 233
-        elif ema89[i] < ema233[i]:
+        elif ema89[i] < ema233[i] and came_from_below:
             if upper_wicks[i] >= min_wick_ratio:
                 # Shelf 1 (Mid): Sweeps EMA 89/55 and closes below EMA 89
                 if (h_bar >= ema89[i] * 0.998 or h_bar >= ema55[i] * 0.998) and (c_bar <= ema89[i]):
