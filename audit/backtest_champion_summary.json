@@ -6,12 +6,12 @@
     "Model": "MODEL_1",
     "EMA": 89,
     "Exit Mode": "trail_0.5r",
-    "Trades": 441,
-    "Win Rate (%)": 44.9,
-    "Profit Factor": 1.3,
-    "Total R": 73.64,
-    "Net PnL ($)": 736.45,
-    "Max DD (R)": 12.95
+    "Trades": 442,
+    "Win Rate (%)": 42.3,
+    "Profit Factor": 1.34,
+    "Total R": 87.42,
+    "Net PnL ($)": 874.01,
+    "Max DD (R)": 12.81
   },
   {
     "Symbol": "JP225.p",
@@ -20,12 +20,12 @@
     "Model": "MODEL_1",
     "EMA": 65,
     "Exit Mode": "trail_0.5r",
-    "Trades": 427,
-    "Win Rate (%)": 42.2,
-    "Profit Factor": 1.28,
-    "Total R": 69.35,
-    "Net PnL ($)": 693.39,
-    "Max DD (R)": 19.03
+    "Trades": 421,
+    "Win Rate (%)": 41.3,
+    "Profit Factor": 1.35,
+    "Total R": 87.04,
+    "Net PnL ($)": 870.5,
+    "Max DD (R)": 17.14
   },
   {
     "Symbol": "DJ30.p",
@@ -34,12 +34,12 @@
     "Model": "MODEL_1",
     "EMA": 55,
     "Exit Mode": "trail_0.5r",
-    "Trades": 653,
-    "Win Rate (%)": 44.0,
-    "Profit Factor": 1.33,
-    "Total R": 121.04,
-    "Net PnL ($)": 1210.45,
-    "Max DD (R)": 15.98
+    "Trades": 649,
+    "Win Rate (%)": 41.9,
+    "Profit Factor": 1.37,
+    "Total R": 139.33,
+    "Net PnL ($)": 1393.92,
+    "Max DD (R)": 19.01
   },
   {
     "Symbol": "NAS100.p",
@@ -48,12 +48,12 @@
     "Model": "MODEL_1",
     "EMA": 55,
     "Exit Mode": "trail_0.5r",
-    "Trades": 554,
-    "Win Rate (%)": 44.9,
-    "Profit Factor": 1.32,
-    "Total R": 96.8,
-    "Net PnL ($)": 968.07,
-    "Max DD (R)": 24.18
+    "Trades": 550,
+    "Win Rate (%)": 43.6,
+    "Profit Factor": 1.46,
+    "Total R": 143.39,
+    "Net PnL ($)": 1434.09,
+    "Max DD (R)": 22.22
   },
   {
     "Symbol": "HK50.p",
@@ -62,12 +62,12 @@
     "Model": "MODEL_1",
     "EMA": 50,
     "Exit Mode": "trail_0.5r",
-    "Trades": 459,
-    "Win Rate (%)": 44.7,
-    "Profit Factor": 1.32,
-    "Total R": 81.55,
-    "Net PnL ($)": 816.13,
-    "Max DD (R)": 21.9
+    "Trades": 456,
+    "Win Rate (%)": 42.3,
+    "Profit Factor": 1.28,
+    "Total R": 74.51,
+    "Net PnL ($)": 745.08,
+    "Max DD (R)": 28.42
   },
   {
     "Symbol": "XAUUSD.pi",
@@ -104,12 +104,12 @@
     "Model": "MODEL_1",
     "EMA": 50,
     "Exit Mode": "trail_0.5r",
-    "Trades": 396,
-    "Win Rate (%)": 44.2,
-    "Profit Factor": 1.23,
-    "Total R": 51.29,
-    "Net PnL ($)": 513.42,
-    "Max DD (R)": 15.84
+    "Trades": 394,
+    "Win Rate (%)": 43.1,
+    "Profit Factor": 1.39,
+    "Total R": 86.45,
+    "Net PnL ($)": 864.88,
+    "Max DD (R)": 11.52
   },
   {
     "Symbol": "BTCUSD.pi",
@@ -160,11 +160,11 @@
     "Model": "MODEL_2",
     "EMA": 89,
     "Exit Mode": "trail_0.5r",
-    "Trades": 260,
-    "Win Rate (%)": 45.0,
-    "Profit Factor": 1.53,
-    "Total R": 75.14,
-    "Net PnL ($)": 751.65,
+    "Trades": 259,
+    "Win Rate (%)": 44.8,
+    "Profit Factor": 1.43,
+    "Total R": 61.52,
+    "Net PnL ($)": 615.39,
     "Max DD (R)": 13.78
   },
   {
@@ -202,12 +202,12 @@
     "Model": "MODEL_1",
     "EMA": 55,
     "Exit Mode": "trail_0.5r",
-    "Trades": 776,
-    "Win Rate (%)": 41.9,
-    "Profit Factor": 1.13,
-    "Total R": 56.99,
-    "Net PnL ($)": 569.84,
-    "Max DD (R)": 34.36
+    "Trades": 768,
+    "Win Rate (%)": 40.9,
+    "Profit Factor": 1.24,
+    "Total R": 107.87,
+    "Net PnL ($)": 1078.34,
+    "Max DD (R)": 34.99
   },
   {
     "Symbol": "GBPUSD.pi",
@@ -231,11 +231,11 @@
     "EMA": 400,
     "Exit Mode": "trail_0.5r",
     "Trades": 49,
-    "Win Rate (%)": 49.0,
-    "Profit Factor": 1.59,
-    "Total R": 14.69,
-    "Net PnL ($)": 146.82,
-    "Max DD (R)": 7.51
+    "Win Rate (%)": 46.9,
+    "Profit Factor": 1.76,
+    "Total R": 19.88,
+    "Net PnL ($)": 198.71,
+    "Max DD (R)": 9.69
   },
   {
     "Symbol": "GBPJPY.pi",
@@ -288,9 +288,9 @@
     "Exit Mode": "trail_0.5r",
     "Trades": 46,
     "Win Rate (%)": 54.3,
-    "Profit Factor": 1.67,
-    "Total R": 14.05,
-    "Net PnL ($)": 140.32,
+    "Profit Factor": 1.98,
+    "Total R": 20.57,
+    "Net PnL ($)": 205.68,
     "Max DD (R)": 4.0
   },
   {
@@ -314,11 +314,11 @@
     "Model": "MODEL_2",
     "EMA": 89,
     "Exit Mode": "trail_0.5r",
-    "Trades": 170,
-    "Win Rate (%)": 41.2,
-    "Profit Factor": 1.41,
-    "Total R": 40.89,
-    "Net PnL ($)": 408.89,
-    "Max DD (R)": 17.59
+    "Trades": 168,
+    "Win Rate (%)": 40.5,
+    "Profit Factor": 1.31,
+    "Total R": 31.08,
+    "Net PnL ($)": 310.84,
+    "Max DD (R)": 15.81
   }
 ]
