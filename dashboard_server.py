@@ -71,10 +71,10 @@ def calculate_candle_metrics(rates, prev_idx=-1):
     return up_wick, low_wick, body, direction
 
 def background_market_scanner():
-    """Continuously refreshes MT5 data, EMAs, and proximity radar in memory."""
-    if not mt5.initialize():
-        print("[FATAL] MT5 could not be initialized in background worker.")
-        return
+    """Continuously refreshes MT5 data, EMAs, and proximity radar in memory with auto-reconnect."""
+    while not mt5.initialize():
+        print("[WARNING] MT5 could not be initialized in background worker, retrying in 2s...")
+        time.sleep(2)
 
     print(">> [DASHBOARD SCANNER] Background market calculation thread started.")
     alpha_symbols = {item["symbol"]: item for item in OPTIMAL_ALPHA_BASKET}
@@ -82,6 +82,8 @@ def background_market_scanner():
 
     while True:
         try:
+            if not mt5.terminal_info():
+                mt5.initialize()
             acc = mt5.account_info()
             term = mt5.terminal_info()
 
@@ -105,8 +107,10 @@ def background_market_scanner():
                     sym_info = mt5.symbol_info(p.symbol)
                     pt = sym_info.point if sym_info else 0.01
                     rd = abs(p.price_open - p.sl) if p.sl > 0 else (0.01 * p.price_open)
+                    if rd <= 1e-6:
+                        rd = (0.01 * p.price_open) if p.price_open > 0 else 1.0
                     cur_p = p.price_current
-                    r_mult = ((cur_p - p.price_open) / rd) if p.type == mt5.ORDER_TYPE_BUY else ((p.price_open - cur_p) / rd)
+                    r_mult = (((cur_p - p.price_open) / rd) if p.type == mt5.ORDER_TYPE_BUY else ((p.price_open - cur_p) / rd)) if rd > 0 else 0.0
                     is_fib = (getattr(p, "comment", "") == "fib_orders" or getattr(p, "magic", 0) == 202611)
                     positions_data.append({
                         "ticket": p.ticket,
