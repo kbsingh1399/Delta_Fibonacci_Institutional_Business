@@ -11,7 +11,7 @@ The codebase is engineered with strict adherence to the **Karpathy Simplicity St
 ```
 Delta_Fibonacci_Institutional_Business/
 ├── Blueberry_Data/                       # Single historical data cache (1H & 4H parquet files from 2023 to present)
-├── MT5_Backtest.py                       # Single Backtesting Engine (100% Code Parity, 23 assets, dual-model, trailing SL)
+├── MT5_Backtest.py                       # Single Backtesting Engine (100% Code Parity, 23 assets, dual-model, candle-direction trailing SL)
 ├── mt5_alpha_trader_live.py              # Single Primary Live Engine (Autonomous monitor, CRO governor, trailing SL, anti-chop)
 ├── dashboard_server.py                   # Single Dashboard Go Live File (Streaming web interface at http://localhost:8088)
 ├── STANDARDIZED_TRADING_DECISION_CHAIN.md# Institutional 10-Step Decision Protocol & Risk Mandate

@@ -106,6 +106,7 @@ flowchart TD
 
 ### Step 10: Dynamic Trailing Ratchet & Reconciliation
 - Continuous 10-second tick loop monitors Maximum Favorable Excursion (MFE in R).
+- Backtest Parity Note: MT5_Backtest.py models intrabar sequencing with the candle-direction convention (bullish bar = low printed first, bearish bar = high printed first), so the stop governing each bar's adverse extreme is the one live would have had in force at that moment - no favorable-sequencing assumption on trailing exits.
 - Trailing Ratchets:
   - `trail_1.5r`: Once MFE >= 2.5R, trail SL at `MFE - 1.5R`.
   - `trail_1.0r`: Once MFE >= 2.0R, trail SL at `MFE - 1.0R`.

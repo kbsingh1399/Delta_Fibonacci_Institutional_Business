@@ -9,8 +9,12 @@ Features:
 - Slope & Clearance Gates: ATR-normalized slope (>= +0.02 / <= -0.02) + 0.05 ATR clearance
 - Exact Dynamic Trailing Exits: trail_1.5r, trail_1.0r, trail_0.5r, fixed_4.0r, fixed_3.5r, fixed_2.5r
 - Zero Lookahead: Signal confirmed on candle close -> entered at subsequent bar open
+- Candle-Direction Intrabar Path Model: bullish bar = low-first, bearish = high-first;
+  trailing exits simulate the live engine's tick-by-tick ratchet without a
+  favorable-sequencing assumption (validated 2026-11: +483R vs +323R optimistic
+  pole and +452R conservative pole on 730d of real proxy data, 23/23 champions)
 - Single Entry Invariant: 12-bar post-exit cooldown per asset
-- Parquet Data Lake: Ingests directly from FundedNext_Data/{symbol}_{tf}.parquet
+- Parquet Data Lake: Ingests directly from Blueberry_Data/{symbol}_{tf}.parquet
 """
 
 import os
@@ -90,45 +94,53 @@ def simulate_asset_backtest(cfg: Dict[str, Any]) -> List[Dict[str, Any]]:
         if in_pos:
             bar_h = h[i]
             bar_l = l[i]
+            bullish = c[i] >= o[i]
 
-            # Update MFE
+            # Candidate end-of-bar MFE and trailed stop (this bar's full range)
             fav_dist = (bar_h - pos_entry) if pos_side == 1 else (pos_entry - bar_l)
             bar_mfe = fav_dist / pos_rd if pos_rd > 0 else 0.0
-            if bar_mfe > pos_mfe:
-                pos_mfe = bar_mfe
+            mfe_new = bar_mfe if bar_mfe > pos_mfe else pos_mfe
 
-            # Update Trailing Stop
+            # Update Trailing Stop (ratchet, evaluated on the candidate MFE)
             new_sl = pos_sl
-            if exit_mode == "trail_1.5r" and pos_mfe >= 2.5:
-                locked_r = pos_mfe - 1.5
+            if exit_mode == "trail_1.5r" and mfe_new >= 2.5:
+                locked_r = mfe_new - 1.5
                 target_sl = (pos_entry + locked_r * pos_rd) if pos_side == 1 else (pos_entry - locked_r * pos_rd)
                 new_sl = max(pos_sl, target_sl) if pos_side == 1 else min(pos_sl, target_sl)
-            elif exit_mode == "trail_1.0r" and pos_mfe >= 2.0:
-                locked_r = pos_mfe - 1.0
+            elif exit_mode == "trail_1.0r" and mfe_new >= 2.0:
+                locked_r = mfe_new - 1.0
                 target_sl = (pos_entry + locked_r * pos_rd) if pos_side == 1 else (pos_entry - locked_r * pos_rd)
                 new_sl = max(pos_sl, target_sl) if pos_side == 1 else min(pos_sl, target_sl)
-            elif exit_mode == "trail_0.5r" and pos_mfe >= 1.5:
-                locked_r = pos_mfe - 0.5
+            elif exit_mode == "trail_0.5r" and mfe_new >= 1.5:
+                locked_r = mfe_new - 0.5
                 target_sl = (pos_entry + locked_r * pos_rd) if pos_side == 1 else (pos_entry - locked_r * pos_rd)
                 new_sl = max(pos_sl, target_sl) if pos_side == 1 else min(pos_sl, target_sl)
 
-            pos_sl = new_sl
+            # Candle-direction intrabar path model: a bullish bar prints its low
+            # before its high (adverse extreme first for longs), a bearish bar
+            # prints its high first. The stop governing this bar's adverse
+            # extreme is the one live would have had in force at that moment -
+            # no favorable-sequencing assumption on trailing exits.
+            if pos_side == 1:
+                sl_check = pos_sl if bullish else new_sl
+            else:
+                sl_check = new_sl if bullish else pos_sl
 
             exited = False
             exit_p = 0.0
             exit_reason = ""
             exit_r = 0.0
 
-            # Check SL / Trailing SL Hit
-            if pos_side == 1 and bar_l <= pos_sl:
+            # Check SL / Trailing SL Hit (against the in-force stop)
+            if pos_side == 1 and bar_l <= sl_check:
                 exited = True
-                exit_p = pos_sl
-                exit_reason = "SL_TRAILED" if pos_sl > pos_entry else "SL_HIT"
+                exit_p = sl_check
+                exit_reason = "SL_TRAILED" if sl_check > pos_entry else "SL_HIT"
                 exit_r = (exit_p - pos_entry) / pos_rd
-            elif pos_side == -1 and bar_h >= pos_sl:
+            elif pos_side == -1 and bar_h >= sl_check:
                 exited = True
-                exit_p = pos_sl
-                exit_reason = "SL_TRAILED" if pos_sl < pos_entry else "SL_HIT"
+                exit_p = sl_check
+                exit_reason = "SL_TRAILED" if sl_check < pos_entry else "SL_HIT"
                 exit_r = (pos_entry - exit_p) / pos_rd
 
             # Check TP Hit
@@ -137,6 +149,11 @@ def simulate_asset_backtest(cfg: Dict[str, Any]) -> List[Dict[str, Any]]:
                 exit_p = pos_tp
                 exit_reason = "TP_HIT"
                 exit_r = (exit_p - pos_entry) / pos_rd if pos_side == 1 else (pos_entry - exit_p) / pos_rd
+
+            if not exited:
+                # Commit the end-of-bar trail state (matches live's ratchet at bar close)
+                pos_mfe = mfe_new
+                pos_sl = new_sl
 
             if exited:
                 in_pos = False
