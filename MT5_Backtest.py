@@ -25,7 +25,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-DATA_DIR = os.path.join(BASE_DIR, "FundedNext_Data")
+DATA_DIR = os.path.join(BASE_DIR, "Blueberry_Data")
 AUDIT_DIR = os.path.join(BASE_DIR, "audit")
 os.makedirs(AUDIT_DIR, exist_ok=True)
 
@@ -175,7 +175,7 @@ def simulate_asset_backtest(cfg: Dict[str, Any]) -> List[Dict[str, Any]]:
         l_bar = l[prev]
         a_bar = atr[prev]
 
-        # Anti-Chop Filter: Kaufman ER >= 0.28
+        # Anti-Chop Filter: Kaufman ER >= 0.18 or Rejection Wick >= 35%
         er_lb = 10
         if prev >= er_lb:
             direction = abs(c[prev] - c[prev - er_lb])
@@ -183,7 +183,8 @@ def simulate_asset_backtest(cfg: Dict[str, Any]) -> List[Dict[str, Any]]:
             er = direction / volatility if volatility > 0 else 0.0
         else:
             er = 0.5
-        if er < 0.28:
+        has_rejection_wick = (upper_wick >= 0.35) or (lower_wick >= 0.35)
+        if er < 0.18 and not has_rejection_wick:
             continue
 
         # Anti-Chop Filter: ATR-banded crossings

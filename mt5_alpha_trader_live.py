@@ -33,14 +33,14 @@ os.makedirs(AUDIT_DIR, exist_ok=True)
 
 # Embedded DailyRiskGovernor below
 """
-Daily Risk Governor for FundedNext MT5 Accounts ($5,000 tier).
-Enforces FundedNext's exact prop-firm rulebook:
-1. Daily Loss Limit: 5% of initial $5,000 balance ($250.00).
+Daily Risk Governor for Blueberry Funded MT5 Accounts ($2,500 Prime 2-Step tier).
+Enforces Blueberry Funded's exact prop-firm rulebook:
+1. Daily Loss Limit: 4% of initial $2,500 balance ($100.00).
    - Anchored to 00:00 broker server time (UTC+2 / UTC+3).
    - Uses equity drop from server-midnight anchor = max(0.0, anchor - equity).
    - Persisted across process restarts in audit/governor_state.json.
-2. Overall Loss Limit: 10% static floor ($4,500.00 on $5,000 account).
-3. Throttle Threshold: At 80% of daily limit ($200.00), halt new entries.
+2. Overall Loss Limit: 10% static floor ($2,250.00 on $2,500 account).
+3. Throttle Threshold: At 80% of daily limit ($80.00), halt new entries.
 """
 
 from typing import Tuple, Optional
@@ -52,7 +52,7 @@ GOVERNOR_STATE_FILE = os.path.join(AUDIT_DIR, "governor_state.json")
 
 def get_server_offset_seconds() -> int:
     """Calculates server time offset in seconds dynamically from broker tick."""
-    t = mt5.symbol_info_tick("BTCUSD") or mt5.symbol_info_tick("USDJPY")
+    t = mt5.symbol_info_tick("EURUSD.pi") or mt5.symbol_info_tick("BTCUSD.pi") or mt5.symbol_info_tick("USDJPY.pi")
     if t and t.time > 0:
         return int(round((t.time - time.time()) / 1800) * 1800)
     return 7200  # Default to UTC+2 if tick unavailable
@@ -61,13 +61,13 @@ def get_server_offset_seconds() -> int:
 class DailyRiskGovernor:
     def __init__(
         self,
-        initial_balance: float = 5000.00,  # FundedNext $5,000 challenge account
-        daily_pct: float = 0.05,           # 5% daily limit ($250.00)
-        overall_pct: float = 0.10,         # 10% lifetime static floor ($4,500.00)
+        initial_balance: float = 2500.00,  # Blueberry Funded $2,500 challenge account
+        daily_pct: float = 0.04,           # 4% daily limit ($100.00)
+        overall_pct: float = 0.10,         # 10% lifetime static floor ($2,250.00)
     ):
         self.initial = initial_balance
-        self.daily_limit = round(initial_balance * daily_pct, 2)              # $250.00
-        self.overall_floor = round(initial_balance * (1.0 - overall_pct), 2)  # $4,500.00
+        self.daily_limit = round(initial_balance * daily_pct, 2)              # $100.00
+        self.overall_floor = round(initial_balance * (1.0 - overall_pct), 2)  # $2,250.00
         self.day_anchor_equity: Optional[float] = None
         self.last_server_day: Optional[int] = None
         self._load_state()
@@ -118,23 +118,23 @@ class DailyRiskGovernor:
         # Fix P0-2: Do NOT double-count closed losses! Equity already reflects realized PnL.
         used_loss_today = max(0.0, round(self.day_anchor_equity - current_equity, 2))
 
-        # 1. Check Lifetime 10% Static Floor ($4,500.00)
+        # 1. Check Lifetime 10% Static Floor ($2,250.00)
         if current_equity <= self.overall_floor:
             msg = (
                 f"CRITICAL: Equity ${current_equity:,.2f} breached Lifetime Floor "
-                f"${self.overall_floor:,.2f} (-10.0%)!"
+                f"${self.overall_floor:,.2f} (-10.0% static)!"
             )
             return "HALT_OVERALL_FLOOR", msg, used_loss_today
 
-        # 2. Check Daily 5% Limit ($250.00)
+        # 2. Check Daily 4% Limit ($100.00 of initial balance)
         if used_loss_today >= self.daily_limit:
             msg = (
-                f"HALT: Today's Loss ${used_loss_today:,.2f} breached Daily 5% Limit "
+                f"HALT: Today's Loss ${used_loss_today:,.2f} breached Daily 4% Limit "
                 f"${self.daily_limit:,.2f}!"
             )
             return "HALT_DAILY_LIMIT", msg, used_loss_today
 
-        # 3. Check 80% Daily Limit Throttle ($200.00)
+        # 3. Check 80% Daily Limit Throttle ($80.00)
         throttle_limit = round(0.80 * self.daily_limit, 2)
         if used_loss_today >= throttle_limit:
             msg = (
@@ -191,45 +191,51 @@ logging.basicConfig(
 )
 logger = logging.getLogger("MT5AlphaMonitor")
 
-# Elite 20 Positive-Alpha Universe across 6 Uncorrelated Clusters (Empirically Champion Optimized)
+# Elite 23 Positive-Alpha Universe across 6 Uncorrelated Clusters (Blueberry Markets Certified)
 OPTIMAL_ALPHA_BASKET = [
-    # --- Crypto (4 Assets) ---
-    {"symbol": "DOGUSD", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "trail_1.0r", "risk_usd": 10.0},
-    {"symbol": "ETHUSD", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_1", "ema": 100, "exit_mode": "trail_1.5r", "risk_usd": 10.0},
-    {"symbol": "ADAUSD", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_1", "ema": 100, "exit_mode": "fixed_4.0r", "risk_usd": 10.0},
-    {"symbol": "XLMUSD", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_1", "ema": 233, "exit_mode": "trail_1.5r", "risk_usd": 10.0},
+    # --- Equity Indices (5 Assets) ---
+    {"symbol": "SP500.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 89, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    {"symbol": "JP225.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 65, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    {"symbol": "DJ30.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    {"symbol": "NAS100.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    {"symbol": "HK50.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 50, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
 
-    # --- Commodities (1 Asset) ---
-    {"symbol": "XAUUSD", "cluster": "Commodity_Energy", "tf": "4H", "primary_model": "MODEL_1", "ema": 50, "exit_mode": "trail_1.5r", "risk_usd": 10.0},
+    # --- Commodities & Energy (3 Assets) ---
+    {"symbol": "XAUUSD.pi", "cluster": "Commodity_Energy", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
+    {"symbol": "XAGUSD.pi", "cluster": "Commodity_Energy", "tf": "1H", "primary_model": "MODEL_1", "ema": 160, "exit_mode": "fixed_4.0r", "risk_usd": 10.0},
+    {"symbol": "USWTI.p", "cluster": "Commodity_Energy", "tf": "1H", "primary_model": "MODEL_1", "ema": 50, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
 
-    # --- Equity Indices (2 Assets) ---
-    {"symbol": "US30", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 65, "exit_mode": "trail_1.0r", "risk_usd": 10.0},
-    {"symbol": "HK50", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 50, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    # --- Crypto (5 Assets) ---
+    {"symbol": "BTCUSD.pi", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_2", "ema": 233, "exit_mode": "fixed_4.0r", "risk_usd": 10.0},
+    {"symbol": "ETHUSD.pi", "cluster": "Crypto", "tf": "4H", "primary_model": "MODEL_2", "ema": 89, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
+    {"symbol": "XLMUSD.p", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_2", "ema": 65, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
+    {"symbol": "XRPUSD.pi", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_2", "ema": 89, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    {"symbol": "ADAUSD.p", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "fixed_4.0r", "risk_usd": 10.0},
 
-    # --- Forex JPY Crosses (5 Assets) ---
-    {"symbol": "NZDJPY", "cluster": "Forex_JPY", "tf": "1H", "primary_model": "MODEL_1", "ema": 65, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
-    {"symbol": "CHFJPY", "cluster": "Forex_JPY", "tf": "4H", "primary_model": "MODEL_2", "ema": 50, "exit_mode": "trail_1.5r", "risk_usd": 10.0},
-    {"symbol": "EURJPY", "cluster": "Forex_JPY", "tf": "1H", "primary_model": "MODEL_1", "ema": 277, "exit_mode": "trail_1.0r", "risk_usd": 10.0},
-    {"symbol": "USDJPY", "cluster": "Forex_JPY", "tf": "1H", "primary_model": "MODEL_1", "ema": 50, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
-    {"symbol": "CADJPY", "cluster": "Forex_JPY", "tf": "1H", "primary_model": "MODEL_2", "ema": 55, "exit_mode": "trail_1.5r", "risk_usd": 10.0},
+    # --- Forex Majors (4 Assets) ---
+    {"symbol": "USDCAD.pi", "cluster": "Forex_Majors", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
+    {"symbol": "EURUSD.pi", "cluster": "Forex_Majors", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    {"symbol": "GBPUSD.pi", "cluster": "Forex_Majors", "tf": "4H", "primary_model": "MODEL_2", "ema": 100, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
+    {"symbol": "USDCHF.pi", "cluster": "Forex_Majors", "tf": "1H", "primary_model": "MODEL_2", "ema": 400, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
 
-    # --- Forex USD & Exotic Pairs (3 Assets) ---
-    {"symbol": "USDCHF", "cluster": "Forex_USD", "tf": "1H", "primary_model": "MODEL_1", "ema": 400, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
-    {"symbol": "USDCNH", "cluster": "Forex_USD", "tf": "1H", "primary_model": "MODEL_2", "ema": 160, "exit_mode": "fixed_4.0r", "risk_usd": 10.0},
-    {"symbol": "NZDSGD", "cluster": "Forex_Exotic", "tf": "1H", "primary_model": "MODEL_1", "ema": 89, "exit_mode": "fixed_4.0r", "risk_usd": 10.0},
+    # --- Forex JPY Crosses (4 Assets) ---
+    {"symbol": "GBPJPY.pi", "cluster": "Forex_JPY", "tf": "4H", "primary_model": "MODEL_1", "ema": 160, "exit_mode": "fixed_2.5r", "risk_usd": 10.0},
+    {"symbol": "CADJPY.pi", "cluster": "Forex_JPY", "tf": "4H", "primary_model": "MODEL_1", "ema": 100, "exit_mode": "fixed_2.5r", "risk_usd": 10.0},
+    {"symbol": "CHFJPY.pi", "cluster": "Forex_JPY", "tf": "4H", "primary_model": "MODEL_2", "ema": 160, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
+    {"symbol": "USDJPY.pi", "cluster": "Forex_JPY", "tf": "4H", "primary_model": "MODEL_2", "ema": 89, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
 
-    # --- US Equities (5 Assets) ---
-    {"symbol": "MSFT", "cluster": "US_Equities", "tf": "1H", "primary_model": "MODEL_1", "ema": 65, "exit_mode": "trail_1.5r", "risk_usd": 10.0},
-    {"symbol": "AMD", "cluster": "US_Equities", "tf": "1H", "primary_model": "MODEL_1", "ema": 89, "exit_mode": "trail_1.0r", "risk_usd": 10.0},
-    {"symbol": "BABA", "cluster": "US_Equities", "tf": "1H", "primary_model": "MODEL_1", "ema": 300, "exit_mode": "trail_1.0r", "risk_usd": 10.0},
-    {"symbol": "NFLX", "cluster": "US_Equities", "tf": "1H", "primary_model": "MODEL_1", "ema": 65, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
-    {"symbol": "NKE", "cluster": "US_Equities", "tf": "1H", "primary_model": "MODEL_1", "ema": 75, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    # --- Forex Crosses & Exotics (2 Assets) ---
+    {"symbol": "NZDSGD.pi", "cluster": "Forex_Crosses_Exotics", "tf": "1H", "primary_model": "MODEL_1", "ema": 100, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
+    {"symbol": "GBPNOK.pi", "cluster": "Forex_Crosses_Exotics", "tf": "1H", "primary_model": "MODEL_2", "ema": 89, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
 ]
 
 MAX_CONCURRENT_POSITIONS = 4
 MAX_PER_CLUSTER = 1
 DEFAULT_RISK_USD = 10.0
-POST_EXIT_COOLDOWN_BARS = 12  # 12 H4 bars = 48 hours post-exit cooldown
+MAX_RISK_CAP_USD = 12.0
+FIB_ORDER_COMMENT = "fib_orders"
+FIB_MAGIC_NUMBER = 202611
+POST_EXIT_COOLDOWN_BARS = 12  # 12 bars post-exit cooldown
 
 
 def calculate_ema(arr: np.ndarray, span: int) -> np.ndarray:
@@ -285,9 +291,9 @@ def compute_adx(high: np.ndarray, low: np.ndarray, close: np.ndarray, period: in
     return adx
 
 
-def calculate_lot_size(symbol: str, risk_usd: float, entry: float, stop: float) -> Tuple[float, float, str]:
+def calculate_lot_size(symbol: str, risk_usd: float, entry: float, stop: float, always_min_lot: bool = True) -> Tuple[float, float, str]:
     """Calculates broker-compliant lot size for a target dollar risk amount.
-    Enforces a strict 1.1R ($11.00) hard cap to block min-lot risk inflation (Patch 1).
+    User Mandate: Always use minimum lot size (vol_min = 0.01) for safety and risk isolation.
     Returns: (final_lot, actual_risk_usd, status_message)
     """
     info = mt5.symbol_info(symbol)
@@ -307,30 +313,25 @@ def calculate_lot_size(symbol: str, risk_usd: float, entry: float, stop: float) 
     if one_lot_risk <= 0:
         return 0.0, 0.0, "Zero 1-lot risk value"
 
-    # CRO Invariant: Hard Risk Cap (1.1R maximum)
-    MAX_RISK_USD = round(risk_usd * 1.10, 2)
+    # CRO Invariant: Hard Risk Cap ($6.00 USD max on $5.00 target risk)
+    MAX_RISK_USD = round(risk_usd * 1.20, 2)
 
-    raw_lot = risk_usd / one_lot_risk
-    step = info.volume_step if info.volume_step > 0 else 0.01
     vol_min = info.volume_min if info.volume_min > 0 else 0.01
     vol_max = info.volume_max if info.volume_max > 0 else 100.0
+    step = info.volume_step if info.volume_step > 0 else 0.01
 
-    rounded_lot = round(raw_lot / step) * step
-
-    if rounded_lot < vol_min:
-        # NEVER floor upward if min lot inflates risk beyond the 1.1R hard cap!
-        min_lot_risk = vol_min * one_lot_risk
-        if min_lot_risk > MAX_RISK_USD:
-            return 0.0, 0.0, f"MIN-LOT RISK ${min_lot_risk:.2f} > ${MAX_RISK_USD:.2f} cap - SKIP"
+    if always_min_lot:
         final_lot = vol_min
     else:
-        final_lot = min(vol_max, rounded_lot)
+        raw_lot = risk_usd / one_lot_risk
+        rounded_lot = round(raw_lot / step) * step
+        final_lot = max(vol_min, min(vol_max, rounded_lot))
 
     decimals = max(0, -int(np.floor(np.log10(step)))) if step < 1 else 0
     final_lot = round(final_lot, decimals)
     actual_risk = round(final_lot * one_lot_risk, 2)
 
-    if actual_risk > MAX_RISK_USD:
+    if actual_risk > MAX_RISK_USD and not always_min_lot:
         return 0.0, 0.0, f"CALCULATED RISK ${actual_risk:.2f} > ${MAX_RISK_USD:.2f} cap - SKIP"
 
     return final_lot, actual_risk, "OK"
@@ -341,7 +342,7 @@ class MT5AlphaTrader:
         self.risk_usd = risk_per_trade_usd
         self.active_positions: Dict[str, Any] = {}
         self.trade_cooldowns: Dict[str, Any] = {}
-        self.governor = DailyRiskGovernor(initial_balance=4701.64, daily_pct=0.05, overall_pct=0.10)
+        self.governor = DailyRiskGovernor()
         self.load_state()
 
     def load_state(self):
@@ -414,11 +415,12 @@ class MT5AlphaTrader:
 
         mt5_tf = mt5.TIMEFRAME_H1 if tf_str == "1H" else mt5.TIMEFRAME_H4
         bar_seconds = 3600 if tf_str == "1H" else 14400
-        freshness_limit = 900 if tf_str == "1H" else 1800  # 15 min for 1H, 30 min for 4H
-        cooldown_seconds = (36 * 3600) if tf_str == "1H" else (48 * 3600)  # 36h for 1H, 48h for 4H
+        freshness_limit = 3300 if tf_str == "1H" else 13800  # 55 min for 1H, 3h50m for 4H
+        cooldown_seconds = 12 * bar_seconds  # Exactly 12 bars (12h for 1H, 48h for 4H), 100% backtest parity
 
-        rates = mt5.copy_rates_from_pos(symbol, mt5_tf, 0, 500)
+        rates = mt5.copy_rates_from_pos(symbol, mt5_tf, 0, 600)
         if rates is None or len(rates) < (target_ema + 50):
+            logger.warning(f"⚠️ [DATA UNAVAILABLE] {symbol} insufficient history ({len(rates) if rates is not None else 0} bars < {target_ema + 50})")
             return None
 
         df = pd.DataFrame(rates)
@@ -479,8 +481,12 @@ class MT5AlphaTrader:
         else:
             er = 0.5
 
-        if er < 0.28:
-            logger.debug(f"🔇 [CHOP FILTER ACTIVE] {symbol} Kaufman ER {er:.3f} < 0.28. Noise regime, skipping.")
+        # Rejection Wick Exemption: An institutional pin bar / rejection wick (>= 35%) at the champion shelf
+        # is the hallmark of structural rejection, even if 10-bar net displacement was absorbed by the pullback.
+        has_rejection_wick = (upper_wick >= 0.35) or (lower_wick >= 0.35)
+
+        if er < 0.18 and not has_rejection_wick:
+            logger.debug(f"🔇 [CHOP FILTER ACTIVE] {symbol} Kaufman ER {er:.3f} < 0.18 (wick < 35%). Noise regime, skipping.")
             self.trade_cooldowns[f"{symbol}_last_bar"] = candle_close_ts
             return None
 
@@ -660,8 +666,8 @@ class MT5AlphaTrader:
             "sl": stop,
             "tp": target,
             "deviation": 25,
-            "magic": 89233,
-            "comment": f"AlphaBasket_{signal['cluster'][:6]}",
+            "magic": FIB_MAGIC_NUMBER,
+            "comment": FIB_ORDER_COMMENT,
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": filling,
         }
@@ -786,8 +792,8 @@ class MT5AlphaTrader:
             "position": ticket,
             "price": price,
             "deviation": 20,
-            "magic": 202611,
-            "comment": comment[:31],
+            "magic": FIB_MAGIC_NUMBER,
+            "comment": FIB_ORDER_COMMENT,
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_IOC,
         }
@@ -799,7 +805,7 @@ class MT5AlphaTrader:
         return False
 
     def flatten_all(self, reason: str = "EMERGENCY_FLATTEN"):
-        """Emergency liquidate all open positions."""
+        """Emergency liquidate all open fib_orders positions."""
         logger.warning(f"🚨 [FLATTEN ALL TRIGGERED] Reason: {reason}")
         for sym, pos in list(self.active_positions.items()):
             self._close_broker_position(pos, comment=reason)
@@ -815,12 +821,19 @@ class MT5AlphaTrader:
                 pass
 
     def sync_broker_positions(self):
-        """Synchronizes open positions directly from MT5 terminal into active state."""
+        """Synchronizes open positions directly from MT5 terminal into active state.
+        STRICT MULTI-ALGO ISOLATION: Only tracks and manages orders with comment='fib_orders'
+        or magic=202611. Other algorithms operating on this account are strictly untouched.
+        """
         mt5_pos = mt5.positions_get()
         if mt5_pos is None:
             return
 
-        live_tickets = {p.ticket: p for p in mt5_pos}
+        # STRICT MULTI-ALGO ISOLATION: filter exclusively fib_orders
+        live_tickets = {
+            p.ticket: p for p in mt5_pos
+            if (getattr(p, "comment", "") == FIB_ORDER_COMMENT or getattr(p, "magic", 0) == FIB_MAGIC_NUMBER)
+        }
         changed = False
 
         # 1. Sync live MT5 positions into active_positions
@@ -1198,11 +1211,13 @@ class MT5AlphaTrader:
 def main():
     acquire_singleton_lock()
     SCAN_INTERVAL_SEC = 10
+    once_mode = "--once" in sys.argv
     logger.info("=" * 80)
-    logger.info("STARTING FUNDEDNEXT MT5 ELITE ALPHA MONITOR WITH CRO RISK GOVERNANCE")
-    logger.info(f"Target Risk per trade: ${DEFAULT_RISK_USD:.2f} USD | 1.1R Hard Cap: ${DEFAULT_RISK_USD*1.1:.2f} USD")
+    logger.info("STARTING BLUEBERRY MARKETS MT5 ELITE ALPHA MONITOR WITH RISK GOVERNANCE")
+    logger.info(f"Target Risk: ${DEFAULT_RISK_USD:.2f} USD (Min lot execution) | Max Cap: ${MAX_RISK_CAP_USD:.2f} USD")
     logger.info(f"Max Concurrency: {MAX_CONCURRENT_POSITIONS} | Max per Cluster: {MAX_PER_CLUSTER}")
-    logger.info(f"Target Assets: {len(OPTIMAL_ALPHA_BASKET)} symbols across 8 uncorrelated clusters")
+    logger.info(f"Target Assets: {len(OPTIMAL_ALPHA_BASKET)} symbols across 6 uncorrelated clusters")
+    logger.info(f"Isolation Protocol: comment='{FIB_ORDER_COMMENT}' | magic={FIB_MAGIC_NUMBER}")
     logger.info(f"High-Speed Tick & Bar Scan Loop: {SCAN_INTERVAL_SEC}s interval")
     logger.info("=" * 80)
 
@@ -1215,6 +1230,12 @@ def main():
     logger.info(f"Connected to MT5: {term.name} ({acc.server}) | Login: {acc.login} | Equity: ${acc.equity:,.2f}")
 
     trader = MT5AlphaTrader(risk_per_trade_usd=DEFAULT_RISK_USD)
+
+    if once_mode:
+        logger.info("Running single pass scan (--once mode)...")
+        trader.run_sweep()
+        logger.info("Single pass scan completed successfully.")
+        return
 
     logger.info(f"Entering continuous {SCAN_INTERVAL_SEC}-second autonomous scanning loop...")
     sweep_count = 0

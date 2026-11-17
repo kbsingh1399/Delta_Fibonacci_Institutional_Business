@@ -107,6 +107,7 @@ def background_market_scanner():
                     rd = abs(p.price_open - p.sl) if p.sl > 0 else (0.01 * p.price_open)
                     cur_p = p.price_current
                     r_mult = ((cur_p - p.price_open) / rd) if p.type == mt5.ORDER_TYPE_BUY else ((p.price_open - cur_p) / rd)
+                    is_fib = (getattr(p, "comment", "") == "fib_orders" or getattr(p, "magic", 0) == 202611)
                     positions_data.append({
                         "ticket": p.ticket,
                         "symbol": p.symbol,
@@ -119,6 +120,9 @@ def background_market_scanner():
                         "profit": round(p.profit, 2),
                         "r_multiple": round(r_mult, 2),
                         "cluster": alpha_symbols.get(p.symbol, {}).get("cluster", "External"),
+                        "comment": getattr(p, "comment", ""),
+                        "magic": getattr(p, "magic", 0),
+                        "is_fib": is_fib,
                     })
 
             # Closed deals from today
@@ -158,7 +162,7 @@ def background_market_scanner():
                     mt5_tf = mt5.TIMEFRAME_H1 if tf_str == "1H" else mt5.TIMEFRAME_H4
                     bar_dur = 3600 if tf_str == "1H" else 14400
 
-                    rates = mt5.copy_rates_from_pos(sym, mt5_tf, 0, 500)
+                    rates = mt5.copy_rates_from_pos(sym, mt5_tf, 0, 600)
                     if rates is None or len(rates) < (target_ema_period + 40):
                         continue
                     tick = mt5.symbol_info_tick(sym)
@@ -178,12 +182,7 @@ def background_market_scanner():
                     if next_close_sec == 0:
                         next_close_sec = time_left
 
-                    e34 = calculate_ema(c, 34)[-1]
-                    e55 = calculate_ema(c, 55)[-1]
-                    e89 = calculate_ema(c, 89)[-1]
                     e_target = calculate_ema(c, target_ema_period)[-1]
-                    macro_p = 233 if tf_str == "4H" else 400
-                    e233 = calculate_ema(c, macro_p)[-1]
                     atr = calculate_atr(h, l, c, 14)[-1]
                     adx = compute_adx(h, l, c, 14)[-1]
 
@@ -195,7 +194,7 @@ def background_market_scanner():
                     shelf_val = e_target
                     min_dist_atr = d_atr
 
-                    # Shelf Status Classification relative to EMA 89
+                    # Shelf Status Classification relative to that asset's champion EMA
                     if min_dist_atr <= 0.05:
                         status = "TOUCHING"
                         status_badge = "badge-danger"
@@ -215,35 +214,38 @@ def background_market_scanner():
                     # Forming bar geometry
                     up_wick, low_wick, body, direction = calculate_candle_metrics(rates, prev_idx=-1)
                     
-                    # Precise Trend & Pullback Origin Logic
-                    trend_regime = "BULL" if e89 > e233 else "BEAR"
+                    # Slope of asset's specific champion EMA
+                    slope_bars = 4 if tf_str == "1H" else 3
+                    ema_series = calculate_ema(c, target_ema_period)
+                    norm_slope = (e_target - ema_series[-1 - slope_bars]) / (slope_bars * atr) if atr > 0 else 0.0
+                    trend_regime = "BULL" if norm_slope >= 0 else "BEAR"
                     
-                    # Pullback Origin Invariant Check
+                    # Pullback Origin Invariant Check relative to champion EMA
                     o_bar = rates['open'][-1]
                     c_prev = rates['close'][-2] if len(rates) >= 2 else o_bar
-                    came_from_above = (o_bar >= e89 * 0.998) or (c_prev >= e89 * 0.998)
-                    came_from_below = (o_bar <= e89 * 1.002) or (c_prev <= e89 * 1.002)
+                    came_from_above = (o_bar >= e_target * 0.998) or (c_prev >= e_target * 0.998)
+                    came_from_below = (o_bar <= e_target * 1.002) or (c_prev <= e_target * 1.002)
 
                     signal_hint = "MONITORING"
                     if min_dist_atr <= 0.35:
                         if trend_regime == "BULL":
                             if came_from_above:
-                                if rates['low'][-1] <= e89 * 1.002 and low_wick >= 0.25:
-                                    signal_hint = "READY: BULLISH EMA89 BOUNCE"
+                                if rates['low'][-1] <= e_target * 1.002 and low_wick >= 0.25:
+                                    signal_hint = f"READY: BULLISH EMA{target_ema_period} BOUNCE"
                                 else:
-                                    signal_hint = "TESTING EMA89 AS SUPPORT"
+                                    signal_hint = f"TESTING EMA{target_ema_period} AS SUPPORT"
                             else:
-                                signal_hint = "BELOW EMA89 (TESTING RESISTANCE - NO BUY)"
+                                signal_hint = f"BELOW EMA{target_ema_period} (RESISTANCE)"
                         else:  # BEAR
                             if came_from_below:
-                                if rates['high'][-1] >= e89 * 0.998 and up_wick >= 0.25:
-                                    signal_hint = "READY: BEARISH EMA89 CEILING"
+                                if rates['high'][-1] >= e_target * 0.998 and up_wick >= 0.25:
+                                    signal_hint = f"READY: BEARISH EMA{target_ema_period} CEILING"
                                 else:
-                                    signal_hint = "TESTING EMA89 AS RESISTANCE"
+                                    signal_hint = f"TESTING EMA{target_ema_period} AS RESISTANCE"
                             else:
-                                signal_hint = "ABOVE EMA89 (TESTING SUPPORT - NO SHORT)"
+                                signal_hint = f"ABOVE EMA{target_ema_period} (SUPPORT)"
                     elif min_dist_atr <= 0.60:
-                        signal_hint = "APPROACHING EMA89"
+                        signal_hint = f"APPROACHING EMA{target_ema_period}"
                     else:
                         signal_hint = "EXTENDED"
 
@@ -251,6 +253,7 @@ def background_market_scanner():
                         "symbol": sym,
                         "cluster": cluster,
                         "setup": f"{primary_model}_{tf_str}",
+                        "primary_model": primary_model,
                         "is_alpha": is_alpha,
                         "tf": tf_str,
                         "target_ema": target_ema_period,
@@ -260,11 +263,7 @@ def background_market_scanner():
                         "bid": tick.bid,
                         "ask": tick.ask,
                         "spread_pts": round((tick.ask - tick.bid) / (mt5.symbol_info(sym).point or 0.01), 1),
-                        "ema34": round(e34, 4),
-                        "ema55": round(e55, 4),
-                        "ema89": round(e89, 4),
                         "ema_target": round(e_target, 4),
-                        "ema233": round(e233, 4),
                         "atr": round(atr, 4),
                         "adx": round(adx, 1),
                         "nearest_shelf": target_shelf,
@@ -642,8 +641,8 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
         <!-- Live Open Positions Card -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">🛡️ Active MT5 Positions (<span id="pos-count">0</span> / 3)</div>
-                <span class="mono" style="font-size: 11px; color: var(--text-muted);">$10 Fixed Risk / Trade</span>
+                <div class="card-title">🛡️ Active MT5 Positions (<span id="pos-count">0</span> / 4)</div>
+                <span class="mono" style="font-size: 11px; color: var(--text-muted);">$5-$6 Target Risk (fib_orders isolated)</span>
             </div>
             <div style="overflow-x: auto;">
                 <table>
@@ -651,6 +650,7 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
                         <tr>
                             <th>Ticket</th>
                             <th>Symbol</th>
+                            <th>Algo Tag</th>
                             <th>Action</th>
                             <th>Lots</th>
                             <th>Entry</th>
@@ -661,7 +661,7 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
                         </tr>
                     </thead>
                     <tbody id="pos-table-body">
-                        <tr><td colspan="9" style="text-align:center; color: var(--text-muted);">No open positions. 3 concurrency slots ready.</td></tr>
+                        <tr><td colspan="10" style="text-align:center; color: var(--text-muted);">No open positions. 4 concurrency slots ready.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -696,11 +696,11 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
     <!-- Full Radar Controls -->
     <div class="controls">
         <div class="btn-group">
-            <button class="btn active" id="btn-alpha" onclick="setUniverseFilter('alpha')">⭐ 21 Elite Alpha Universe</button>
-            <button class="btn" id="btn-all" onclick="setUniverseFilter('all')">🌐 All 90 MT5 Symbols</button>
+            <button class="btn active" id="btn-alpha" onclick="setUniverseFilter('alpha')">⭐ 23 Elite Alpha Champions</button>
+            <button class="btn" id="btn-all" onclick="setUniverseFilter('all')">🌐 All 156 Blueberry Symbols</button>
             <button class="btn" id="btn-touching" onclick="setApproachFilter('touching')">🔥 Approaching / Touching (≤ 0.5 ATR)</button>
         </div>
-        <input type="text" class="search-box mono" id="search-input" placeholder="🔍 Search symbol (e.g. US30, XAUUSD)..." onkeyup="renderTable()">
+        <input type="text" class="search-box mono" id="search-input" placeholder="🔍 Search symbol (e.g. SP500, XAUUSD, BTCUSD)..." onkeyup="renderTable()">
     </div>
 
     <!-- Main Table: Live EMAs & Setup Scanner -->
@@ -712,15 +712,15 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
                         <th>Symbol</th>
                         <th>Cluster</th>
                         <th>Live Price</th>
-                        <th>EMA 34</th>
-                        <th>EMA 55</th>
-                        <th>EMA 89 (Entry Shelf)</th>
-                        <th>EMA 233 (Macro Regime)</th>
-                        <th>Target Shelf</th>
-                        <th>Shelf Proximity</th>
+                        <th>Champion Setup</th>
+                        <th>TF</th>
+                        <th>Optimal Shelf</th>
+                        <th>Shelf Level</th>
+                        <th>Distance (ATR)</th>
+                        <th>Exit / Trail Mode</th>
                         <th>ATR (14)</th>
                         <th>ADX</th>
-                        <th>4H Wick Geometry</th>
+                        <th>Wick Geometry</th>
                         <th>Action Status</th>
                     </tr>
                 </thead>
@@ -799,12 +799,13 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
             document.getElementById('pos-count').textContent = pos.length;
             const posBody = document.getElementById('pos-table-body');
             if (pos.length === 0) {
-                posBody.innerHTML = `<tr><td colspan="9" style="text-align:center; color: var(--text-muted); padding: 16px;">No open positions. 3 concurrency slots ready.</td></tr>`;
+                posBody.innerHTML = `<tr><td colspan="10" style="text-align:center; color: var(--text-muted); padding: 16px;">No open positions. 4 concurrency slots ready.</td></tr>`;
             } else {
                 posBody.innerHTML = pos.map(p => `
-                    <tr>
+                    <tr style="${p.is_fib ? 'background: rgba(0, 229, 255, 0.05);' : ''}">
                         <td class="mono">#${p.ticket}</td>
                         <td class="font-bold cyan">${p.symbol}</td>
+                        <td><span class="badge ${p.is_fib ? 'badge-primary' : 'badge-warning'}" style="font-size: 10px;">${p.is_fib ? 'fib_orders' : (p.comment || 'other_algo')}</span></td>
                         <td class="${p.type === 'BUY' ? 'green' : 'crimson'} font-bold">${p.type}</td>
                         <td class="mono">${p.volume}</td>
                         <td class="mono">${p.price_open}</td>
@@ -828,7 +829,7 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
                 highBody.innerHTML = approaching.map(x => `
                     <tr>
                         <td class="font-bold cyan">${x.symbol} <span style="font-size:10px; color:var(--text-muted)">(${x.cluster})</span></td>
-                        <td><span class="badge ${x.nearest_shelf === 'EMA89' ? 'badge-primary' : 'badge-info'}">${x.nearest_shelf}</span></td>
+                        <td><span class="badge ${x.nearest_shelf.includes('EMA') ? 'badge-primary' : 'badge-info'}">${x.nearest_shelf}</span></td>
                         <td class="mono font-bold ${x.dist_atr <= 0.1 ? 'crimson' : (x.dist_atr <= 0.25 ? 'amber' : 'cyan')}">${x.dist_atr.toFixed(2)} ATR</td>
                         <td class="mono">${x.price.toFixed(4)}</td>
                         <td class="mono text-muted">${x.shelf_price.toFixed(4)}</td>
@@ -873,25 +874,20 @@ DASHBOARD_HTML = r"""<!DOCTYPE html>
                         </td>
                         <td style="color: var(--text-muted); font-size: 11px;">${x.cluster}</td>
                         <td class="font-bold" style="color: #fff;">${x.price.toFixed(4)}</td>
-                        <td style="color: #bbb;">${x.ema34.toFixed(4)}</td>
-                        <td style="color: #bbb;">${x.ema55.toFixed(4)}</td>
-                        <td style="color: var(--accent-cyan); font-weight: 600;">${x.ema89.toFixed(4)}</td>
-                        <td style="color: var(--accent-purple); font-weight: 600;">
-                            ${x.ema233.toFixed(4)}
-                            <span class="badge ${x.trend_regime === 'BULL' ? 'badge-primary' : 'badge-danger'}" style="font-size: 9px; padding: 1px 4px; margin-left: 3px;">
-                                ${x.trend_regime}
-                            </span>
-                        </td>
+                        <td><span class="badge ${x.primary_model === 'MODEL_1' ? 'badge-primary' : 'badge-info'}" style="font-size: 10px;">${x.primary_model || 'MODEL_1'}</span></td>
+                        <td class="mono font-bold" style="color: #00e5ff;">${x.tf}</td>
                         <td>
-                            <span class="badge badge-primary">
-                                EMA 89
+                            <span class="badge badge-primary font-bold" style="font-size: 11px;">
+                                EMA ${x.target_ema}
                             </span>
                         </td>
+                        <td class="mono font-bold" style="color: #00e5ff;">${x.shelf_price.toFixed(4)}</td>
                         <td>
                             <span class="badge ${x.status_badge}">
                                 ${x.dist_atr.toFixed(2)} ATR (${x.status})
                             </span>
                         </td>
+                        <td><span class="badge badge-neutral" style="font-size: 10px;">${x.exit_mode}</span></td>
                         <td style="color: #888;">${x.atr.toFixed(4)}</td>
                         <td class="${x.adx >= 20 ? 'green font-bold' : 'amber'}">${x.adx.toFixed(1)}</td>
                         <td>

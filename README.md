@@ -1,6 +1,6 @@
 # Delta Fibonacci Institutional Business — Quant Trading System
 
-Institutional-grade, multi-asset algorithmic trading engine and quantitative radar tailored for **FundedNext MT5 Prop-Firm Accounts** ($5,000 tier, `#11808165`).
+Institutional-grade, multi-asset algorithmic trading engine and quantitative radar tailored for **Blueberry Funded MT5 Accounts** ($2,500 Prime 2-Step tier, Account `#5126976`).
 
 ---
 
@@ -10,8 +10,8 @@ The codebase is engineered with strict adherence to the **Karpathy Simplicity St
 
 ```
 Delta_Fibonacci_Institutional_Business/
-├── FundedNext_Data/                      # Single historical data cache (192 parquet files: 96 _1H & 96 _4H)
-├── MT5_Backtest.py                       # Single Backtesting Engine (100% Code Parity, 20 assets, dual-model, trailing SL)
+├── Blueberry_Data/                       # Single historical data cache (1H & 4H parquet files from 2023 to present)
+├── MT5_Backtest.py                       # Single Backtesting Engine (100% Code Parity, 22 assets, dual-model, trailing SL)
 ├── mt5_alpha_trader_live.py              # Single Primary Live Engine (Autonomous monitor, CRO governor, trailing SL, anti-chop)
 ├── dashboard_server.py                   # Single Dashboard Go Live File (Streaming web interface at http://localhost:8088)
 ├── STANDARDIZED_TRADING_DECISION_CHAIN.md# Institutional 10-Step Decision Protocol & Risk Mandate
@@ -22,64 +22,68 @@ Delta_Fibonacci_Institutional_Business/
 
 ---
 
-## 2. 20 Alpha Champion Assets & Configuration
+## 2. 23 Alpha Champion Assets & Configuration (Blueberry Markets)
 
 Every asset in the curated universe operates on its empirical champion timeframe, target EMA shelf, model, and trailing stop strategy:
 
 | Symbol | Cluster | Timeframe | Champion EMA | Execution Model | Trailing SL Mode | Target Risk | Hard Risk Cap |
 | :--- | :--- | :---: | :---: | :--- | :--- | :---: | :---: |
-| **XAUUSD** | Commodity_Energy | **4H** | **EMA 50** | `MODEL_1_PULLBACK` | **Trail 1.5R** (at +2.5R, trail 1.5R to 8R) | $10.00 | $11.00 (1.1R) |
-| **CHFJPY** | Forex_JPY | **4H** | **EMA 50** | `MODEL_2_RECLAIM` | **Trail 1.5R** (at +2.5R, trail 1.5R to 8R) | $10.00 | $11.00 (1.1R) |
-| **US30** | Indices | **1H** | **EMA 65** | `MODEL_1_PULLBACK` | **Trail 1.0R** (at +2.0R, trail 1.0R to 6R) | $10.00 | $11.00 (1.1R) |
-| **HK50** | Indices | **1H** | **EMA 50** | `MODEL_1_PULLBACK` | **Trail 0.5R** (at +1.5R, trail 0.5R to 6R) | $10.00 | $11.00 (1.1R) |
-| **USDJPY** | Forex_JPY | **1H** | **EMA 50** | `MODEL_1_PULLBACK` | **Trail 0.5R** (at +1.5R, trail 0.5R to 6R) | $10.00 | $11.00 (1.1R) |
-| **NZDJPY** | Forex_JPY | **1H** | **EMA 65** | `MODEL_1_PULLBACK` | **Fixed 3.5R** | $10.00 | $11.00 (1.1R) |
-| **CADJPY** | Forex_JPY | **1H** | **EMA 55** | `MODEL_2_RECLAIM` | **Trail 1.5R** (at +2.5R, trail 1.5R to 8R) | $10.00 | $11.00 (1.1R) |
-| **EURJPY** | Forex_JPY | **1H** | **EMA 277** | `MODEL_1_PULLBACK` | **Trail 1.0R** (at +2.0R, trail 1.0R to 6R) | $10.00 | $11.00 (1.1R) |
-| **USDCHF** | Forex_USD | **1H** | **EMA 400** | `MODEL_1_PULLBACK` | **Trail 0.5R** (at +1.5R, trail 0.5R to 6R) | $10.00 | $11.00 (1.1R) |
-| **USDCNH** | Forex_USD | **1H** | **EMA 160** | `MODEL_2_RECLAIM` | **Fixed 4.0R** | $10.00 | $11.00 (1.1R) |
-| **NZDSGD** | Forex_Exotic | **1H** | **EMA 89** | `MODEL_1_PULLBACK` | **Fixed 4.0R** | $10.00 | $11.00 (1.1R) |
-| **ETHUSD** | Crypto | **1H** | **EMA 100** | `MODEL_1_PULLBACK` | **Trail 1.5R** (at +2.5R, trail 1.5R to 8R) | $10.00 | $11.00 (1.1R) |
-| **ADAUSD** | Crypto | **1H** | **EMA 100** | `MODEL_1_PULLBACK` | **Fixed 4.0R** | $10.00 | $11.00 (1.1R) |
-| **DOGUSD** | Crypto | **1H** | **EMA 55** | `MODEL_1_PULLBACK` | **Trail 1.0R** (at +2.0R, trail 1.0R to 6R) | $10.00 | $11.00 (1.1R) |
-| **XLMUSD** | Crypto | **1H** | **EMA 233** | `MODEL_1_PULLBACK` | **Trail 1.5R** (at +2.5R, trail 1.5R to 8R) | $10.00 | $11.00 (1.1R) |
-| **MSFT** | US_Equities | **1H** | **EMA 65** | `MODEL_1_PULLBACK` | **Trail 1.5R** (at +2.5R, trail 1.5R to 8R) | $10.00 | $11.00 (1.1R) |
-| **AMD** | US_Equities | **1H** | **EMA 89** | `MODEL_1_PULLBACK` | **Trail 1.0R** (at +2.0R, trail 1.0R to 6R) | $10.00 | $11.00 (1.1R) |
-| **NKE** | US_Equities | **1H** | **EMA 75** | `MODEL_1_PULLBACK` | **Trail 0.5R** (at +1.5R, trail 0.5R to 6R) | $10.00 | $11.00 (1.1R) |
-| **NFLX** | US_Equities | **1H** | **EMA 65** | `MODEL_1_PULLBACK` | **Trail 0.5R** (at +1.5R, trail 0.5R to 6R) | $10.00 | $11.00 (1.1R) |
-| **BABA** | US_Equities | **1H** | **EMA 300** | `MODEL_1_PULLBACK` | **Trail 1.0R** (at +2.0R, trail 1.0R to 6R) | $10.00 | $11.00 (1.1R) |
+| **SP500.p** | Indices | **1H** | **EMA 89** | `MODEL_1_PULLBACK` | **Trail 0.5R** | $10.00 | $12.00 (1.2R) |
+| **JP225.p** | Indices | **1H** | **EMA 65** | `MODEL_1_PULLBACK` | **Trail 0.5R** | $10.00 | $12.00 (1.2R) |
+| **DJ30.p** | Indices | **1H** | **EMA 55** | `MODEL_1_PULLBACK` | **Trail 0.5R** | $10.00 | $12.00 (1.2R) |
+| **NAS100.p** | Indices | **1H** | **EMA 55** | `MODEL_1_PULLBACK` | **Trail 0.5R** | $10.00 | $12.00 (1.2R) |
+| **HK50.p** | Indices | **1H** | **EMA 50** | `MODEL_1_PULLBACK` | **Trail 0.5R** | $10.00 | $12.00 (1.2R) |
+| **XAUUSD.pi** | Commodity_Energy | **1H** | **EMA 55** | `MODEL_1_PULLBACK` | **Fixed 3.5R** | $10.00 | $12.00 (1.2R) |
+| **XAGUSD.pi** | Commodity_Energy | **1H** | **EMA 160** | `MODEL_1_PULLBACK` | **Fixed 4.0R** | $10.00 | $12.00 (1.2R) |
+| **USWTI.p** | Commodity_Energy | **1H** | **EMA 50** | `MODEL_1_PULLBACK` | **Trail 0.5R** | $10.00 | $12.00 (1.2R) |
+| **BTCUSD.pi** | Crypto | **1H** | **EMA 233** | `MODEL_2_RECLAIM` | **Fixed 4.0R** | $10.00 | $12.00 (1.2R) |
+| **ETHUSD.pi** | Crypto | **4H** | **EMA 89** | `MODEL_2_RECLAIM` | **Fixed 3.5R** | $10.00 | $12.00 (1.2R) |
+| **XLMUSD.p** | Crypto | **1H** | **EMA 65** | `MODEL_2_RECLAIM` | **Fixed 3.5R** | $10.00 | $12.00 (1.2R) |
+| **XRPUSD.pi** | Crypto | **1H** | **EMA 89** | `MODEL_2_RECLAIM` | **Trail 0.5R** | $10.00 | $12.00 (1.2R) |
+| **ADAUSD.p** | Crypto | **1H** | **EMA 55** | `MODEL_1_PULLBACK` | **Fixed 4.0R** | $10.00 | $12.00 (1.2R) |
+| **USDCAD.pi** | Forex_Majors | **1H** | **EMA 55** | `MODEL_1_PULLBACK` | **Fixed 3.5R** | $10.00 | $12.00 (1.2R) |
+| **EURUSD.pi** | Forex_Majors | **1H** | **EMA 55** | `MODEL_1_PULLBACK` | **Trail 0.5R** | $10.00 | $12.00 (1.2R) |
+| **GBPUSD.pi** | Forex_Majors | **4H** | **EMA 100** | `MODEL_2_RECLAIM` | **Fixed 3.5R** | $10.00 | $12.00 (1.2R) |
+| **USDCHF.pi** | Forex_Majors | **1H** | **EMA 400** | `MODEL_2_RECLAIM` | **Trail 0.5R** | $10.00 | $12.00 (1.2R) |
+| **GBPJPY.pi** | Forex_JPY | **4H** | **EMA 160** | `MODEL_1_PULLBACK` | **Fixed 2.5R** | $10.00 | $12.00 (1.2R) |
+| **CADJPY.pi** | Forex_JPY | **4H** | **EMA 100** | `MODEL_1_PULLBACK` | **Fixed 2.5R** | $10.00 | $12.00 (1.2R) |
+| **CHFJPY.pi** | Forex_JPY | **4H** | **EMA 160** | `MODEL_2_RECLAIM` | **Fixed 3.5R** | $10.00 | $12.00 (1.2R) |
+| **USDJPY.pi** | Forex_JPY | **4H** | **EMA 89** | `MODEL_2_RECLAIM` | **Trail 0.5R** | $10.00 | $12.00 (1.2R) |
+| **NZDSGD.pi** | Forex_Crosses_Exotics | **1H** | **EMA 100** | `MODEL_1_PULLBACK` | **Fixed 3.5R** | $10.00 | $12.00 (1.2R) |
+| **GBPNOK.pi** | Forex_Crosses_Exotics | **1H** | **EMA 89** | `MODEL_2_RECLAIM` | **Trail 0.5R** | $10.00 | $12.00 (1.2R) |
 
 ---
 
 ## 3. Core Strategy Safeguards
 
-1. **Strict Champion Model Isolation**: Assets assigned to `MODEL_1` execute ONLY Model 1 (Pullback Rejection). If slope or rejection wick criteria fail, the setup terminates immediately with zero cross-model fallback.
-2. **Anti-Whipsaw Kaufman ER & Banded Crossing Gate**: Evaluates 10-bar Kaufman Efficiency Ratio ($ER \ge 0.28$). If $ER < 0.28$, market is classified as noise and skipped. Requires true penetration beyond $\pm 0.25 \times \text{ATR}$ across the EMA; $\ge 2$ band crossings in 12 bars silences all setups.
+1. **Strict Champion Model Isolation**: Assets assigned to `MODEL_1` execute ONLY Model 1 (Pullback Rejection). Assets assigned to `MODEL_2` execute ONLY Model 2 (Reclaim Spring).
+2. **Anti-Whipsaw Kaufman ER & Pinbar Wick Exemption Gate**: Evaluates 10-bar Kaufman Efficiency Ratio ($ER \ge 0.18$). If $ER < 0.18$, noise is filtered unless an institutional pinbar rejection wick ($\ge 35\%$) is present at the champion EMA shelf. Requires true penetration beyond $\pm 0.25 \times \text{ATR}$ across the EMA; $\ge 2$ band crossings in 12 bars silences all setups.
 3. **ATR-Normalized Slope Filter**: Model 1 requires normalized slope $\ge +0.02$ ATR/bar for BUY ($\le -0.02$ ATR/bar for SELL) over lookback (4 bars on 1H, 3 bars on 4H).
 4. **Decisive Clearance Gate**: For Model 1, candle close must exceed EMA by $\ge 0.05 \times \text{ATR}$. For Model 2 Reclaims, candle close must exceed EMA by $\ge 0.12 \times \text{ATR}$ (or $1.5\times$ spread), eliminating noise trap blips.
-5. **Causal Candle Closure**: All signals evaluate strictly upon completed bar close (zero lookahead).
+5. **Causal Candle Closure & Post-Exit Cooldown**: All signals evaluate strictly upon completed bar close (zero lookahead). Enforces strict 12-bar post-exit cooldown (12h for 1H, 48h for 4H).
 
 ---
 
-## 4. Execution & Risk Governance
+## 4. Execution & Risk Governance (Multi-Algorithm Coexistence)
 
-* **Dual-Mode Execution Pipeline**:
-  * The engine first attempts automated Python order execution via `mt5.order_send()`.
-  * If the broker evaluation server restricts automated EA orders (`retcode 10026`), the engine outputs an actionable console alert and surfaces a notification banner on the live dashboard (`http://localhost:8088`) with a 1-click **"COPY SETUP"** button.
-  * Once punched in MT5 GUI, the background daemon auto-syncs the live ticket within 10 seconds via `sync_broker_positions()`, tracks MFE, and manages trailing SL.
-* **FundedNext $5,000 Challenge Risk Governor**:
-  * Lifetime 10% static floor: **$4,500.00 USD**.
-  * Daily 5% loss limit: **$250.00 USD**, anchored to 00:00 broker server time (UTC+2) to `max(balance, equity)`.
-  * 80% throttle threshold: **$200.00 USD** (halts new entries, manages open positions).
-  * 90% risk budget soft cap: `used_loss + open_risk + new_trade_risk <= $225.00`.
+* **Multi-EA Isolation**:
+  * Other algorithmic strategies operate on account `#5126976`.
+  * The Fibonacci engine places orders strictly tagged with `comment="fib_orders"` and `magic=202611`.
+  * The position synchronization loop monitors and manages **only** orders with `fib_orders`, completely ignoring all external algorithm trades.
+* **Blueberry Funded Prime 2-Step Risk Governor**:
+  * Lifetime 10% static floor: **$2,250.00 USD** ($250.00 buffer on $2,500 starting equity).
+  * Daily 4% loss limit: **$100.00 USD**, anchored to 00:00 broker server time (UTC+2) to `max(balance, equity)`.
+  * 80% throttle threshold: **$80.00 USD** (halts new entries, manages open positions).
+  * 90% risk budget soft cap: `used_loss + open_risk + new_trade_risk <= $90.00`.
+  * Target risk per trade: **$10.00 USD** (1.0R) or broker minimum lot size.
+  * Hard risk cap per trade: **$12.00 USD** (1.2R maximum).
   * Concurrency: Max 4 global slots, max 1 open position per cluster.
-  * Hard risk cap per trade: **$11.00 USD** (1.1R maximum).
 
 ---
 
 ## 5. Quickstart
 
-### Backtesting (100% Code-Parity on 20 Champion Assets)
+### Backtesting (100% Code-Parity on Blueberry Markets Data)
 ```bash
 python MT5_Backtest.py
 ```
