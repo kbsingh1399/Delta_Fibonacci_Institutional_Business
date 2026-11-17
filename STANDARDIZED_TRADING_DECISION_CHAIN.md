@@ -15,8 +15,8 @@
 - **Lifetime Static Floor**: **$2,250.00 USD** (Strict 10% maximum static loss limit, $250.00 buffer)
 - **Daily Loss Limit**: **$100.00 USD** (Strict 4% daily limit measured from 00:00 server time)
 - **Daily Throttle Limit**: **$80.00 USD** (80% threshold — halts new entries, manages existing)
-- **Target Risk per Trade**: **$5.00 USD** (1.0R)
-- **Hard Max Risk Cap per Trade**: **$6.00 USD** (1.2R maximum with slippage/commission buffer)
+- **Target Risk per Trade**: **$10.00 USD** (1.0R)
+- **Hard Max Risk Cap per Trade**: **$12.00 USD** (1.2R maximum with slippage/commission buffer)
 - **Order Identification**: **`comment="fib_orders"`** | **`magic=202611`**
 - **Global Concurrency Ceiling**: **4 concurrent open fib_orders**
 - **Sector / Cluster Isolation**: **Max 1 active fib_order per cluster**
@@ -44,9 +44,9 @@ flowchart TD
     Step2 --> Step3["Step 3: Open Risk Budget Soft-Cap Gate (Used + Open <= $90.00)"]
     Step3 --> Step4["Step 4: Market Session & Spread Filter (Spread <= 0.35 ATR)"]
     Step4 --> Step5["Step 5: Post-Exit Cooldown Verification (12 Bars)"]
-    Step5 --> Step6["Step 6: Anti-Chop Verification (Kaufman ER >= 0.28 + Banded Crossings)"]
+    Step5 --> Step6["Step 6: Anti-Chop Verification (Kaufman ER >= 0.18 + Banded Crossings)"]
     Step6 --> Step7["Step 7: Dual-Model Setup Qualification (Model 1 / Model 2)"]
-    Step7 --> Step8["Step 8: Exact Dynamic Lot Sizing (Risk $5.00, Cap $6.00 USD)"]
+    Step7 --> Step8["Step 8: Exact Dynamic Lot Sizing (Risk $10.00, Cap $12.00 USD)"]
     Step8 --> Step9["Step 9: Atomic Order Placement (magic=202611, comment=fib_orders)"]
     Step9 --> Step10["Step 10: Dynamic Trailing Ratchet & Deal Reconciliation"]
 ```
@@ -60,7 +60,7 @@ flowchart TD
 ### Step 2: Global Concurrency & Cluster Isolation Gate
 - Max concurrent `fib_orders` across the entire portfolio: **4**.
 - Max active `fib_orders` in any single cluster: **1**.
-- Uncorrelated clusters: `Crypto`, `Commodity_Energy`, `Indices`, `Forex_JPY`, `Forex_USD`, `Forex_Exotic`.
+- Uncorrelated clusters: `Crypto`, `Commodity_Energy`, `Indices`, `Forex_Majors`, `Forex_JPY`, `Forex_Crosses_Exotics`.
 
 ### Step 3: Open Risk Budget Soft-Cap Gate
 - Compute `open_risk = sum(p["actual_risk_usd"] for p in active_positions if p["comment"] == "fib_orders")`.
@@ -69,11 +69,11 @@ flowchart TD
 ### Step 4: Market Session & Spread Filter
 - Verify symbol trade mode is `SYMBOL_TRADE_MODE_FULL`.
 - Verify bid/ask ticks are valid and live.
-- Check current spread against 14-period ATR; spread must be <= 0.35 ATR.
+- Check current spread against the 1R institutional risk distance (1.5 * ATR): spread must be <= **15% of 1R** (≈ 0.23 ATR).
 
 ### Step 5: Post-Exit Cooldown Verification
-- Enforce strict **12-bar post-exit cooldown** per asset (48 hours on 4H, 12 hours on 1H).
-- Evaluated using broker server timestamp.
+- Enforce strict **12-bar post-exit cooldown** per asset, counted in CLOSED bars after the exit bar (exact backtest parity; wall-clock hours are only an approximation on 24×5 markets and drift across weekends).
+- Evaluated using broker server timestamp anchored to the candle series.
 
 ### Step 6: Anti-Chop & Regime Gates
 - **Kaufman Efficiency Ratio (ER)**: 10-bar Kaufman ER must be >= **0.18**. If ER < 0.18, reject as noise unless exempted by strong rejection wick.

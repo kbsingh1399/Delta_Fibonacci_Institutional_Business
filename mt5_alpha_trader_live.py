@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 r"""mt5_alpha_trader_monitor.py: Autonomous Live Trader & Risk Governor for the
-Optimal Multi-Cluster Alpha Basket on FundedNext MetaTrader 5.
+Optimal Multi-Cluster Alpha Basket on Blueberry Markets MetaTrader 5
+(BlueberryMarketsSVG-Live, Account #5126976).
 
 Features:
 - Fixed $10 USD Target Risk per Trade with dynamic broker-exact lot sizing.
-- Hard Risk Cap (1.1R / $11.00 max): Strictly blocks min-lot risk inflation (Patch 1).
+- Hard Risk Cap (1.2R / $12.00 max): Strictly blocks min-lot risk inflation (Patch 1).
 - Broker-Side Trailing Stops: Advanced via mt5.TRADE_ACTION_SLTP (Patch 2).
 - Zero Phantom Fills: Rejections are never fabricated or recorded as open (Patch 3).
-- FundedNext Daily Risk Governor: 5% daily loss limit & 10% lifetime floor (Patch 4).
+- Blueberry Daily Risk Governor: 4% daily loss limit ($100) & 10% lifetime floor $2,250 (Patch 4).
 - Spread Friction Gate: Discards signals where spread > 15% of 1R risk distance.
 - 12-Bar Post-Exit Cooldown: Enforces backtest parity across symbol exits.
 - Institutional Pullback Origin: Enforces came_from_above (Long) & came_from_below (Short).
@@ -96,7 +97,7 @@ class DailyRiskGovernor:
             logger.error(f"Error saving governor state: {e}")
 
     def check(self, current_equity: float, current_balance: float) -> Tuple[str, str, float]:
-        """Evaluates live equity against FundedNext rules using exact broker server day."""
+        """Evaluates live equity against Blueberry rules using exact broker server day."""
         offset = get_server_offset_seconds()
         server_ts = time.time() + offset
         day = int(server_ts // 86400)
@@ -170,7 +171,11 @@ def acquire_singleton_lock():
                 import psutil
                 if psutil.pid_exists(old_pid):
                     proc = psutil.Process(old_pid)
-                    if "python" in proc.name().lower():
+                    # Kill only a genuine prior instance of THIS daemon; a recycled
+                    # PID belonging to an unrelated process must never be killed
+                    if "python" in proc.name().lower() and any(
+                        "mt5_alpha_trader_live" in arg for arg in proc.cmdline()
+                    ):
                         logger.warning(f"⚠️ Terminating old daemon instance PID {old_pid} to prevent split-brain collision.")
                         proc.kill()
                         time.sleep(1)
@@ -313,8 +318,8 @@ def calculate_lot_size(symbol: str, risk_usd: float, entry: float, stop: float, 
     if one_lot_risk <= 0:
         return 0.0, 0.0, "Zero 1-lot risk value"
 
-    # CRO Invariant: Hard Risk Cap ($6.00 USD max on $5.00 target risk)
-    MAX_RISK_USD = round(risk_usd * 1.20, 2)
+    # CRO Invariant: hard stressed-risk cap ($12.00 on $10 target risk, 1.2R).
+    # Enforced unconditionally - min-lot trades are never exempt (Step 8 mandate).
 
     vol_min = info.volume_min if info.volume_min > 0 else 0.01
     vol_max = info.volume_max if info.volume_max > 0 else 100.0
@@ -331,8 +336,8 @@ def calculate_lot_size(symbol: str, risk_usd: float, entry: float, stop: float, 
     final_lot = round(final_lot, decimals)
     actual_risk = round(final_lot * one_lot_risk, 2)
 
-    if actual_risk > MAX_RISK_USD and not always_min_lot:
-        return 0.0, 0.0, f"CALCULATED RISK ${actual_risk:.2f} > ${MAX_RISK_USD:.2f} cap - SKIP"
+    if actual_risk > MAX_RISK_CAP_USD:
+        return 0.0, 0.0, f"CALCULATED RISK ${actual_risk:.2f} > ${MAX_RISK_CAP_USD:.2f} cap - SKIP"
 
     return final_lot, actual_risk, "OK"
 
@@ -416,7 +421,6 @@ class MT5AlphaTrader:
         mt5_tf = mt5.TIMEFRAME_H1 if tf_str == "1H" else mt5.TIMEFRAME_H4
         bar_seconds = 3600 if tf_str == "1H" else 14400
         freshness_limit = 3300 if tf_str == "1H" else 13800  # 55 min for 1H, 3h50m for 4H
-        cooldown_seconds = 12 * bar_seconds  # Exactly 12 bars (12h for 1H, 48h for 4H), 100% backtest parity
 
         rates = mt5.copy_rates_from_pos(symbol, mt5_tf, 0, 600)
         if rates is None or len(rates) < (target_ema + 50):
@@ -438,12 +442,15 @@ class MT5AlphaTrader:
         prev = n - 2
         candle_close_ts = int(t[prev] + bar_seconds)
 
-        # 1. Post-Exit Cooldown Enforcement
+        # 1. Post-Exit Cooldown Enforcement (12 closed bars after the exit bar,
+        # exact backtest parity - wall-clock expiry across weekends is not a bar count)
         exit_ts = self.trade_cooldowns.get(f"{symbol}_exit_ts", 0)
-        if tick.time < exit_ts + cooldown_seconds:
-            remaining_h = round((exit_ts + cooldown_seconds - tick.time) / 3600, 1)
-            logger.debug(f"⏳ [COOLDOWN ACTIVE] {symbol} in post-exit cooldown ({remaining_h}h remaining)")
-            return None
+        if exit_ts > 0:
+            exit_bar = int(np.searchsorted(t, exit_ts, side="right")) - 1
+            if (prev - exit_bar) < POST_EXIT_COOLDOWN_BARS:
+                bars_left = POST_EXIT_COOLDOWN_BARS - (prev - exit_bar)
+                logger.debug(f"⏳ [COOLDOWN ACTIVE] {symbol} in post-exit cooldown ({bars_left} bars remaining)")
+                return None
 
         # 2. Bar Freshness Check: ensure we only evaluate freshly confirmed completed candle
         last_eval_bar = self.trade_cooldowns.get(f"{symbol}_last_bar", 0)
@@ -569,8 +576,10 @@ class MT5AlphaTrader:
             return None
 
         # Determine Entry & Stop Prices
+        # Institutional Stop Loss = 1.5 * ATR(14) from entry (Step 8 mandate; exact
+        # backtest parity - the signal-bar wick is entry context, not the stop anchor)
         curr_price = (tick.ask if sig == 1 else tick.bid) if tick else c_bar
-        stop_price = (l_bar - 0.30 * a_bar) if sig == 1 else (h_bar + 0.30 * a_bar)
+        stop_price = (curr_price - 1.5 * a_bar) if sig == 1 else (curr_price + 1.5 * a_bar)
 
         risk_dist = abs(curr_price - stop_price)
         if risk_dist <= 0 or (risk_dist / curr_price) < 0.0003:
@@ -604,7 +613,7 @@ class MT5AlphaTrader:
 
         tp_price = (curr_price + target_rr * risk_dist) if sig == 1 else (curr_price - target_rr * risk_dist)
 
-        # Calculate Lot Size for $10 USD Target Risk (with 1.1R hard cap)
+        # Calculate Lot Size for $10 USD Target Risk (with 1.2R / $12.00 hard cap)
         lot, actual_risk, status_msg = calculate_lot_size(symbol, self.risk_usd, curr_price, stop_price)
         if lot <= 0:
             logger.warning(f"[{symbol}] Lot calculation returned 0 ({status_msg})")
@@ -672,11 +681,23 @@ class MT5AlphaTrader:
             "type_filling": filling,
         }
 
+        # One refresh-and-retry pass for transient price rejections; all other
+        # outcomes fall through to the manual-punch protocol unchanged
+        transient = (getattr(mt5, "TRADE_RETCODE_REQUOTE", 10004),
+                     getattr(mt5, "TRADE_RETCODE_PRICE_CHANGED", 10020),
+                     getattr(mt5, "TRADE_RETCODE_PRICE_OFF", 10021))
         order_res = mt5.order_send(req)
+        if not (order_res and order_res.retcode == mt5.TRADE_RETCODE_DONE) \
+                and order_res and order_res.retcode in transient:
+            fresh = mt5.symbol_info_tick(symbol)
+            if fresh and fresh.ask > 0 and fresh.bid > 0:
+                req["price"] = fresh.ask if action == "BUY" else fresh.bid
+                order_res = mt5.order_send(req)
 
         if order_res and order_res.retcode == mt5.TRADE_RETCODE_DONE:
             ticket = order_res.order
-            logger.info(f"✅ [MT5 AUTO-FILL SUCCESS] {symbol} Ticket: {ticket}")
+            fill_price = getattr(order_res, "price", 0.0) or entry
+            logger.info(f"✅ [MT5 AUTO-FILL SUCCESS] {symbol} Ticket: {ticket} @ {fill_price}")
             self._clear_manual_pending(symbol)
         else:
             err_msg = order_res.comment if order_res else str(mt5.last_error())
@@ -696,6 +717,8 @@ class MT5AlphaTrader:
                 f"   Take Profit: {target}\n"
                 f"   Risk USD:    ${signal['actual_risk_usd']:.2f} (Target: ${signal['target_risk_usd']:.2f})\n"
                 f"   Setup:       {signal['setup']} ({signal['tf']} TF | Exit: {exit_mode})\n"
+                f"   Order Tag:   comment='fib_orders' (REQUIRED - the daemon only adopts &\n"
+                f"                trails tickets tagged fib_orders / magic 202611)\n"
                 f"   Reason:      AutoTrading restricted by broker (retcode {retcode}: {err_msg})\n"
                 f"👉 PUNCH THIS ORDER MANUALLY IN MT5 GUI. The daemon will auto-sync and manage trailing SL!\n"
                 f"{border}\n"
@@ -730,7 +753,7 @@ class MT5AlphaTrader:
             "action": action,
             "side": signal["side"],
             "lot": lot,
-            "entry_price": entry,
+            "entry_price": fill_price,
             "stop_price": stop,
             "target_price": target,
             "risk_dist": signal["risk_dist"],
@@ -1021,32 +1044,36 @@ class MT5AlphaTrader:
                     info = mt5.symbol_info(symbol)
                     digits = info.digits if info else 5
                     new_sl_rounded = round(new_sl, digits)
-
-                    # Send MT5 broker modification request
-                    req = {
-                        "action": mt5.TRADE_ACTION_SLTP,
-                        "position": pos["ticket"],
-                        "symbol": symbol,
-                        "sl": new_sl_rounded,
-                        "tp": tp_p if tp_p else 0.0,
-                    }
-                    res = mt5.order_send(req)
-                    if res and res.retcode == mt5.TRADE_RETCODE_DONE:
-                        pos["stop_price"] = new_sl_rounded
-                        logger.info(
-                            f"🛡️ [BROKER TRAIL ADVANCED] {symbol} Ticket: {pos['ticket']} "
-                            f"New SL: {new_sl_rounded} (MFE: +{mfe}R | Mode: {exit_mode})"
-                        )
-                        self.save_state()
-                    else:
-                        retcode = res.retcode if res else "None"
-                        err_comment = res.comment if res else str(mt5.last_error())
-                        logger.warning(
-                            f"⚠️ [TRAILING SL NOTICE] {symbol} Ticket: {pos['ticket']} "
-                            f"MFE +{mfe}R ({exit_mode}) target SL {new_sl_rounded}. Broker retcode {retcode}: {err_comment}"
-                        )
-                        # Save virtual trailing stop level
-                        pos["virtual_trailing_sl"] = new_sl_rounded
+                    # Ratchet guard: only send a broker modification when the
+                    # rounded level strictly improves the stop (no no-op SLTP
+                    # requests, no retcode 10025 noise, no spurious virtual fallback)
+                    improves = new_sl_rounded > sl_p if side == 1 else new_sl_rounded < sl_p
+                    if improves:
+                        # Send MT5 broker modification request
+                        req = {
+                            "action": mt5.TRADE_ACTION_SLTP,
+                            "position": pos["ticket"],
+                            "symbol": symbol,
+                            "sl": new_sl_rounded,
+                            "tp": tp_p if tp_p else 0.0,
+                        }
+                        res = mt5.order_send(req)
+                        if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+                            pos["stop_price"] = new_sl_rounded
+                            logger.info(
+                                f"🛡️ [BROKER TRAIL ADVANCED] {symbol} Ticket: {pos['ticket']} "
+                                f"New SL: {new_sl_rounded} (MFE: +{mfe}R | Mode: {exit_mode})"
+                            )
+                            self.save_state()
+                        else:
+                            retcode = res.retcode if res else "None"
+                            err_comment = res.comment if res else str(mt5.last_error())
+                            logger.warning(
+                                f"⚠️ [TRAILING SL NOTICE] {symbol} Ticket: {pos['ticket']} "
+                                f"MFE +{mfe}R ({exit_mode}) target SL {new_sl_rounded}. Broker retcode {retcode}: {err_comment}"
+                            )
+                            # Save virtual trailing stop level
+                            pos["virtual_trailing_sl"] = new_sl_rounded
 
             if exited:
                 logger.info(f"🏁 [ALGO EXIT EXECUTING] {symbol} Reason: {exit_reason} | Level: {current_price}")
@@ -1112,7 +1139,7 @@ class MT5AlphaTrader:
             "active_clusters": active_clusters,
             "market_statuses": market_statuses,
             "risk_per_trade_usd": self.risk_usd,
-            "max_risk_cap_usd": round(self.risk_usd * 1.10, 2),
+            "max_risk_cap_usd": MAX_RISK_CAP_USD,
             "concurrency_limit": MAX_CONCURRENT_POSITIONS,
             "manual_pending_signal": json.load(open(MANUAL_PENDING_FILE, "r", encoding="utf-8")) if os.path.exists(MANUAL_PENDING_FILE) else None,
         }
@@ -1145,7 +1172,9 @@ class MT5AlphaTrader:
             self.emit_health_status(gov_status=gov_status, used_loss_today=used_loss)
             return
 
-        if gov_status == "HALT_DAILY_LIMIT":
+        if gov_status in ("HALT_DAILY_LIMIT", "THROTTLE_NEW_ENTRIES"):
+            # Daily limit breached OR 80% throttle reached: halt ALL new entries
+            # (Step 1 mandate), keep managing/trailing existing positions
             logger.warning(f"🚨 [GOVERNOR ACTIVE] {gov_msg} Halting new entries.")
             # Still manage open positions to trail/close existing trades
             self.manage_open_positions()
@@ -1153,7 +1182,7 @@ class MT5AlphaTrader:
             self.emit_health_status(gov_status=gov_status, used_loss_today=used_loss)
             return
 
-        max_concurrent = 1 if gov_status == "THROTTLE_NEW_ENTRIES" else MAX_CONCURRENT_POSITIONS
+        max_concurrent = MAX_CONCURRENT_POSITIONS
 
         # 1. Sync real-time positions directly from MT5 terminal
         self.sync_broker_positions()

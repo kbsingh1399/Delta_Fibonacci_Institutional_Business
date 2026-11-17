@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 r"""MT5_Backtest.py: Institutional 100% Code-Parity Backtest Engine
-for the 20 Champion Assets in OPTIMAL_ALPHA_BASKET.
+for the 23 Champion Assets in OPTIMAL_ALPHA_BASKET.
 
 Features:
 - 100% Logic Parity with mt5_alpha_trader_live.py
 - Dual Models: Model 1 (Pullback Rejection) & Model 2 (Dwell & Reclaim Spring)
-- Anti-Chop Gates: Kaufman Efficiency Ratio (ER >= 0.28) + ATR-Banded Crossings Filter
+- Anti-Chop Gates: Kaufman Efficiency Ratio (ER >= 0.18) + ATR-Banded Crossings Filter
 - Slope & Clearance Gates: ATR-normalized slope (>= +0.02 / <= -0.02) + 0.05 ATR clearance
 - Exact Dynamic Trailing Exits: trail_1.5r, trail_1.0r, trail_0.5r, fixed_4.0r, fixed_3.5r, fixed_2.5r
 - Zero Lookahead: Signal confirmed on candle close -> entered at subsequent bar open
