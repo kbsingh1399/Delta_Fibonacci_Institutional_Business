@@ -36,8 +36,6 @@ desktop.ini
 
 # Data
 FundedNext_Data/
-Blueberry_Data/
-*.parquet
 
 # Audit runtime logs and process locks
 audit/*.log
