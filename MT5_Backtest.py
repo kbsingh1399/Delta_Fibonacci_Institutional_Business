@@ -61,8 +61,11 @@ def simulate_asset_backtest(cfg: Dict[str, Any]) -> List[Dict[str, Any]]:
         return []
 
     df = pd.read_parquet(pq_path)
-    # Ensure time is integer unix epoch seconds
-    df["time_sec"] = pd.to_datetime(df["time"]).astype("int64") // 10**9
+    # Ensure time is integer unix epoch seconds. Normalize ANY datetime
+    # resolution (s/ms/us/ns, tz-aware or naive) to ns first: parquet lakes
+    # written by pandas 2.x carry non-nanosecond dtypes, and assuming ns
+    # collapses time_sec into tie-groups that scramble bar order on sort.
+    df["time_sec"] = pd.to_datetime(df["time"], utc=True).astype("datetime64[ns, UTC]").astype("int64") // 10**9
     df = df.sort_values("time_sec").reset_index(drop=True)
     c = df["close"].to_numpy(dtype=float)
     h = df["high"].to_numpy(dtype=float)

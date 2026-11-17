@@ -259,7 +259,7 @@ def analyze_single_symbol(symbol: str) -> Optional[Dict[str, Any]]:
             df = pd.read_parquet(pq)
             if len(df) < 200:
                 continue
-            df["time_sec"] = pd.to_datetime(df["time"]).astype("int64") // 10**9
+            df["time_sec"] = pd.to_datetime(df["time"], utc=True).astype("datetime64[ns, UTC]").astype("int64") // 10**9
             df = df.sort_values("time_sec").reset_index(drop=True)
             c = df["close"].to_numpy(dtype=float)
             h = df["high"].to_numpy(dtype=float)
