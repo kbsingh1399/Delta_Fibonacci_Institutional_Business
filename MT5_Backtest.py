@@ -351,11 +351,11 @@ def run_full_portfolio_backtest():
         p_tot_pnl = sum(t["pnl_usd"] for t in all_trades)
 
         print("\n" + "=" * 85)
-        print(f"📊 PORTFOLIO AGGREGATE PERFORMANCE (20 Curated Assets across 6 Clusters)")
+        print(f"📊 PORTFOLIO AGGREGATE PERFORMANCE (23 Curated Assets across 6 Clusters)")
         print(f"Total Trades:       {tot_trades}")
         print(f"Overall Win Rate:   {p_wr:.1f}%")
         print(f"Profit Factor:      {p_pf:.2f}")
-        print(f"Total Return:       +{p_tot_r:.2f} R  (${p_tot_pnl:,.2f} USD @ $10/trade)")
+        print(f"Total Return:       +{p_tot_r:.2f} R  (${p_tot_pnl:,.2f} USD @ $5/trade)")
         print("=" * 85)
 
         # Save to audit files

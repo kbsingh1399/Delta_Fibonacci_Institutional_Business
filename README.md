@@ -75,8 +75,8 @@ Every asset in the curated universe operates on its empirical champion timeframe
   * Daily 4% loss limit: **$100.00 USD**, anchored to 00:00 broker server time (UTC+2) to `max(balance, equity)`.
   * 80% throttle threshold: **$80.00 USD** (halts new entries, manages open positions).
   * 90% risk budget soft cap: `used_loss + open_risk + new_trade_risk <= $90.00`.
-  * Target risk per trade: **$10.00 USD** (1.0R) or broker minimum lot size.
-  * Hard risk cap per trade: **$12.00 USD** (1.2R maximum).
+  * Target risk per trade: **$5.00 USD** (1.0R target; minimum lot size fallback when min lot requires > $5.00).
+  * Hard risk cap per trade: **$40.00 USD** (safety ceiling accommodating index minimum lots like NAS100).
   * Concurrency: Max 4 global slots, max 1 open position per cluster.
 
 ---

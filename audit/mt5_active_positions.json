@@ -1,1 +1,42 @@
-{}
+{
+  "NZDSGD.pi": {
+    "ticket": 20236066,
+    "symbol": "NZDSGD.pi",
+    "cluster": "Forex_Crosses_Exotics",
+    "setup": "MODEL_1_PULLBACK_EMA100",
+    "action": "SELL",
+    "side": -1,
+    "lot": 0.01,
+    "entry_price": 0.7083,
+    "stop_price": 0.7099,
+    "target_price": 0.7027,
+    "risk_dist": 0.0016,
+    "target_risk_usd": 10.0,
+    "actual_risk_usd": 1.24,
+    "exit_mode": "fixed_3.5r",
+    "entry_time": "2026-11-18T01:59:52.388201+00:00",
+    "max_fav_r": 0.27,
+    "status": "OPEN",
+    "source": "MONITOR_ALGO"
+  },
+  "USDCAD.pi": {
+    "ticket": 20239250,
+    "symbol": "USDCAD.pi",
+    "cluster": "Forex_Majors",
+    "setup": "MODEL_1_PULLBACK_EMA55",
+    "action": "BUY",
+    "side": 1,
+    "lot": 0.01,
+    "entry_price": 1.4309,
+    "stop_price": 1.42935,
+    "target_price": 1.43633,
+    "risk_dist": 0.00155,
+    "target_risk_usd": 10.0,
+    "actual_risk_usd": 1.08,
+    "exit_mode": "fixed_3.5r",
+    "entry_time": "2026-11-18T04:00:00.209624+00:00",
+    "max_fav_r": 0.26,
+    "status": "OPEN",
+    "source": "MONITOR_ALGO"
+  }
+}

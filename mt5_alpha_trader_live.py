@@ -199,45 +199,45 @@ logger = logging.getLogger("MT5AlphaMonitor")
 # Elite 23 Positive-Alpha Universe across 6 Uncorrelated Clusters (Blueberry Markets Certified)
 OPTIMAL_ALPHA_BASKET = [
     # --- Equity Indices (5 Assets) ---
-    {"symbol": "SP500.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 89, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
-    {"symbol": "JP225.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 65, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
-    {"symbol": "DJ30.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
-    {"symbol": "NAS100.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
-    {"symbol": "HK50.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 50, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    {"symbol": "SP500.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 89, "exit_mode": "trail_0.5r", "risk_usd": 5.0},
+    {"symbol": "JP225.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 65, "exit_mode": "trail_0.5r", "risk_usd": 5.0},
+    {"symbol": "DJ30.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "trail_0.5r", "risk_usd": 5.0},
+    {"symbol": "NAS100.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "trail_0.5r", "risk_usd": 5.0},
+    {"symbol": "HK50.p", "cluster": "Indices", "tf": "1H", "primary_model": "MODEL_1", "ema": 50, "exit_mode": "trail_0.5r", "risk_usd": 5.0},
 
     # --- Commodities & Energy (3 Assets) ---
-    {"symbol": "XAUUSD.pi", "cluster": "Commodity_Energy", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
-    {"symbol": "XAGUSD.pi", "cluster": "Commodity_Energy", "tf": "1H", "primary_model": "MODEL_1", "ema": 160, "exit_mode": "fixed_4.0r", "risk_usd": 10.0},
-    {"symbol": "USWTI.p", "cluster": "Commodity_Energy", "tf": "1H", "primary_model": "MODEL_1", "ema": 50, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    {"symbol": "XAUUSD.pi", "cluster": "Commodity_Energy", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "fixed_3.5r", "risk_usd": 5.0},
+    {"symbol": "XAGUSD.pi", "cluster": "Commodity_Energy", "tf": "1H", "primary_model": "MODEL_1", "ema": 160, "exit_mode": "fixed_4.0r", "risk_usd": 5.0},
+    {"symbol": "USWTI.p", "cluster": "Commodity_Energy", "tf": "1H", "primary_model": "MODEL_1", "ema": 50, "exit_mode": "trail_0.5r", "risk_usd": 5.0},
 
     # --- Crypto (5 Assets) ---
-    {"symbol": "BTCUSD.pi", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_2", "ema": 233, "exit_mode": "fixed_4.0r", "risk_usd": 10.0},
-    {"symbol": "ETHUSD.pi", "cluster": "Crypto", "tf": "4H", "primary_model": "MODEL_2", "ema": 89, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
-    {"symbol": "XLMUSD.p", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_2", "ema": 65, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
-    {"symbol": "XRPUSD.pi", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_2", "ema": 89, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
-    {"symbol": "ADAUSD.p", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "fixed_4.0r", "risk_usd": 10.0},
+    {"symbol": "BTCUSD.pi", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_2", "ema": 233, "exit_mode": "fixed_4.0r", "risk_usd": 5.0},
+    {"symbol": "ETHUSD.pi", "cluster": "Crypto", "tf": "4H", "primary_model": "MODEL_2", "ema": 89, "exit_mode": "fixed_3.5r", "risk_usd": 5.0},
+    {"symbol": "XLMUSD.p", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_2", "ema": 65, "exit_mode": "fixed_3.5r", "risk_usd": 5.0},
+    {"symbol": "XRPUSD.pi", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_2", "ema": 89, "exit_mode": "trail_0.5r", "risk_usd": 5.0},
+    {"symbol": "ADAUSD.p", "cluster": "Crypto", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "fixed_4.0r", "risk_usd": 5.0},
 
     # --- Forex Majors (4 Assets) ---
-    {"symbol": "USDCAD.pi", "cluster": "Forex_Majors", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
-    {"symbol": "EURUSD.pi", "cluster": "Forex_Majors", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
-    {"symbol": "GBPUSD.pi", "cluster": "Forex_Majors", "tf": "4H", "primary_model": "MODEL_2", "ema": 100, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
-    {"symbol": "USDCHF.pi", "cluster": "Forex_Majors", "tf": "1H", "primary_model": "MODEL_2", "ema": 400, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    {"symbol": "USDCAD.pi", "cluster": "Forex_Majors", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "fixed_3.5r", "risk_usd": 5.0},
+    {"symbol": "EURUSD.pi", "cluster": "Forex_Majors", "tf": "1H", "primary_model": "MODEL_1", "ema": 55, "exit_mode": "trail_0.5r", "risk_usd": 5.0},
+    {"symbol": "GBPUSD.pi", "cluster": "Forex_Majors", "tf": "4H", "primary_model": "MODEL_2", "ema": 100, "exit_mode": "fixed_3.5r", "risk_usd": 5.0},
+    {"symbol": "USDCHF.pi", "cluster": "Forex_Majors", "tf": "1H", "primary_model": "MODEL_2", "ema": 400, "exit_mode": "trail_0.5r", "risk_usd": 5.0},
 
     # --- Forex JPY Crosses (4 Assets) ---
-    {"symbol": "GBPJPY.pi", "cluster": "Forex_JPY", "tf": "4H", "primary_model": "MODEL_1", "ema": 160, "exit_mode": "fixed_2.5r", "risk_usd": 10.0},
-    {"symbol": "CADJPY.pi", "cluster": "Forex_JPY", "tf": "4H", "primary_model": "MODEL_1", "ema": 100, "exit_mode": "fixed_2.5r", "risk_usd": 10.0},
-    {"symbol": "CHFJPY.pi", "cluster": "Forex_JPY", "tf": "4H", "primary_model": "MODEL_2", "ema": 160, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
-    {"symbol": "USDJPY.pi", "cluster": "Forex_JPY", "tf": "4H", "primary_model": "MODEL_2", "ema": 89, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    {"symbol": "GBPJPY.pi", "cluster": "Forex_JPY", "tf": "4H", "primary_model": "MODEL_1", "ema": 160, "exit_mode": "fixed_2.5r", "risk_usd": 5.0},
+    {"symbol": "CADJPY.pi", "cluster": "Forex_JPY", "tf": "4H", "primary_model": "MODEL_1", "ema": 100, "exit_mode": "fixed_2.5r", "risk_usd": 5.0},
+    {"symbol": "CHFJPY.pi", "cluster": "Forex_JPY", "tf": "4H", "primary_model": "MODEL_2", "ema": 160, "exit_mode": "fixed_3.5r", "risk_usd": 5.0},
+    {"symbol": "USDJPY.pi", "cluster": "Forex_JPY", "tf": "4H", "primary_model": "MODEL_2", "ema": 89, "exit_mode": "trail_0.5r", "risk_usd": 5.0},
 
     # --- Forex Crosses & Exotics (2 Assets) ---
-    {"symbol": "NZDSGD.pi", "cluster": "Forex_Crosses_Exotics", "tf": "1H", "primary_model": "MODEL_1", "ema": 100, "exit_mode": "fixed_3.5r", "risk_usd": 10.0},
-    {"symbol": "GBPNOK.pi", "cluster": "Forex_Crosses_Exotics", "tf": "1H", "primary_model": "MODEL_2", "ema": 89, "exit_mode": "trail_0.5r", "risk_usd": 10.0},
+    {"symbol": "NZDSGD.pi", "cluster": "Forex_Crosses_Exotics", "tf": "1H", "primary_model": "MODEL_1", "ema": 100, "exit_mode": "fixed_3.5r", "risk_usd": 5.0},
+    {"symbol": "GBPNOK.pi", "cluster": "Forex_Crosses_Exotics", "tf": "1H", "primary_model": "MODEL_2", "ema": 89, "exit_mode": "trail_0.5r", "risk_usd": 5.0},
 ]
 
 MAX_CONCURRENT_POSITIONS = 4
 MAX_PER_CLUSTER = 1
-DEFAULT_RISK_USD = 10.0
-MAX_RISK_CAP_USD = 12.0
+DEFAULT_RISK_USD = 5.0
+MAX_RISK_CAP_USD = 40.0
 FIB_ORDER_COMMENT = "fib_orders"
 FIB_MAGIC_NUMBER = 202611
 POST_EXIT_COOLDOWN_BARS = 12  # 12 bars post-exit cooldown
@@ -296,9 +296,12 @@ def compute_adx(high: np.ndarray, low: np.ndarray, close: np.ndarray, period: in
     return adx
 
 
-def calculate_lot_size(symbol: str, risk_usd: float, entry: float, stop: float, always_min_lot: bool = True) -> Tuple[float, float, str]:
+def calculate_lot_size(symbol: str, risk_usd: float, entry: float, stop: float) -> Tuple[float, float, str]:
     """Calculates broker-compliant lot size for a target dollar risk amount.
-    User Mandate: Always use minimum lot size (vol_min = 0.01) for safety and risk isolation.
+    User Mandate: Target risk is $5.00 USD per trade.
+    If 1 minimum lot (vol_min = 0.01) already requires >= $5.00 (e.g. SP500, Gold, Crypto, Indices),
+    execute minimum lot size (vol_min). If min lot risk < $5.00 (e.g. FX majors/crosses),
+    dynamically size up to achieve $5.00 target risk.
     Returns: (final_lot, actual_risk_usd, status_message)
     """
     info = mt5.symbol_info(symbol)
@@ -318,23 +321,23 @@ def calculate_lot_size(symbol: str, risk_usd: float, entry: float, stop: float, 
     if one_lot_risk <= 0:
         return 0.0, 0.0, "Zero 1-lot risk value"
 
-    # CRO Invariant: hard stressed-risk cap ($12.00 on $10 target risk, 1.2R).
-    # Enforced unconditionally - min-lot trades are never exempt (Step 8 mandate).
-
     vol_min = info.volume_min if info.volume_min > 0 else 0.01
     vol_max = info.volume_max if info.volume_max > 0 else 100.0
     step = info.volume_step if info.volume_step > 0 else 0.01
 
-    if always_min_lot:
+    min_lot_risk = round(vol_min * one_lot_risk, 2)
+
+    # User Mandate: if more than $5 is required at min lot, take minimum lot size
+    if min_lot_risk >= risk_usd:
         final_lot = vol_min
+        actual_risk = min_lot_risk
     else:
         raw_lot = risk_usd / one_lot_risk
         rounded_lot = round(raw_lot / step) * step
         final_lot = max(vol_min, min(vol_max, rounded_lot))
-
-    decimals = max(0, -int(np.floor(np.log10(step)))) if step < 1 else 0
-    final_lot = round(final_lot, decimals)
-    actual_risk = round(final_lot * one_lot_risk, 2)
+        decimals = max(0, -int(np.floor(np.log10(step)))) if step < 1 else 0
+        final_lot = round(final_lot, decimals)
+        actual_risk = round(final_lot * one_lot_risk, 2)
 
     if actual_risk > MAX_RISK_CAP_USD:
         return 0.0, 0.0, f"CALCULATED RISK ${actual_risk:.2f} > ${MAX_RISK_CAP_USD:.2f} cap - SKIP"
@@ -1243,7 +1246,7 @@ def main():
     once_mode = "--once" in sys.argv
     logger.info("=" * 80)
     logger.info("STARTING BLUEBERRY MARKETS MT5 ELITE ALPHA MONITOR WITH RISK GOVERNANCE")
-    logger.info(f"Target Risk: ${DEFAULT_RISK_USD:.2f} USD (Min lot execution) | Max Cap: ${MAX_RISK_CAP_USD:.2f} USD")
+    logger.info(f"Target Risk: ${DEFAULT_RISK_USD:.2f} USD (Min lot fallback) | Max Cap: ${MAX_RISK_CAP_USD:.2f} USD")
     logger.info(f"Max Concurrency: {MAX_CONCURRENT_POSITIONS} | Max per Cluster: {MAX_PER_CLUSTER}")
     logger.info(f"Target Assets: {len(OPTIMAL_ALPHA_BASKET)} symbols across 6 uncorrelated clusters")
     logger.info(f"Isolation Protocol: comment='{FIB_ORDER_COMMENT}' | magic={FIB_MAGIC_NUMBER}")

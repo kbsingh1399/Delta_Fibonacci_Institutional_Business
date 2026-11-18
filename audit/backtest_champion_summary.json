@@ -10,7 +10,7 @@
     "Win Rate (%)": 42.3,
     "Profit Factor": 1.34,
     "Total R": 87.42,
-    "Net PnL ($)": 874.01,
+    "Net PnL ($)": 437.04,
     "Max DD (R)": 12.81
   },
   {
@@ -24,7 +24,7 @@
     "Win Rate (%)": 41.3,
     "Profit Factor": 1.35,
     "Total R": 87.04,
-    "Net PnL ($)": 870.5,
+    "Net PnL ($)": 435.21,
     "Max DD (R)": 17.14
   },
   {
@@ -38,7 +38,7 @@
     "Win Rate (%)": 41.9,
     "Profit Factor": 1.37,
     "Total R": 139.33,
-    "Net PnL ($)": 1393.92,
+    "Net PnL ($)": 696.89,
     "Max DD (R)": 19.01
   },
   {
@@ -52,7 +52,7 @@
     "Win Rate (%)": 43.6,
     "Profit Factor": 1.46,
     "Total R": 143.39,
-    "Net PnL ($)": 1434.09,
+    "Net PnL ($)": 717.02,
     "Max DD (R)": 22.22
   },
   {
@@ -66,7 +66,7 @@
     "Win Rate (%)": 42.3,
     "Profit Factor": 1.28,
     "Total R": 74.51,
-    "Net PnL ($)": 745.08,
+    "Net PnL ($)": 372.5,
     "Max DD (R)": 28.42
   },
   {
@@ -80,7 +80,7 @@
     "Win Rate (%)": 29.2,
     "Profit Factor": 1.44,
     "Total R": 90.0,
-    "Net PnL ($)": 900.0,
+    "Net PnL ($)": 450.0,
     "Max DD (R)": 13.0
   },
   {
@@ -94,7 +94,7 @@
     "Win Rate (%)": 21.8,
     "Profit Factor": 1.12,
     "Total R": 5.0,
-    "Net PnL ($)": 50.0,
+    "Net PnL ($)": 25.0,
     "Max DD (R)": 11.0
   },
   {
@@ -108,7 +108,7 @@
     "Win Rate (%)": 43.1,
     "Profit Factor": 1.39,
     "Total R": 86.45,
-    "Net PnL ($)": 864.88,
+    "Net PnL ($)": 432.39,
     "Max DD (R)": 11.52
   },
   {
@@ -122,7 +122,7 @@
     "Win Rate (%)": 25.5,
     "Profit Factor": 1.37,
     "Total R": 27.0,
-    "Net PnL ($)": 270.0,
+    "Net PnL ($)": 135.0,
     "Max DD (R)": 13.0
   },
   {
@@ -136,7 +136,7 @@
     "Win Rate (%)": 34.0,
     "Profit Factor": 1.81,
     "Total R": 25.0,
-    "Net PnL ($)": 250.0,
+    "Net PnL ($)": 125.0,
     "Max DD (R)": 10.0
   },
   {
@@ -150,7 +150,7 @@
     "Win Rate (%)": 28.8,
     "Profit Factor": 1.42,
     "Total R": 76.0,
-    "Net PnL ($)": 760.0,
+    "Net PnL ($)": 380.0,
     "Max DD (R)": 12.5
   },
   {
@@ -164,7 +164,7 @@
     "Win Rate (%)": 44.8,
     "Profit Factor": 1.43,
     "Total R": 61.52,
-    "Net PnL ($)": 615.39,
+    "Net PnL ($)": 307.59,
     "Max DD (R)": 13.78
   },
   {
@@ -178,7 +178,7 @@
     "Win Rate (%)": 23.8,
     "Profit Factor": 1.25,
     "Total R": 76.0,
-    "Net PnL ($)": 760.0,
+    "Net PnL ($)": 380.0,
     "Max DD (R)": 18.0
   },
   {
@@ -192,7 +192,7 @@
     "Win Rate (%)": 27.1,
     "Profit Factor": 1.3,
     "Total R": 124.5,
-    "Net PnL ($)": 1245.0,
+    "Net PnL ($)": 622.5,
     "Max DD (R)": 22.0
   },
   {
@@ -206,7 +206,7 @@
     "Win Rate (%)": 40.9,
     "Profit Factor": 1.24,
     "Total R": 107.87,
-    "Net PnL ($)": 1078.34,
+    "Net PnL ($)": 539.15,
     "Max DD (R)": 34.99
   },
   {
@@ -220,7 +220,7 @@
     "Win Rate (%)": 45.7,
     "Profit Factor": 2.95,
     "Total R": 37.0,
-    "Net PnL ($)": 370.0,
+    "Net PnL ($)": 185.0,
     "Max DD (R)": 8.0
   },
   {
@@ -234,7 +234,7 @@
     "Win Rate (%)": 46.9,
     "Profit Factor": 1.76,
     "Total R": 19.88,
-    "Net PnL ($)": 198.71,
+    "Net PnL ($)": 99.35,
     "Max DD (R)": 9.69
   },
   {
@@ -248,7 +248,7 @@
     "Win Rate (%)": 55.6,
     "Profit Factor": 3.12,
     "Total R": 25.5,
-    "Net PnL ($)": 255.0,
+    "Net PnL ($)": 127.5,
     "Max DD (R)": 4.0
   },
   {
@@ -262,7 +262,7 @@
     "Win Rate (%)": 34.3,
     "Profit Factor": 1.3,
     "Total R": 14.0,
-    "Net PnL ($)": 140.0,
+    "Net PnL ($)": 70.0,
     "Max DD (R)": 10.0
   },
   {
@@ -276,7 +276,7 @@
     "Win Rate (%)": 34.6,
     "Profit Factor": 1.85,
     "Total R": 14.5,
-    "Net PnL ($)": 145.0,
+    "Net PnL ($)": 72.5,
     "Max DD (R)": 5.0
   },
   {
@@ -290,7 +290,7 @@
     "Win Rate (%)": 54.3,
     "Profit Factor": 1.98,
     "Total R": 20.57,
-    "Net PnL ($)": 205.68,
+    "Net PnL ($)": 102.85,
     "Max DD (R)": 4.0
   },
   {
@@ -304,7 +304,7 @@
     "Win Rate (%)": 23.5,
     "Profit Factor": 1.08,
     "Total R": 25.5,
-    "Net PnL ($)": 255.0,
+    "Net PnL ($)": 127.5,
     "Max DD (R)": 47.5
   },
   {
@@ -318,7 +318,7 @@
     "Win Rate (%)": 40.5,
     "Profit Factor": 1.31,
     "Total R": 31.08,
-    "Net PnL ($)": 310.84,
+    "Net PnL ($)": 155.4,
     "Max DD (R)": 15.81
   }
 ]

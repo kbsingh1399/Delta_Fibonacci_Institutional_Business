@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-11-18T04:14:12.133079+00:00",
+  "timestamp": "2026-11-18T05:36:48.373958+00:00",
   "terminal_connected": true,
   "account_login": 5126976,
   "server": "BlueberryMarketsSVG-Live",
   "balance": 2566.39,
-  "equity": 2585.29,
-  "margin_free": 2260.05,
-  "margin_level": 794.8868527856351,
+  "equity": 2590.22,
+  "margin_free": 2264.98,
+  "margin_level": 796.4026564998154,
   "governor_status": "OK",
   "used_loss_today_usd": 0.0,
   "daily_loss_limit_usd": 100.0,
@@ -29,7 +29,7 @@
       "actual_risk_usd": 1.24,
       "exit_mode": "fixed_3.5r",
       "entry_time": "2026-11-18T01:59:52.388201+00:00",
-      "max_fav_r": 0.24,
+      "max_fav_r": 0.27,
       "status": "OPEN",
       "source": "MONITOR_ALGO"
     },
@@ -49,7 +49,7 @@
       "actual_risk_usd": 1.08,
       "exit_mode": "fixed_3.5r",
       "entry_time": "2026-11-18T04:00:00.209624+00:00",
-      "max_fav_r": 0.12,
+      "max_fav_r": 0.3,
       "status": "OPEN",
       "source": "MONITOR_ALGO"
     }
@@ -83,8 +83,8 @@
     "NZDSGD.pi": "OPEN",
     "GBPNOK.pi": "OPEN"
   },
-  "risk_per_trade_usd": 10.0,
-  "max_risk_cap_usd": 12.0,
+  "risk_per_trade_usd": 5.0,
+  "max_risk_cap_usd": 40.0,
   "concurrency_limit": 4,
   "manual_pending_signal": null
 }

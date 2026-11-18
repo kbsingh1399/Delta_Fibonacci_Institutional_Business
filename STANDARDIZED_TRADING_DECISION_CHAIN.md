@@ -15,8 +15,8 @@
 - **Lifetime Static Floor**: **$2,250.00 USD** (Strict 10% maximum static loss limit, $250.00 buffer)
 - **Daily Loss Limit**: **$100.00 USD** (Strict 4% daily limit measured from 00:00 server time)
 - **Daily Throttle Limit**: **$80.00 USD** (80% threshold — halts new entries, manages existing)
-- **Target Risk per Trade**: **$10.00 USD** (1.0R)
-- **Hard Max Risk Cap per Trade**: **$12.00 USD** (1.2R maximum with slippage/commission buffer)
+- **Target Risk per Trade**: **$5.00 USD** (1.0R target; if min lot requires > $5.00, executes broker minimum lot size `vol_min`)
+- **Hard Max Risk Cap per Trade**: **$40.00 USD** (safety ceiling accommodating index minimum lots like NAS100)
 - **Order Identification**: **`comment="fib_orders"`** | **`magic=202611`**
 - **Global Concurrency Ceiling**: **4 concurrent open fib_orders**
 - **Sector / Cluster Isolation**: **Max 1 active fib_order per cluster**
@@ -92,12 +92,12 @@ flowchart TD
   - Decisive Clearance: Candle close must clear EMA by at least `max(0.12 * ATR, 1.5 * spread)`.
 
 ### Step 8: Dynamic Lot Sizing & Risk Hard Cap
-- Exact target risk = **$10.00 USD** (or broker `volume_min` lot size).
-- Hard max risk cap = **$12.00 USD** (1.2R max).
+- Exact target risk = **$5.00 USD** (dynamically sized for FX; minimum lot fallback for high-value assets).
+- Hard max risk cap = **$40.00 USD** (safety ceiling).
 - Institutional Stop Loss = `1.5 * ATR(14)`.
-- Lot calculation: `lot = target_risk / (risk_dist_points * tick_value_per_point)`.
+- Lot calculation: if 1 minimum lot risk >= $5.00, take `vol_min`; else scale dynamically `lot = target_risk / (risk_dist_points * tick_value_per_point)`.
 - Lot clamped to broker `volume_min`, `volume_max`, `volume_step`.
-- Stressed risk check: calculated risk must be strictly <= **$12.00 USD**.
+- Stressed risk check: calculated risk must be strictly <= **$40.00 USD**.
 
 ### Step 9: Atomic Order Placement & Multi-EA Tagging
 - Send `TRADE_ACTION_DEAL` with `magic=202611`, `comment="fib_orders"`.
