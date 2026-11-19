@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-11-19T17:45:46.005775+00:00",
+  "timestamp": "2026-11-19T18:08:29.794264+00:00",
   "status": "ONLINE",
   "login": 5126976,
-  "equity": 2608.28,
-  "balance": 2542.36,
-  "margin_free": 575.31,
-  "open_positions_count": 11,
+  "equity": 2620.63,
+  "balance": 2537.39,
+  "margin_free": 349.33,
+  "open_positions_count": 16,
   "active_symbols_tracked": 18,
   "total_setups_tracked": 25
 }

@@ -15,7 +15,7 @@
     "actual_risk_usd": 23.16,
     "exit_mode": "fixed_3.5r",
     "entry_time": "2026-11-18T17:59:53.097900+00:00",
-    "max_fav_r": 2.44,
+    "max_fav_r": 2.71,
     "status": "OPEN",
     "source": "MONITOR_ALGO"
   },
@@ -36,7 +36,7 @@
     "actual_risk_usd": 4.81,
     "exit_mode": "fixed_2.5r",
     "entry_time": "2026-11-19T16:00:02+00:00",
-    "max_fav_r": 1.2,
+    "max_fav_r": 1.52,
     "status": "OPEN",
     "source": "MT5_TERMINAL"
   }
