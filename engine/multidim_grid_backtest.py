@@ -1,6 +1,7 @@
 """engine/multidim_grid_backtest.py: High-speed, zero-lookahead backtest engine
 for Multi-Dimensional VWAP Standard Deviation Bands & Multi-Timeframe EMAs.
-Features single-pass signal vectorization for sub-second parameter sweeps.
+Features single-pass signal vectorization for sub-second parameter sweeps and
+multi-variant price action patterns (Pinbar Kiss, 2-Bar Reversals, Cluster Stalls).
 """
 
 from datetime import datetime, timezone
@@ -9,7 +10,11 @@ import numpy as np
 import pandas as pd
 
 from engine.vwap_bands import calculate_session_vwap_bands
-from engine.candle_rejection import check_vwap_band_signal, check_ema_rejection_signal
+from engine.candle_rejection import (
+    check_vwap_band_signal,
+    check_ema_rejection_signal,
+    evaluate_level_rejection
+)
 
 
 def calculate_atr(h: np.ndarray, l: np.ndarray, c: np.ndarray, period: int = 14) -> np.ndarray:
@@ -101,15 +106,21 @@ def precompute_signals_vector(
     ema_vals: Optional[np.ndarray] = None,
     ema_period: int = 50,
     start_bar: int = 20
-) -> Tuple[np.ndarray, List[str]]:
-    """Generates candle rejection signal vectors in a single pass across the price array."""
+) -> Tuple[np.ndarray, List[str], np.ndarray]:
+    """Generates candle rejection signal vectors in a single pass across the price array
+    incorporating Pinbar, Two-Bar Reversal, and Cluster Stall Breakaways.
+    """
     n = len(c)
     sig_sides = np.zeros(n, dtype=np.int8)
     sig_setups = [""] * n
+    sig_rds = np.zeros(n, dtype=float)
 
     for i in range(start_bar, n - 1):
         prev_idx = i - 1 if i > 0 else 0
+        res = {"side": 0}
+
         if model_family == "VWAP":
+            # 1. Base VWAP check (Pinbars)
             res = check_vwap_band_signal(
                 open_p=o[i], high_p=h[i], low_p=l[i], close_p=c[i],
                 prev_close=c[prev_idx],
@@ -117,18 +128,54 @@ def precompute_signals_vector(
                 vwap_m1=vwap_m1[i], vwap_m2=vwap_m2[i],
                 atr=atr[i]
             )
+            # 2. Multi-Variant check (Two-Bar Reversal & Cluster Stall) if base didn't trigger
+            if res["side"] == 0:
+                tol = 0.20 * atr[i]
+                # Check -2 SD bounce
+                if l[i] <= vwap_m2[i] + tol:
+                    mv = evaluate_level_rejection(o, h, l, c, atr, i, vwap_m2[i], side_bias=1)
+                    if mv["detected"]:
+                        res = {"side": 1, "setup": f"VWAP_M2_{mv['pattern']}", "risk_dist": mv.get("risk_dist", 1.5 * atr[i])}
+                # Check +2 SD rejection
+                elif h[i] >= vwap_p2[i] - tol:
+                    mv = evaluate_level_rejection(o, h, l, c, atr, i, vwap_p2[i], side_bias=-1)
+                    if mv["detected"]:
+                        res = {"side": -1, "setup": f"VWAP_P2_{mv['pattern']}", "risk_dist": mv.get("risk_dist", 1.5 * atr[i])}
+                # Check 0 SD (Mean) retest from below
+                elif c[prev_idx] <= vwap_vals[i] + tol and h[i] >= vwap_vals[i] - tol:
+                    mv = evaluate_level_rejection(o, h, l, c, atr, i, vwap_vals[i], side_bias=-1)
+                    if mv["detected"]:
+                        res = {"side": -1, "setup": f"VWAP_0_{mv['pattern']}", "risk_dist": mv.get("risk_dist", 1.5 * atr[i])}
+                # Check 0 SD (Mean) retest from above
+                elif c[prev_idx] >= vwap_vals[i] - tol and l[i] <= vwap_vals[i] + tol:
+                    mv = evaluate_level_rejection(o, h, l, c, atr, i, vwap_vals[i], side_bias=1)
+                    if mv["detected"]:
+                        res = {"side": 1, "setup": f"VWAP_0_{mv['pattern']}", "risk_dist": mv.get("risk_dist", 1.5 * atr[i])}
         else:
+            # 1. Base EMA check
             res = check_ema_rejection_signal(
                 open_p=o[i], high_p=h[i], low_p=l[i], close_p=c[i],
                 ema_val=ema_vals[i], ema_prev=ema_vals[prev_idx],
                 atr=atr[i], ema_period=ema_period
             )
+            # 2. Multi-Variant check for EMA
+            if res["side"] == 0:
+                tol = 0.20 * atr[i]
+                if ema_vals[i] >= ema_vals[prev_idx] * 0.9995 and l[i] <= ema_vals[i] + tol:
+                    mv = evaluate_level_rejection(o, h, l, c, atr, i, ema_vals[i], side_bias=1)
+                    if mv["detected"]:
+                        res = {"side": 1, "setup": f"EMA{ema_period}_{mv['pattern']}", "risk_dist": mv.get("risk_dist", 1.5 * atr[i])}
+                elif ema_vals[i] <= ema_vals[prev_idx] * 1.0005 and h[i] >= ema_vals[i] - tol:
+                    mv = evaluate_level_rejection(o, h, l, c, atr, i, ema_vals[i], side_bias=-1)
+                    if mv["detected"]:
+                        res = {"side": -1, "setup": f"EMA{ema_period}_{mv['pattern']}", "risk_dist": mv.get("risk_dist", 1.5 * atr[i])}
 
         if res["side"] != 0:
             sig_sides[i] = res["side"]
             sig_setups[i] = res["setup"]
+            sig_rds[i] = res.get("risk_dist", 1.5 * atr[i])
 
-    return sig_sides, sig_setups
+    return sig_sides, sig_setups, sig_rds
 
 
 def simulate_with_signals(
@@ -138,7 +185,8 @@ def simulate_with_signals(
     exit_mode: str = "fixed_2.0r",
     risk_usd: float = 5.0,
     cooldown_bars: int = 6,
-    start_bar: int = 20
+    start_bar: int = 20,
+    sig_rds: Optional[np.ndarray] = None
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     """Ultra-fast trade simulation using precomputed signal arrays."""
     n = len(c)
@@ -270,7 +318,12 @@ def simulate_with_signals(
             pos_entry = entry_p
             entry_idx = next_bar
             pos_side = int(sig_side)
-            rd = max(1e-5, 1.5 * atr[i])
+
+            # Use precalculated structural risk distance or fallback to 1.5 ATR
+            if sig_rds is not None and sig_rds[i] > 0:
+                rd = max(1e-5, sig_rds[i])
+            else:
+                rd = max(1e-5, 1.5 * atr[i])
             pos_rd = rd
 
             pos_sl = (entry_p - rd) if pos_side == 1 else (entry_p + rd)
@@ -314,7 +367,7 @@ def simulate_multidim_backtest(
 
     if model_family == "VWAP":
         vwap_df = calculate_session_vwap_bands(df_sorted, anchor_mode=anchor_mode)
-        sig_sides, sig_setups = precompute_signals_vector(
+        sig_sides, sig_setups, sig_rds = precompute_signals_vector(
             o=o, h=h, l=l, c=c, atr=atr, model_family="VWAP",
             vwap_vals=vwap_df["vwap"].to_numpy(dtype=float),
             vwap_p1=vwap_df["vwap_p1"].to_numpy(dtype=float),
@@ -325,7 +378,7 @@ def simulate_multidim_backtest(
         )
     else:
         ema_vals = calculate_ema(c, ema_period)
-        sig_sides, sig_setups = precompute_signals_vector(
+        sig_sides, sig_setups, sig_rds = precompute_signals_vector(
             o=o, h=h, l=l, c=c, atr=atr, model_family="EMA",
             ema_vals=ema_vals, ema_period=ema_period,
             start_bar=start_bar
@@ -336,5 +389,5 @@ def simulate_multidim_backtest(
         sig_sides=sig_sides, sig_setups=sig_setups,
         symbol=symbol, tf=tf, model_family=model_family,
         exit_mode=exit_mode, risk_usd=risk_usd, cooldown_bars=cooldown_bars,
-        start_bar=start_bar
+        start_bar=start_bar, sig_rds=sig_rds
     )
