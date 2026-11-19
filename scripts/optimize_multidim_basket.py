@@ -87,7 +87,7 @@ def run_full_basket_optimization():
             vwap_df = calculate_session_vwap_bands(df, anchor_mode=anchor_mode)
 
             # 1. Precalculate VWAP signals ONCE
-            vwap_sides, vwap_setups = precompute_signals_vector(
+            vwap_sides, vwap_setups, vwap_rds = precompute_signals_vector(
                 o=o, h=h, l=l, c=c, atr=atr, model_family="VWAP",
                 vwap_vals=vwap_df["vwap"].to_numpy(dtype=float),
                 vwap_p1=vwap_df["vwap_p1"].to_numpy(dtype=float),
@@ -101,7 +101,7 @@ def run_full_basket_optimization():
             for em in EXIT_MODES:
                 trades, m = simulate_with_signals(
                     times=times, o=o, h=h, l=l, c=c, atr=atr,
-                    sig_sides=vwap_sides, sig_setups=vwap_setups,
+                    sig_sides=vwap_sides, sig_setups=vwap_setups, sig_rds=vwap_rds,
                     symbol=sym, tf=tf, model_family="VWAP",
                     exit_mode=em, risk_usd=5.0, start_bar=20
                 )
@@ -116,7 +116,7 @@ def run_full_basket_optimization():
             for p in EMA_PERIODS:
                 ema_vals = calculate_ema(c, p)
                 start_p = max(p + 10, 20)
-                ema_sides, ema_setups = precompute_signals_vector(
+                ema_sides, ema_setups, ema_rds = precompute_signals_vector(
                     o=o, h=h, l=l, c=c, atr=atr, model_family="EMA",
                     ema_vals=ema_vals, ema_period=p, start_bar=start_p
                 )
@@ -125,7 +125,7 @@ def run_full_basket_optimization():
                 for em in EXIT_MODES:
                     trades, m = simulate_with_signals(
                         times=times, o=o, h=h, l=l, c=c, atr=atr,
-                        sig_sides=ema_sides, sig_setups=ema_setups,
+                        sig_sides=ema_sides, sig_setups=ema_setups, sig_rds=ema_rds,
                         symbol=sym, tf=tf, model_family="EMA",
                         exit_mode=em, risk_usd=5.0, start_bar=start_p
                     )
