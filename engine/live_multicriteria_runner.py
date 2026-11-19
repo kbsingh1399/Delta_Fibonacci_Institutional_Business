@@ -69,6 +69,25 @@ MAX_LATENCY_SECONDS = {
     "4H": 180,
 }
 
+MAX_SPREAD_RATIO = 0.12  # Peer-reviewed friction threshold (12% of stop distance)
+
+
+def is_in_rollover_window(dt: Optional[datetime] = None) -> bool:
+    """Checks if current UTC time falls within the daily broker rollover window (21:55-22:15 UTC).
+    Brokers widen spreads significantly during this 20-minute gap.
+    """
+    if dt is None:
+        dt = datetime.now(timezone.utc)
+    minutes_of_day = dt.hour * 60 + dt.minute
+    return 1315 <= minutes_of_day <= 1335
+
+
+def is_spread_acceptable(spread: float, risk_dist: float, max_ratio: float = MAX_SPREAD_RATIO) -> bool:
+    """Verifies that bid-ask spread is within allowable risk friction tolerance."""
+    if risk_dist <= 0:
+        return False
+    return spread <= (max_ratio * risk_dist)
+
 
 def calculate_trailing_stop_update(
     side: int,
@@ -323,17 +342,22 @@ class MT5MultiCriteriaLiveRunner:
         else:
             target_rr = 2.5
 
-        # 1. Pre-Trade Spread Filter (Max 0.08R spread to eliminate friction drag)
+        # 1. Rollover Guard (Pause new entries during daily 21:55-22:15 UTC bank rollover)
+        if is_in_rollover_window():
+            logger.info(f"⏳ [ROLLOVER GUARD] Pausing new entries during daily rollover window (21:55-22:15 UTC).")
+            return
+
+        # 2. Pre-Trade Spread Filter (Max 0.12R spread to eliminate friction drag)
         spread = tick.ask - tick.bid
-        max_spread = 0.08 * risk_dist
-        if spread > max_spread:
+        max_spread = MAX_SPREAD_RATIO * risk_dist
+        if not is_spread_acceptable(spread, risk_dist, MAX_SPREAD_RATIO):
             logger.warning(
-                f"❌ [SPREAD FILTER] {symbol} spread={spread:.5f} > max allowed {max_spread:.5f} (0.08R). "
+                f"❌ [SPREAD FILTER] {symbol} spread={spread:.5f} > max allowed {max_spread:.5f} ({MAX_SPREAD_RATIO:.2f}R). "
                 f"Rejecting trade to prevent friction bleed."
             )
             return
 
-        # 2. Pre-Trade Margin & Solvency Filter
+        # 3. Pre-Trade Margin & Solvency Filter
         order_type = mt5.ORDER_TYPE_BUY if side == 1 else mt5.ORDER_TYPE_SELL
         account = mt5.account_info()
         if not account:

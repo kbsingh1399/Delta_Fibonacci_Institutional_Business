@@ -11,7 +11,11 @@ from engine.mt5_multicriteria_trader import (
     calculate_position_lot_size,
     evaluate_live_setup_signal
 )
-from engine.live_multicriteria_runner import calculate_trailing_stop_update
+from engine.live_multicriteria_runner import (
+    calculate_trailing_stop_update,
+    is_in_rollover_window,
+    is_spread_acceptable
+)
 from audit.EXPANDED_OPTIMAL_ALPHA_BASKET import ROBUST_ALPHA_BASKET
 
 
@@ -127,3 +131,36 @@ def test_trailing_stop_ignores_fixed_exit():
         mfe_price=106.0, risk_dist=2.0, exit_mode="fixed_3.5r", digits=2
     )
     assert res is None
+
+
+def test_rollover_window_detection():
+    from datetime import datetime, timezone
+    # 21:50 UTC -> outside
+    dt1 = datetime(2026, 11, 20, 21, 50, tzinfo=timezone.utc)
+    assert not is_in_rollover_window(dt1)
+
+    # 22:00 UTC -> inside
+    dt2 = datetime(2026, 11, 20, 22, 0, tzinfo=timezone.utc)
+    assert is_in_rollover_window(dt2)
+
+    # 22:15 UTC -> inside
+    dt3 = datetime(2026, 11, 20, 22, 15, tzinfo=timezone.utc)
+    assert is_in_rollover_window(dt3)
+
+    # 22:20 UTC -> outside
+    dt4 = datetime(2026, 11, 20, 22, 20, tzinfo=timezone.utc)
+    assert not is_in_rollover_window(dt4)
+
+
+def test_spread_acceptable_calibration():
+    # Stop distance 0.40 (e.g. USWTI)
+    risk_dist = 0.40
+
+    # Normal market spread 0.046 -> 0.046 / 0.40 = 0.115R <= 0.12R -> Accept
+    assert is_spread_acceptable(spread=0.046, risk_dist=risk_dist, max_ratio=0.12)
+
+    # Blowout spread 0.060 -> 0.060 / 0.40 = 0.150R > 0.12R -> Reject
+    assert not is_spread_acceptable(spread=0.060, risk_dist=risk_dist, max_ratio=0.12)
+
+    # Zero or negative risk_dist -> Reject
+    assert not is_spread_acceptable(spread=0.01, risk_dist=0.0, max_ratio=0.12)
