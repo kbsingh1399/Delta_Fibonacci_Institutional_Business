@@ -40,6 +40,7 @@ FundedNext_Data/
 # Audit runtime logs and process locks
 audit/*.log
 audit/*.pid
-audit/mt5_multicriteria_*.json
+audit/mt5_*.json
 audit/mt5_multicriteria_*.log
 audit/mt5_multicriteria_live_ledger.csv
+audit/trade_cooldowns.json

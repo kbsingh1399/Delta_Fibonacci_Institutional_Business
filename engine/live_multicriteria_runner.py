@@ -27,6 +27,7 @@ os.makedirs(AUDIT_DIR, exist_ok=True)
 LEDGER_FILE = os.path.join(AUDIT_DIR, "mt5_multicriteria_live_ledger.csv")
 HEALTH_FILE = os.path.join(AUDIT_DIR, "mt5_multicriteria_health.json")
 POSITIONS_FILE = os.path.join(AUDIT_DIR, "mt5_multicriteria_positions.json")
+TRAIL_STATE_FILE = os.path.join(AUDIT_DIR, "mt5_multicriteria_trailing_state.json")
 
 from engine.mt5_multicriteria_trader import (
     generate_setup_magic,
@@ -69,6 +70,66 @@ MAX_LATENCY_SECONDS = {
 }
 
 
+def calculate_trailing_stop_update(
+    side: int,
+    entry_price: float,
+    current_sl: float,
+    mfe_price: float,
+    risk_dist: float,
+    exit_mode: str,
+    digits: int = 5
+) -> Optional[float]:
+    """Calculates updated trailing SL matching backtest ratchet mechanics exactly.
+    - At MFE >= 1.0R: moves SL to Breakeven + 0.05R.
+    - At MFE >= 1.5R: trails SL by trail_step behind MFE.
+    Returns new SL rounded to broker digits if tightening by >= 0.05R, else None.
+    """
+    if risk_dist <= 0 or "trail" not in exit_mode:
+        return None
+
+    trail_step = 0.5 if "0.5" in exit_mode else (1.0 if "1.0" in exit_mode else 1.5)
+
+    if side == 1:  # BUY
+        pos_mfe = (mfe_price - entry_price) / risk_dist
+        if pos_mfe < 1.0:
+            return None
+
+        target_sl = current_sl
+        if pos_mfe >= 1.0:
+            be_level = entry_price + (0.05 * risk_dist)
+            if be_level > target_sl:
+                target_sl = be_level
+
+        if pos_mfe >= 1.5:
+            trail_level = entry_price + ((pos_mfe - trail_step) * risk_dist)
+            if trail_level > target_sl:
+                target_sl = trail_level
+
+        if target_sl > current_sl + (0.05 * risk_dist):
+            return round(target_sl, digits)
+
+    elif side == -1:  # SELL
+        pos_mfe = (entry_price - mfe_price) / risk_dist
+        if pos_mfe < 1.0:
+            return None
+
+        target_sl = current_sl
+        if pos_mfe >= 1.0:
+            be_level = entry_price - (0.05 * risk_dist)
+            if target_sl == 0.0 or be_level < target_sl:
+                target_sl = be_level
+
+        if pos_mfe >= 1.5:
+            trail_level = entry_price - ((pos_mfe - trail_step) * risk_dist)
+            if target_sl == 0.0 or trail_level < target_sl:
+                target_sl = trail_level
+
+        if current_sl == 0.0 or target_sl < current_sl - (0.05 * risk_dist):
+            return round(target_sl, digits)
+
+    return None
+
+
 class MT5MultiCriteriaLiveRunner:
     def __init__(self, risk_mode: str = "min_lot"):
         self.risk_mode = risk_mode
@@ -76,6 +137,23 @@ class MT5MultiCriteriaLiveRunner:
         self.last_candle_times: Dict[str, int] = {}
         self.is_running = False
         self._init_ledger()
+        self.trailing_state: Dict[str, Any] = self._load_trailing_state()
+
+    def _load_trailing_state(self) -> Dict[str, Any]:
+        if os.path.exists(TRAIL_STATE_FILE):
+            try:
+                with open(TRAIL_STATE_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return {}
+
+    def _save_trailing_state(self):
+        try:
+            with open(TRAIL_STATE_FILE, "w", encoding="utf-8") as f:
+                json.dump(self.trailing_state, f, indent=2)
+        except Exception as e:
+            logger.error(f"Error saving trailing state: {e}")
 
     def _init_ledger(self):
         if not os.path.exists(LEDGER_FILE):
@@ -227,15 +305,48 @@ class MT5MultiCriteriaLiveRunner:
             risk_dist = float(np.mean(h[-15:-1] - l[-15:-1])) * 1.5
 
         # Determine target RR from exit_mode
-        target_rr = 2.5
-        if "4.0" in exit_mode:
+        is_trail = "trail" in exit_mode
+        if is_trail:
+            target_rr = 6.0  # Allow trailing stop to manage exit
+        elif "4.0" in exit_mode:
             target_rr = 4.0
         elif "3.5" in exit_mode:
             target_rr = 3.5
         elif "3.0" in exit_mode:
             target_rr = 3.0
-        elif "2.0" in exit_mode or "trail" in exit_mode:
+        elif "2.5" in exit_mode:
             target_rr = 2.5
+        elif "2.0" in exit_mode:
+            target_rr = 2.0
+        elif "1.5" in exit_mode:
+            target_rr = 1.5
+        else:
+            target_rr = 2.5
+
+        # 1. Pre-Trade Spread Filter (Max 0.08R spread to eliminate friction drag)
+        spread = tick.ask - tick.bid
+        max_spread = 0.08 * risk_dist
+        if spread > max_spread:
+            logger.warning(
+                f"❌ [SPREAD FILTER] {symbol} spread={spread:.5f} > max allowed {max_spread:.5f} (0.08R). "
+                f"Rejecting trade to prevent friction bleed."
+            )
+            return
+
+        # 2. Pre-Trade Margin & Solvency Filter
+        order_type = mt5.ORDER_TYPE_BUY if side == 1 else mt5.ORDER_TYPE_SELL
+        account = mt5.account_info()
+        if not account:
+            return
+
+        required_margin = mt5.order_calc_margin(order_type, symbol, volume, entry_price)
+        if required_margin is not None:
+            if required_margin > 0.50 * account.margin_free or (account.margin_free - required_margin) < 100.0:
+                logger.warning(
+                    f"❌ [MARGIN FILTER] {symbol} requires ${required_margin:.2f} margin, "
+                    f"but free margin is ${account.margin_free:.2f}. Rejecting trade to preserve solvency."
+                )
+                return
 
         if side == 1:
             sl = entry_price - risk_dist
@@ -340,8 +451,126 @@ class MT5MultiCriteriaLiveRunner:
         except Exception as e:
             logger.error(f"Error updating health telemetry: {e}")
 
+    def manage_trailing_stops(self):
+        """Monitors open MT5 positions, tracks MFE, and ratchets trailing SL to breakeven (+0.05R)
+        at +1.0R and trails behind MFE at >= 1.5R with 100% backtest fidelity."""
+        try:
+            positions = mt5.positions_get()
+            if not positions:
+                if self.trailing_state:
+                    self.trailing_state.clear()
+                    self._save_trailing_state()
+                return
+
+            open_tickets = {p.ticket for p in positions}
+            # Clean up closed tickets
+            for t in list(self.trailing_state.keys()):
+                if int(t) not in open_tickets:
+                    del self.trailing_state[t]
+
+            # Index ledger for initial entry price, SL, and exit mode
+            ledger_lookup = {}
+            if os.path.exists(LEDGER_FILE):
+                try:
+                    df_led = pd.read_csv(LEDGER_FILE)
+                    for _, row in df_led.iterrows():
+                        ledger_lookup[int(row["ticket"])] = row
+                except Exception:
+                    pass
+
+            for p in positions:
+                ticket_str = str(p.ticket)
+                side = 1 if p.type == mt5.POSITION_TYPE_BUY else -1
+                symbol = p.symbol
+
+                row = ledger_lookup.get(p.ticket)
+                if row is not None:
+                    exit_mode = str(row.get("exit_mode", ""))
+                    initial_entry = float(row.get("price", p.price_open))
+                    initial_sl = float(row.get("sl", p.sl))
+                    risk_dist = abs(initial_entry - initial_sl)
+                elif p.comment and p.comment.startswith("Alpha_"):
+                    exit_mode = "trail_0.5r"
+                    initial_entry = p.price_open
+                    risk_dist = abs(p.price_open - p.sl) if p.sl > 0 else 0.0
+                else:
+                    continue
+
+                if "trail" not in exit_mode or risk_dist <= 0:
+                    continue
+
+                info = mt5.symbol_info(symbol)
+                if not info:
+                    continue
+                digits = info.digits
+                tick = mt5.symbol_info_tick(symbol)
+                if not tick:
+                    continue
+
+                state = self.trailing_state.get(ticket_str, {
+                    "ticket": p.ticket,
+                    "symbol": symbol,
+                    "side": side,
+                    "entry_price": initial_entry,
+                    "risk_dist": risk_dist,
+                    "exit_mode": exit_mode,
+                    "mfe_price": initial_entry
+                })
+
+                if side == 1:
+                    cur_price = max(tick.bid, p.price_current)
+                    state["mfe_price"] = max(state.get("mfe_price", initial_entry), cur_price)
+                else:
+                    cur_price = min(tick.ask, p.price_current)
+                    state["mfe_price"] = min(state.get("mfe_price", initial_entry), cur_price)
+
+                self.trailing_state[ticket_str] = state
+
+                new_sl = calculate_trailing_stop_update(
+                    side=side,
+                    entry_price=initial_entry,
+                    current_sl=p.sl,
+                    mfe_price=state["mfe_price"],
+                    risk_dist=risk_dist,
+                    exit_mode=exit_mode,
+                    digits=digits
+                )
+
+                if new_sl is not None:
+                    # Guard against invalid stop placement
+                    if side == 1 and new_sl >= tick.bid:
+                        continue
+                    if side == -1 and new_sl <= tick.ask:
+                        continue
+
+                    mfe_r = (state["mfe_price"] - initial_entry) / risk_dist if side == 1 else (initial_entry - state["mfe_price"]) / risk_dist
+                    logger.info(
+                        f"🎯 [TRAILING RATCHET] Ticket #{p.ticket} {symbol} MFE={mfe_r:.2f}R | "
+                        f"Updating SL: {p.sl} -> {new_sl} (TP: {p.tp})"
+                    )
+
+                    req = {
+                        "action": mt5.TRADE_ACTION_SLTP,
+                        "position": p.ticket,
+                        "symbol": symbol,
+                        "sl": new_sl,
+                        "tp": p.tp,
+                    }
+                    res = mt5.order_send(req)
+                    if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+                        logger.info(f"✅ [TRAILING STOP SUCCESS] Ticket #{p.ticket} SL moved to {new_sl}")
+                    else:
+                        err = res.comment if res else str(mt5.last_error())
+                        logger.warning(f"❌ [TRAILING STOP FAILED] Ticket #{p.ticket} retcode={getattr(res, 'retcode', 'NONE')}: {err}")
+
+            self._save_trailing_state()
+        except Exception as e:
+            logger.error(f"Error in manage_trailing_stops: {e}")
+
     def run_cycle(self):
         """Executes a single monitoring cycle across all symbols and setups in the basket."""
+        self.manage_trailing_stops()
+
         for sym, setups in self.basket.items():
             for setup_cfg in setups:
                 try:
