@@ -5,8 +5,8 @@ strategy("Delta Fibonacci Institutional Alpha Strategy [Champion Basket]",
          initial_capital=2500, 
          default_qty_type=strategy.cash, 
          default_qty_value=5, 
-         commission_type=strategy.commission.cash_per_order, 
-         commission_value=0.05, 
+         commission_type=strategy.commission.percent, 
+         commission_value=0.02, 
          slippage=1, 
          process_orders_on_close=false)
 
@@ -17,22 +17,21 @@ grp_model = "Strategy Engine & Champion Preset"
 use_auto_detect = input.bool(true, "Auto-Detect Champion Preset by Symbol", group=grp_model, tooltip="Automatically applies the empirically validated champion parameters for the active chart symbol.")
 manual_model    = input.string("MODEL_1", "Manual Primary Model", options=["MODEL_1", "MODEL_2", "BOTH"], group=grp_model)
 manual_ema      = input.int(55, "Manual Fast EMA Period", minval=10, maxval=400, group=grp_model)
-manual_exit     = input.string("fixed_3.0r", "Manual Exit Strategy", options=["fixed_2.0r", "fixed_2.5r", "fixed_3.0r", "fixed_3.5r", "fixed_4.0r", "trail_0.5r", "trail_1.0r", "trail_1.5r"], group=grp_model)
+manual_exit     = input.string("fixed_3.5r", "Manual Exit Strategy", options=["fixed_3.5r", "fixed_4.0r", "fixed_2.5r", "trail_0.5r", "trail_1.0r", "trail_1.5r"], group=grp_model)
 
 grp_risk = "Risk & Position Sizing"
 risk_per_trade_usd = input.float(5.0, "Target Risk per Trade ($ USD)", minval=1.0, group=grp_risk)
-sl_atr_mult        = input.float(1.2, "Stop Loss ATR Multiplier", step=0.1, group=grp_risk)
+min_lot_override   = input.bool(true, "Min Lot Sizing Fallback (If > $5 Risk)", group=grp_risk, tooltip="If minimum lot size requires > $5 risk, executes minimum lot size up to $40 hard cap.")
 hard_max_cap_usd   = input.float(40.0, "Hard Max Risk Cap ($ USD)", group=grp_risk)
 
-grp_params = "Mechanical 'Kiss EMA & Go Back' Criteria"
-kiss_tolerance_atr = input.float(0.15, "EMA Kiss Shelf Tolerance (ATR)", step=0.05, group=grp_params, tooltip="Max distance above EMA for low (Buy) or below EMA for high (Sell) to qualify as touching/kissing the EMA shelf.")
-max_pierce_atr     = input.float(0.40, "Max Allowed EMA Pierce (ATR)", step=0.05, group=grp_params, tooltip="Max distance candle wick can pierce through the EMA without invalidating the bounce.")
-min_slope_atr      = input.float(0.015, "Min Normalized Slope (ATR/bar)", step=0.005, group=grp_params)
-min_wick_pct       = input.float(30.0, "Min Rejection Wick (%)", step=1.0, group=grp_params) / 100.0
-require_candle_dir = input.bool(true, "Require Directional Rejection Candle (Green for Long, Red for Short)", group=grp_params)
-require_close_half = input.bool(true, "Require Close in Rejection Half of Candle Range", group=grp_params)
+grp_params = "Mechanical Signal Thresholds (Standardized)"
+prox_pct           = input.float(0.2, "EMA Shelf Proximity Tolerance (%)", step=0.05, group=grp_params) / 100.0
+min_slope_atr      = input.float(0.02, "Min Normalized Slope (ATR/bar)", step=0.005, group=grp_params)
+min_wick_pct       = input.float(25.0, "Min Rejection Wick (%)", step=1.0, group=grp_params) / 100.0
+close_clearance    = input.float(0.05, "Close Clearance Beyond EMA (ATR)", step=0.01, group=grp_params)
 kaufman_er_thresh  = input.float(0.18, "Kaufman ER Chop Floor", step=0.02, group=grp_params)
-cooldown_bars      = input.int(10, "Post-Exit Cooldown (Bars)", minval=1, group=grp_params)
+pinbar_exemption   = input.float(35.0, "Pinbar Exemption Wick (%)", step=1.0, group=grp_params) / 100.0
+cooldown_bars      = input.int(12, "Post-Exit Cooldown (Bars)", minval=1, group=grp_params)
 enable_breakeven   = input.bool(true, "Lock Breakeven at +1.0R MFE", group=grp_params)
 
 // ==============================================================================
@@ -43,58 +42,57 @@ f_get_preset() =>
     string m = manual_model
     int e = manual_ema
     string ex = manual_exit
-    float sl = sl_atr_mult
 
     if use_auto_detect
         if str.contains(t, "SP500") or str.contains(t, "US500") or str.contains(t, "SPX")
-            m := "MODEL_1", e := 89, ex := "trail_0.5r", sl := 1.5
+            m := "MODEL_1", e := 89, ex := "trail_0.5r"
         else if str.contains(t, "JP225") or str.contains(t, "NI225") or str.contains(t, "JPN225")
-            m := "MODEL_1", e := 65, ex := "trail_0.5r", sl := 1.5
+            m := "MODEL_1", e := 65, ex := "trail_0.5r"
         else if str.contains(t, "DJ30") or str.contains(t, "US30") or str.contains(t, "WS30")
-            m := "MODEL_1", e := 55, ex := "trail_0.5r", sl := 1.5
+            m := "MODEL_1", e := 55, ex := "trail_0.5r"
         else if str.contains(t, "NAS100") or str.contains(t, "USTEC") or str.contains(t, "NDX")
-            m := "MODEL_1", e := 55, ex := "trail_0.5r", sl := 1.5
+            m := "MODEL_1", e := 55, ex := "trail_0.5r"
         else if str.contains(t, "HK50") or str.contains(t, "HSI")
-            m := "MODEL_1", e := 50, ex := "trail_0.5r", sl := 1.5
+            m := "MODEL_1", e := 50, ex := "trail_0.5r"
         else if str.contains(t, "XAUUSD") or str.contains(t, "GOLD")
-            m := "MODEL_1", e := 55, ex := "fixed_3.5r", sl := 1.5
+            m := "MODEL_1", e := 55, ex := "fixed_3.5r"
         else if str.contains(t, "XAGUSD") or str.contains(t, "SILVER")
-            m := "MODEL_1", e := 160, ex := "fixed_4.0r", sl := 1.5
+            m := "MODEL_1", e := 160, ex := "fixed_4.0r"
         else if str.contains(t, "USWTI") or str.contains(t, "WTI") or str.contains(t, "OIL")
-            m := "MODEL_1", e := 50, ex := "trail_0.5r", sl := 1.5
+            m := "MODEL_1", e := 50, ex := "trail_0.5r"
         else if str.contains(t, "BTCUSD") or str.contains(t, "BTC")
-            m := "MODEL_2", e := 233, ex := "fixed_4.0r", sl := 1.5
+            m := "MODEL_2", e := 233, ex := "fixed_4.0r"
         else if str.contains(t, "ETHUSD") or str.contains(t, "ETH")
-            m := "MODEL_2", e := 89, ex := "fixed_3.5r", sl := 1.5
+            m := "MODEL_2", e := 89, ex := "fixed_3.5r"
         else if str.contains(t, "XLMUSD") or str.contains(t, "XLM")
-            m := "MODEL_2", e := 65, ex := "fixed_3.5r", sl := 1.5
+            m := "MODEL_2", e := 65, ex := "fixed_3.5r"
         else if str.contains(t, "XRPUSD") or str.contains(t, "XRP")
-            m := "MODEL_2", e := 89, ex := "trail_0.5r", sl := 1.5
+            m := "MODEL_2", e := 89, ex := "trail_0.5r"
         else if str.contains(t, "ADAUSD") or str.contains(t, "ADA")
-            m := "MODEL_1", e := 55, ex := "fixed_4.0r", sl := 1.5
+            m := "MODEL_1", e := 55, ex := "fixed_4.0r"
         else if str.contains(t, "USDCAD")
-            m := "MODEL_1", e := 55, ex := "fixed_3.0r", sl := 1.5
+            m := "MODEL_1", e := 55, ex := "fixed_3.5r"
         else if str.contains(t, "EURUSD")
-            m := "MODEL_1", e := 55, ex := "trail_0.5r", sl := 1.5
+            m := "MODEL_1", e := 55, ex := "trail_0.5r"
         else if str.contains(t, "GBPUSD")
-            m := "MODEL_2", e := 100, ex := "fixed_3.5r", sl := 1.5
+            m := "MODEL_2", e := 100, ex := "fixed_3.5r"
         else if str.contains(t, "USDCHF")
-            m := "MODEL_2", e := 400, ex := "trail_0.5r", sl := 1.5
+            m := "MODEL_2", e := 400, ex := "trail_0.5r"
         else if str.contains(t, "GBPJPY")
-            m := "MODEL_1", e := 160, ex := "fixed_2.5r", sl := 1.5
+            m := "MODEL_1", e := 160, ex := "fixed_2.5r"
         else if str.contains(t, "CADJPY")
-            m := "MODEL_1", e := 100, ex := "fixed_2.5r", sl := 1.5
+            m := "MODEL_1", e := 100, ex := "fixed_2.5r"
         else if str.contains(t, "CHFJPY")
-            m := "MODEL_2", e := 160, ex := "fixed_3.5r", sl := 1.5
+            m := "MODEL_2", e := 160, ex := "fixed_3.5r"
         else if str.contains(t, "USDJPY")
-            m := "MODEL_2", e := 89, ex := "trail_0.5r", sl := 1.5
+            m := "MODEL_2", e := 89, ex := "trail_0.5r"
         else if str.contains(t, "NZDSGD")
-            m := "MODEL_1", e := 100, ex := "fixed_3.5r", sl := 1.5
+            m := "MODEL_1", e := 100, ex := "fixed_3.5r"
         else if str.contains(t, "GBPNOK")
-            m := "MODEL_2", e := 89, ex := "trail_0.5r", sl := 1.5
-    [m, e, ex, sl]
+            m := "MODEL_2", e := 89, ex := "trail_0.5r"
+    [m, e, ex]
 
-[active_model, active_ema, active_exit, active_sl_mult] = f_get_preset()
+[active_model, active_ema, active_exit] = f_get_preset()
 
 // ==============================================================================
 // 3. CORE TECHNICAL INDICATORS
@@ -102,36 +100,47 @@ f_get_preset() =>
 // Fast Champion EMA
 ema_val = ta.ema(close, active_ema)
 
-// ATR 14
+// ATR(14)
 atr_val = ta.atr(14)
 
-// Candle Geometry
-candle_rng = high - low
-candle_rng_safe = candle_rng > 0 ? candle_rng : syminfo.mintick
-lower_wick = (math.min(open, close) - low) / candle_rng_safe
-upper_wick = (high - math.max(open, close)) / candle_rng_safe
-body_pct   = math.abs(close - open) / candle_rng_safe
-
-// Directional Rejection & Close Placement Filters
-is_bullish_candle = close > open
-is_bearish_candle = close < open
-close_in_upper_half = ((close - low) / candle_rng_safe) >= 0.50
-close_in_lower_half = ((high - close) / candle_rng_safe) >= 0.50
-
 // Kaufman Efficiency Ratio (10 bars)
-er_direction  = math.abs(close - close[10])
-er_volatility = math.sum(ta.tr(true), 10)
-kaufman_er    = er_volatility > 0 ? (er_direction / er_volatility) : 0.0
+er_direction = math.abs(close - close[10])
+er_volatility = math.sum(math.abs(close - close[1]), 10)
+kaufman_er = er_volatility > 0 ? er_direction / er_volatility : 0.0
 
-chop_pass = (kaufman_er >= kaufman_er_thresh) or (lower_wick >= 0.35) or (upper_wick >= 0.35)
+// Candle Structural Metrics
+c_rng = math.max(1e-6, high - low)
+c_body_top = math.max(open, close)
+c_body_bot = math.min(open, close)
+upper_wick = (high - c_body_top) / c_rng
+lower_wick = (c_body_bot - low) / c_rng
+has_pinbar_exemption = (upper_wick >= pinbar_exemption) or (lower_wick >= pinbar_exemption)
+
+// Chop Filter
+chop_pass = (kaufman_er >= kaufman_er_thresh) or has_pinbar_exemption
+
+// ATR-Banded Whipsaw Filter (Count crosses beyond +-0.25 ATR in prior 12 bars)
+upper_band = ema_val + 0.25 * atr_val
+lower_band = ema_val - 0.25 * atr_val
+
+int whipsaw_crosses = 0
+for k = 1 to 12
+    if (close[k] > upper_band[k] and close[k+1] <= lower_band[k+1]) or (close[k] < lower_band[k] and close[k+1] >= upper_band[k+1])
+        whipsaw_crosses += 1
+
+whipsaw_pass = whipsaw_crosses < 2
+
+// Institutional Shelf Proximity Buffer (0.2%)
+shelf_upper = ema_val * (1.0 + prox_pct)
+shelf_lower = ema_val * (1.0 - prox_pct)
+
+// Origin Validation (Prior bar or open was on the trending side)
+came_from_above = (open >= shelf_lower) or (close[1] >= ema_val[1] * (1.0 - prox_pct))
+came_from_below = (open <= shelf_upper) or (close[1] <= ema_val[1] * (1.0 + prox_pct))
 
 // ATR-Normalized Slope (4 bars on 1H, 3 bars on 4H/Daily)
 slope_lookback = (timeframe.isintraday and timeframe.multiplier <= 60) ? 4 : 3
 norm_slope = (atr_val > 0) ? (ema_val - ema_val[slope_lookback]) / (slope_lookback * atr_val) : 0.0
-
-// Prior Trend Continuity (Prior bar was on the proper trend side of EMA)
-prior_above_ema = close[1] > ema_val[1]
-prior_below_ema = close[1] < ema_val[1]
 
 // Post-Exit Cooldown State Tracker
 var int last_exit_bar = -999
@@ -141,33 +150,21 @@ if strategy.position_size[1] != 0 and strategy.position_size == 0
 in_cooldown = (bar_index - last_exit_bar) <= cooldown_bars
 
 // ==============================================================================
-// 4. MODEL 1: SURGICAL "KISS EMA & GO BACK" REJECTION
+// 4. MODEL 1: PULLBACK REJECTION CRITERIA
 // ==============================================================================
 bool m1_buy_signal = false
 bool m1_sell_signal = false
 
 if (active_model == "MODEL_1" or active_model == "BOTH")
-    // Long "Kiss & Go Back":
-    // 1. Upward trend: EMA slope >= min_slope and prior bar above EMA
-    // 2. Kiss: Low tests EMA shelf within tolerance (low <= EMA + kiss_tolerance and low >= EMA - max_pierce)
-    // 3. Go Back: Closes above EMA, bullish candle (close > open), lower wick >= min_wick_pct, closes in upper half
-    bool long_trend_ok  = (norm_slope >= min_slope_atr) and prior_above_ema
-    bool long_kiss_ok   = (low <= ema_val + kiss_tolerance_atr * atr_val) and (low >= ema_val - max_pierce_atr * atr_val)
-    bool long_go_back   = (close > ema_val) and (require_candle_dir ? is_bullish_candle : true) and (lower_wick >= min_wick_pct) and (require_close_half ? close_in_upper_half : true)
-    
-    if long_trend_ok and long_kiss_ok and long_go_back
-        m1_buy_signal := true
+    // Long: Slope >= +0.02 ATR/bar, came from above, lower wick >= 25%, low touches shelf, close >= EMA + 0.05 ATR
+    if norm_slope >= min_slope_atr and came_from_above and lower_wick >= min_wick_pct
+        if low <= shelf_upper and close >= (ema_val + close_clearance * atr_val)
+            m1_buy_signal := true
 
-    // Short "Kiss & Go Back":
-    // 1. Downward trend: EMA slope <= -min_slope and prior bar below EMA
-    // 2. Kiss: High tests EMA shelf within tolerance (high >= EMA - kiss_tolerance and high <= EMA + max_pierce)
-    // 3. Go Back: Closes below EMA, bearish candle (close < open), upper wick >= min_wick_pct, closes in lower half
-    bool short_trend_ok = (norm_slope <= -min_slope_atr) and prior_below_ema
-    bool short_kiss_ok  = (high >= ema_val - kiss_tolerance_atr * atr_val) and (high <= ema_val + max_pierce_atr * atr_val)
-    bool short_go_back  = (close < ema_val) and (require_candle_dir ? is_bearish_candle : true) and (upper_wick >= min_wick_pct) and (require_close_half ? close_in_lower_half : true)
-    
-    if short_trend_ok and short_kiss_ok and short_go_back
-        m1_sell_signal := true
+    // Short: Slope <= -0.02 ATR/bar, came from below, upper wick >= 25%, high touches shelf, close <= EMA - 0.05 ATR
+    if norm_slope <= -min_slope_atr and came_from_below and upper_wick >= min_wick_pct
+        if high >= shelf_lower and close <= (ema_val - close_clearance * atr_val)
+            m1_sell_signal := true
 
 // ==============================================================================
 // 5. MODEL 2: MACRO DWELL & RECLAIM SPRING CRITERIA
@@ -178,7 +175,7 @@ bool m2_sell_signal = false
 int dwell_lb   = (timeframe.isintraday and timeframe.multiplier <= 60) ? 100 : 35
 int min_dwell  = (timeframe.isintraday and timeframe.multiplier <= 60) ? 12 : 3
 int max_dwell  = (timeframe.isintraday and timeframe.multiplier <= 60) ? 60 : 25
-float m2_clearance = 0.10 * atr_val
+float m2_clearance = 0.12 * atr_val
 
 int count_below = 0
 int count_above = 0
@@ -189,19 +186,21 @@ for b = 1 to dwell_lb
         count_above += 1
 
 if (active_model == "MODEL_2" or active_model == "BOTH")
+    // Long Reclaim: EMA not crashing, pinbar wick >= 33%, low pierced EMA, close decisively reclaimed
     if ema_val >= ema_val[3] * 0.999 and lower_wick >= 0.33
-        if low <= ema_val and close >= (ema_val + m2_clearance) and is_bullish_candle
+        if low <= ema_val and close >= (ema_val + m2_clearance)
             if count_below >= min_dwell and count_below <= max_dwell
                 m2_buy_signal := true
 
+    // Short Reclaim: EMA not surging, upper pinbar wick >= 33%, high pierced EMA, close decisively rejected
     if ema_val <= ema_val[3] * 1.001 and upper_wick >= 0.33
-        if high >= ema_val and close <= (ema_val - m2_clearance) and is_bearish_candle
+        if high >= ema_val and close <= (ema_val - m2_clearance)
             if count_above >= min_dwell and count_above <= max_dwell
                 m2_sell_signal := true
 
 // Combine signals with Anti-Chop & Anti-Whipsaw gates
-valid_long_setup  = (m1_buy_signal or m2_buy_signal) and chop_pass and not in_cooldown and (strategy.position_size == 0)
-valid_short_setup = (m1_sell_signal or m2_sell_signal) and chop_pass and not in_cooldown and (strategy.position_size == 0)
+valid_long_setup  = (m1_buy_signal or m2_buy_signal) and chop_pass and whipsaw_pass and not in_cooldown and (strategy.position_size == 0)
+valid_short_setup = (m1_sell_signal or m2_sell_signal) and chop_pass and whipsaw_pass and not in_cooldown and (strategy.position_size == 0)
 
 // ==============================================================================
 // 6. POSITION EXECUTION & DYNAMIC RISK TRAILING
@@ -217,19 +216,17 @@ f_get_target_rr(string mode) =>
     switch mode
         "trail_1.5r" => 8.0
         "trail_1.0r" => 6.0
-        "trail_0.5r" => 5.0
+        "trail_0.5r" => 6.0
         "fixed_4.0r" => 4.0
         "fixed_3.5r" => 3.5
-        "fixed_3.0r" => 3.0
         "fixed_2.5r" => 2.5
-        "fixed_2.0r" => 2.0
-        => 2.5
+        => 3.0
 
 float target_rr = f_get_target_rr(active_exit)
 
 // Entry Triggers (Strictly causal on next bar open)
 if valid_long_setup
-    risk_dist_val   := active_sl_mult * atr_val
+    risk_dist_val   := 1.5 * atr_val
     entry_price_val := close
     stop_loss_val   := close - risk_dist_val
     take_profit_val := close + target_rr * risk_dist_val
@@ -240,7 +237,7 @@ if valid_long_setup
     strategy.entry("Long", strategy.long, qty=qty)
 
 if valid_short_setup
-    risk_dist_val   := active_sl_mult * atr_val
+    risk_dist_val   := 1.5 * atr_val
     entry_price_val := close
     stop_loss_val   := close + risk_dist_val
     take_profit_val := close - target_rr * risk_dist_val
@@ -301,50 +298,48 @@ else if strategy.position_size < 0
     strategy.exit("Exit Short", from_entry="Short", stop=stop_loss_val, limit=take_profit_val)
 
 // ==============================================================================
-// 7. VISUALIZATIONS & HUD OVERLAY
+// 7. VISUALIZATIONS & ON-CHART RADAR
 // ==============================================================================
-// Fast EMA with slope color coding
-color ema_color = norm_slope >= min_slope_atr ? color.new(color.green, 0) : 
-                  norm_slope <= -min_slope_atr ? color.new(color.red, 0) : 
-                  color.new(color.gray, 50)
+// EMA Color based on normalized slope
+color ema_color = norm_slope >= min_slope_atr ? color.new(color.teal, 0) : 
+                  norm_slope <= -min_slope_atr ? color.new(color.maroon, 0) : 
+                  color.new(color.gray, 20)
+
 plot(ema_val, "Champion Fast EMA", color=ema_color, linewidth=2)
+p_upper = plot(shelf_upper, "0.2% Shelf Upper", color=color.new(color.blue, 70), style=plot.style_line)
+p_lower = plot(shelf_lower, "0.2% Shelf Lower", color=color.new(color.blue, 70), style=plot.style_line)
+fill(p_upper, p_lower, color=color.new(color.blue, 94), title="0.2% Institutional Proximity Shelf")
 
-// Shelf Tolerance Bands
-p_shelf_top = plot(ema_val + kiss_tolerance_atr * atr_val, "Kiss Shelf Upper", color=color.new(color.teal, 80), style=plot.style_circles)
-p_shelf_bot = plot(ema_val - kiss_tolerance_atr * atr_val, "Kiss Shelf Lower", color=color.new(color.teal, 80), style=plot.style_circles)
-fill(p_shelf_top, p_shelf_bot, color=color.new(color.teal, 92), title="EMA Kiss Shelf")
+// Signal Shapes
+plotshape(valid_long_setup, "Valid Long Signal", shape.triangleup, location.belowbar, color.new(color.green, 0), size=size.small, text="BUY")
+plotshape(valid_short_setup, "Valid Short Signal", shape.triangledown, location.abovebar, color.new(color.red, 0), size=size.small, text="SELL")
 
-// Signal Plots
-plotshape(valid_long_setup, "Long Setup Confirmed", shape.triangleup, location.belowbar, color.green, size=size.small)
-plotshape(valid_short_setup, "Short Setup Confirmed", shape.triangledown, location.abovebar, color.red, size=size.small)
+// Stop & Target lines when in position
+plot(strategy.position_size != 0 ? stop_loss_val : na, "Live Stop Loss", color=color.red, style=plot.style_linebr, linewidth=1)
+plot(strategy.position_size != 0 ? take_profit_val : na, "Live Take Profit", color=color.green, style=plot.style_linebr, linewidth=1)
 
-// Live Target & Stop Lines when in Trade
-plot(strategy.position_size != 0 ? stop_loss_val : na, "Active Stop Loss", color=color.red, style=plot.style_linebr, linewidth=2)
-plot(strategy.position_size != 0 ? take_profit_val : na, "Active Take Profit", color=color.green, style=plot.style_linebr, linewidth=2)
-
-// Tactical HUD Table in Top-Right
-var table hud = table.new(position.top_right, 2, 8, bgcolor=color.new(color.black, 20), border_color=color.gray, border_width=1)
+// ==============================================================================
+// 8. ON-CHART HUD DASHBOARD TABLE
+// ==============================================================================
+var table hud = table.new(position.top_right, 2, 7, bgcolor=color.new(color.black, 20), border_color=color.gray, border_width=1)
 if barstate.islast
-    table.cell(hud, 0, 0, "Champion Asset", bgcolor=color.navy, text_color=color.white, text_size=size.small)
-    table.cell(hud, 1, 0, syminfo.ticker, bgcolor=color.navy, text_color=color.yellow, text_size=size.small)
-    
+    table.cell(hud, 0, 0, "Champion Symbol", text_color=color.white, text_size=size.small, bgcolor=color.new(color.navy, 40))
+    table.cell(hud, 1, 0, syminfo.ticker, text_color=color.yellow, text_size=size.small, bgcolor=color.new(color.navy, 40))
+
     table.cell(hud, 0, 1, "Active Model", text_color=color.white, text_size=size.small)
     table.cell(hud, 1, 1, active_model, text_color=color.white, text_size=size.small)
-    
-    table.cell(hud, 0, 2, "Fast EMA", text_color=color.white, text_size=size.small)
-    table.cell(hud, 1, 2, str.tostring(active_ema), text_color=color.aqua, text_size=size.small)
-    
-    table.cell(hud, 0, 3, "Exit Mode", text_color=color.white, text_size=size.small)
-    table.cell(hud, 1, 3, active_exit, text_color=color.orange, text_size=size.small)
-    
-    table.cell(hud, 0, 4, "SL Mult (ATR)", text_color=color.white, text_size=size.small)
-    table.cell(hud, 1, 4, str.tostring(active_sl_mult, "#.#"), text_color=color.white, text_size=size.small)
 
-    table.cell(hud, 0, 5, "Normalized Slope", text_color=color.white, text_size=size.small)
-    table.cell(hud, 1, 5, str.tostring(norm_slope, "#.####") + " ATR/b", text_color=norm_slope >= min_slope_atr ? color.green : norm_slope <= -min_slope_atr ? color.red : color.gray, text_size=size.small)
-    
-    table.cell(hud, 0, 6, "Kaufman ER (10)", text_color=color.white, text_size=size.small)
-    table.cell(hud, 1, 6, str.tostring(kaufman_er, "#.##"), text_color=chop_pass ? color.green : color.red, text_size=size.small)
-    
-    table.cell(hud, 0, 7, "Cooldown Status", text_color=color.white, text_size=size.small)
-    table.cell(hud, 1, 7, in_cooldown ? "In Cooldown (" + str.tostring(bar_index - last_exit_bar) + "/" + str.tostring(cooldown_bars) + ")" : "Active Ready", text_color=in_cooldown ? color.orange : color.green, text_size=size.small)
+    table.cell(hud, 0, 2, "Champion EMA", text_color=color.white, text_size=size.small)
+    table.cell(hud, 1, 2, str.tostring(active_ema), text_color=color.aqua, text_size=size.small)
+
+    table.cell(hud, 0, 3, "Exit Strategy", text_color=color.white, text_size=size.small)
+    table.cell(hud, 1, 3, active_exit, text_color=color.white, text_size=size.small)
+
+    table.cell(hud, 0, 4, "Norm Slope", text_color=color.white, text_size=size.small)
+    table.cell(hud, 1, 4, str.tostring(norm_slope, "#.####") + " ATR", text_color=(norm_slope >= min_slope_atr ? color.green : norm_slope <= -min_slope_atr ? color.red : color.gray), text_size=size.small)
+
+    table.cell(hud, 0, 5, "Kaufman ER", text_color=color.white, text_size=size.small)
+    table.cell(hud, 1, 5, str.tostring(kaufman_er, "#.###") + (chop_pass ? " (PASS)" : " (CHOP)"), text_color=(chop_pass ? color.green : color.orange), text_size=size.small)
+
+    table.cell(hud, 0, 6, "Cooldown State", text_color=color.white, text_size=size.small)
+    table.cell(hud, 1, 6, in_cooldown ? "ACTIVE (" + str.tostring(cooldown_bars - (bar_index - last_exit_bar)) + "b)" : "READY", text_color=(in_cooldown ? color.orange : color.green), text_size=size.small)
