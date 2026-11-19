@@ -1,0 +1,231 @@
+{
+ "rows": [
+  {
+   "cell": "SP500.p_5M",
+   "exit": "trail_0.5r",
+   "trades_engine": 1416,
+   "trades_corrected": 1422,
+   "net_r_engine": 136.8,
+   "net_r_corrected": 155.61,
+   "delta": 18.8
+  },
+  {
+   "cell": "SP500.p_1H",
+   "exit": "trail_0.5r",
+   "trades_engine": 675,
+   "trades_corrected": 679,
+   "net_r_engine": 126.27,
+   "net_r_corrected": 113.34,
+   "delta": -12.9
+  },
+  {
+   "cell": "JP225.p_5M",
+   "exit": "trail_0.5r",
+   "trades_engine": 994,
+   "trades_corrected": 1002,
+   "net_r_engine": 105.87,
+   "net_r_corrected": 113.82,
+   "delta": 7.9
+  },
+  {
+   "cell": "DJ30.p_5M",
+   "exit": "trail_0.5r",
+   "trades_engine": 2018,
+   "trades_corrected": 2045,
+   "net_r_engine": 94.96,
+   "net_r_corrected": 121.6,
+   "delta": 26.6
+  },
+  {
+   "cell": "DJ30.p_15M",
+   "exit": "trail_0.5r",
+   "trades_engine": 1719,
+   "trades_corrected": 1708,
+   "net_r_engine": 181.37,
+   "net_r_corrected": 180.91,
+   "delta": -0.5
+  },
+  {
+   "cell": "NAS100.p_1H",
+   "exit": "fixed_3.0r",
+   "trades_engine": 668,
+   "trades_corrected": 668,
+   "net_r_engine": 88.0,
+   "net_r_corrected": 85.18,
+   "delta": -2.8
+  },
+  {
+   "cell": "HK50.p_1H",
+   "exit": "fixed_4.0r",
+   "trades_engine": 361,
+   "trades_corrected": 361,
+   "net_r_engine": 99.0,
+   "net_r_corrected": 101.84,
+   "delta": 2.8
+  },
+  {
+   "cell": "XAUUSD.pi_1H",
+   "exit": "fixed_3.5r",
+   "trades_engine": 535,
+   "trades_corrected": 535,
+   "net_r_engine": 135.5,
+   "net_r_corrected": 134.28,
+   "delta": -1.2
+  },
+  {
+   "cell": "XAUUSD.pi_4H",
+   "exit": "trail_1.0r",
+   "trades_engine": 138,
+   "trades_corrected": 138,
+   "net_r_engine": 31.92,
+   "net_r_corrected": 22.45,
+   "delta": -9.5
+  },
+  {
+   "cell": "USWTI.p_5M",
+   "exit": "trail_0.5r",
+   "trades_engine": 2006,
+   "trades_corrected": 2018,
+   "net_r_engine": 333.07,
+   "net_r_corrected": 302.11,
+   "delta": -31.0
+  },
+  {
+   "cell": "USWTI.p_15M",
+   "exit": "trail_0.5r",
+   "trades_engine": 2535,
+   "trades_corrected": 2548,
+   "net_r_engine": 232.94,
+   "net_r_corrected": 224.7,
+   "delta": -8.2
+  },
+  {
+   "cell": "BTCUSD.pi_15M",
+   "exit": "trail_0.5r",
+   "trades_engine": 1450,
+   "trades_corrected": 1465,
+   "net_r_engine": 119.95,
+   "net_r_corrected": 126.41,
+   "delta": 6.5
+  },
+  {
+   "cell": "BTCUSD.pi_4H",
+   "exit": "trail_1.0r",
+   "trades_engine": 863,
+   "trades_corrected": 868,
+   "net_r_engine": 140.18,
+   "net_r_corrected": 116.68,
+   "delta": -23.5
+  },
+  {
+   "cell": "ETHUSD.pi_1H",
+   "exit": "trail_0.5r",
+   "trades_engine": 1028,
+   "trades_corrected": 1040,
+   "net_r_engine": 70.85,
+   "net_r_corrected": 100.68,
+   "delta": 29.8
+  },
+  {
+   "cell": "XLMUSD.p_5M",
+   "exit": "trail_1.5r",
+   "trades_engine": 1856,
+   "trades_corrected": 1859,
+   "net_r_engine": 226.23,
+   "net_r_corrected": 224.72,
+   "delta": -1.5
+  },
+  {
+   "cell": "XRPUSD.pi_4H",
+   "exit": "trail_1.0r",
+   "trades_engine": 573,
+   "trades_corrected": 573,
+   "net_r_engine": 69.8,
+   "net_r_corrected": 65.49,
+   "delta": -4.3
+  },
+  {
+   "cell": "USDCAD.pi_1H",
+   "exit": "trail_0.5r",
+   "trades_engine": 528,
+   "trades_corrected": 527,
+   "net_r_engine": 55.75,
+   "net_r_corrected": 67.26,
+   "delta": 11.5
+  },
+  {
+   "cell": "USDCAD.pi_4H",
+   "exit": "fixed_2.0r",
+   "trades_engine": 226,
+   "trades_corrected": 226,
+   "net_r_engine": 38.0,
+   "net_r_corrected": 38.0,
+   "delta": 0.0
+  },
+  {
+   "cell": "EURUSD.pi_15M",
+   "exit": "trail_0.5r",
+   "trades_engine": 1436,
+   "trades_corrected": 1463,
+   "net_r_engine": 73.2,
+   "net_r_corrected": 69.02,
+   "delta": -4.2
+  },
+  {
+   "cell": "GBPUSD.pi_4H",
+   "exit": "fixed_3.5r",
+   "trades_engine": 89,
+   "trades_corrected": 89,
+   "net_r_engine": 46.0,
+   "net_r_corrected": 45.82,
+   "delta": -0.2
+  },
+  {
+   "cell": "USDCHF.pi_4H",
+   "exit": "trail_0.5r",
+   "trades_engine": 485,
+   "trades_corrected": 496,
+   "net_r_engine": 66.61,
+   "net_r_corrected": 35.56,
+   "delta": -31.0
+  },
+  {
+   "cell": "CADJPY.pi_5M",
+   "exit": "trail_0.5r",
+   "trades_engine": 2122,
+   "trades_corrected": 2133,
+   "net_r_engine": 176.04,
+   "net_r_corrected": 168.84,
+   "delta": -7.2
+  },
+  {
+   "cell": "CHFJPY.pi_4H",
+   "exit": "trail_1.5r",
+   "trades_engine": 363,
+   "trades_corrected": 361,
+   "net_r_engine": 45.59,
+   "net_r_corrected": 43.75,
+   "delta": -1.8
+  },
+  {
+   "cell": "GBPNOK.pi_5M",
+   "exit": "trail_1.5r",
+   "trades_engine": 954,
+   "trades_corrected": 956,
+   "net_r_engine": 133.57,
+   "net_r_corrected": 132.02,
+   "delta": -1.5
+  },
+  {
+   "cell": "GBPNOK.pi_15M",
+   "exit": "trail_0.5r",
+   "trades_engine": 2148,
+   "trades_corrected": 2150,
+   "net_r_engine": 180.64,
+   "net_r_corrected": 187.04,
+   "delta": 6.4
+  }
+ ],
+ "portfolio_engine": 3008.1,
+ "portfolio_corrected": 2977.1
+}

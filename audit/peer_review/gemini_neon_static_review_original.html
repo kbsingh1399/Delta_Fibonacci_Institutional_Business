@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Institutional Quantitative Peer Review: Delta Fibonacci Systematic Alpha System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* Utilitarian · Quantitative Code & Methodology Audit · answer-first split hero · Verdict -> Pipeline Faults -> Simulation Integrity -> Statistical Validation -> Price Action -> Live Microstructure -> Basket Reconciliation & Roadmap -> Sources · IBM Plex Sans + IBM Plex Mono · Crisp White (#FFFFFF) + Cool Slate Band (#F4F6F8) + Deep Crimson (#991B1B) & Deep Teal (#115E59) · 0px radius · Hero emphasis numeral (6/25 zero-DSR & 80% unimplemented live trails) · Full-bleed remediation band · 3-stage fault flow SVG + Timeframe Risk/Expectancy SVG + Friction Erosion SVG */
+
+:root {
+  --paper: #FFFFFF;
+  --band: #F4F6F8;
+  --ink: #0F172A;
+  --ink2: #334155;
+  --mute: #475569;
+  --hair: #CBD5E1;
+  --accent: #B91C1C;
+  --accent-text: #991B1B;
+  --accent-2: #0F766E;
+  --accent-2-text: #115E59;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  padding: 68px clamp(24px, 10.4vw, 112px) 92px;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+a {
+  color: var(--accent-2-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+a:hover {
+  color: var(--ink);
+}
+
+code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.875rem;
+  color: var(--ink);
+  background: #F1F5F9;
+  padding: 1px 5px;
+}
+
+pre {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--ink);
+  border-left: 3px solid var(--accent);
+  padding: 12px 0 12px 18px;
+  margin: 18px 0 24px;
+  overflow-x: auto;
+  background: transparent;
+}
+
+.grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 24px;
+  row-gap: 20px;
+}
+
+.col-1-12 { grid-column: 1 / -1; }
+.col-1-4 { grid-column: 1 / span 4; }
+.col-5-12 { grid-column: 5 / -1; }
+.col-1-7 { grid-column: 1 / span 7; }
+.col-8-12 { grid-column: 8 / -1; }
+.col-1-6 { grid-column: 1 / span 6; }
+.col-7-12 { grid-column: 7 / -1; }
+
+.measure {
+  max-width: 68ch;
+}
+
+/* Hero */
+.hero {
+  padding-bottom: 44px;
+  border-bottom: 2px solid var(--ink);
+}
+
+h1 {
+  font-size: clamp(2.5rem, 3.6vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  margin: 0 0 18px;
+  color: var(--ink);
+}
+
+.deck {
+  font-size: 1.125rem;
+  line-height: 1.55;
+  color: var(--ink2);
+  margin: 0 0 24px;
+  max-width: 64ch;
+  text-wrap: pretty;
+}
+
+.verdict-lead {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--ink);
+  border-left: 4px solid var(--accent);
+  padding-left: 18px;
+  margin: 0;
+  max-width: 64ch;
+}
+
+.hero-stat-block {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-left: 1px solid var(--hair);
+  padding-left: 28px;
+}
+
+.hero-num {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 4.5rem;
+  font-weight: 700;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  color: var(--accent-text);
+  margin: 0 0 10px;
+}
+
+.hero-num-caption {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ink2);
+  margin: 0;
+}
+
+.scope-note {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hair);
+  font-size: 0.9375rem;
+  color: var(--mute);
+  max-width: 78ch;
+}
+
+/* Sections */
+section {
+  margin-top: 66px;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 2.2vw, 1.875rem);
+  font-weight: 700;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0 0 18px;
+  text-wrap: balance;
+}
+
+h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
+  margin: 24px 0 10px;
+}
+
+p {
+  margin: 0 0 16px;
+  color: var(--ink2);
+}
+
+p strong {
+  color: var(--ink);
+}
+
+ul, ol {
+  margin: 0 0 18px;
+  padding-left: 22px;
+  color: var(--ink2);
+}
+
+li {
+  margin-bottom: 10px;
+}
+
+li strong {
+  color: var(--ink);
+}
+
+/* Open multi-column strip */
+.strip-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+  border-top: 1px solid var(--hair);
+  padding-top: 22px;
+  margin-top: 20px;
+}
+
+.strip-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 36px;
+  border-top: 1px solid var(--hair);
+  padding-top: 22px;
+  margin-top: 20px;
+}
+
+.metric-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.625rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 6px;
+  white-space: nowrap;
+}
+
+.metric-val.fail {
+  color: var(--accent-text);
+}
+
+.metric-val.ok {
+  color: var(--accent-2-text);
+}
+
+.metric-desc {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ink2);
+  margin: 0;
+}
+
+/* Open Tables (max 3) */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 24px 0 12px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  text-align: left;
+}
+
+thead th {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--ink);
+  border-bottom: 2px solid var(--ink);
+  padding: 10px 12px 10px 0;
+  vertical-align: bottom;
+}
+
+tbody td {
+  border-bottom: 1px solid var(--hair);
+  padding: 12px 12px 12px 0;
+  vertical-align: top;
+  color: var(--ink2);
+}
+
+tbody tr:last-child td {
+  border-bottom: 2px solid var(--ink);
+}
+
+.num {
+  font-family: 'IBM Plex Mono', monospace;
+  white-space: nowrap;
+  text-align: right;
+  color: var(--ink);
+}
+
+.sev-crit {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent-text);
+  white-space: nowrap;
+}
+
+.sev-med {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.sev-ok {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent-2-text);
+  white-space: nowrap;
+}
+
+/* Figures & Inline SVG */
+figure {
+  margin: 30px 0 34px;
+  padding: 0;
+}
+
+.fig-title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 14px;
+  line-height: 1.35;
+}
+
+figcaption {
+  font-size: 0.8125rem;
+  color: var(--mute);
+  margin-top: 10px;
+  line-height: 1.45;
+}
+
+svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Pull Quote */
+.pull-quote {
+  margin: 56px 0;
+  padding: 24px 0;
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--hair);
+  font-size: clamp(1.375rem, 2.1vw, 1.75rem);
+  font-weight: 500;
+  line-height: 1.38;
+  color: var(--ink);
+  max-width: 52ch;
+}
+
+/* Single Full-Bleed Band */
+.full-band {
+  margin-top: 66px;
+  margin-left: calc(-1 * clamp(24px, 10.4vw, 112px));
+  margin-right: calc(-1 * clamp(24px, 10.4vw, 112px));
+  padding: 56px clamp(24px, 10.4vw, 112px);
+  background: var(--band);
+  border-top: 1px solid var(--hair);
+  border-bottom: 1px solid var(--hair);
+}
+
+/* Numbered Lists with Counter */
+.ranked-list {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+  counter-reset: item;
+}
+
+.ranked-list li {
+  position: relative;
+  padding-left: 38px;
+  margin-bottom: 20px;
+}
+
+.ranked-list li::before {
+  counter-increment: item;
+  content: counter(item) ".";
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-text);
+}
+
+.ranked-list.alpha li::before {
+  color: var(--accent-2-text);
+}
+
+/* Sources */
+.sources-list {
+  padding-left: 22px;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--ink2);
+}
+
+.sources-list li {
+  margin-bottom: 8px;
+}
+
+@media (max-width: 900px) {
+  .col-1-4, .col-5-12, .col-1-7, .col-8-12, .col-1-6, .col-7-12 {
+    grid-column: 1 / -1;
+  }
+  .hero-stat-block {
+    border-left: none;
+    border-top: 1px solid var(--hair);
+    padding-left: 0;
+    padding-top: 20px;
+  }
+  .strip-3, .strip-2 {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="grid-12">
+    <div class="col-1-7">
+      <h1>Hold live capital: six structural defects invalidate the reported backtest edge</h1>
+      <p class="deck">An independent line-by-line code and statistical audit of the <a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business" target="_blank" rel="noopener noreferrer">Delta Fibonacci Institutional Business</a> repository across simulation mechanics, Deflated Sharpe validation, price-action detectors, and MT5 live execution.</p>
+      <p class="verdict-lead"><strong>Investment committee verdict: Reject for production deployment until remediated.</strong> Four of five audit domains contain severe mathematical or execution-parity defects. Most critically, 80% of the 25 selected setups rely on trailing stops that collect phantom profit in backtests and are silently replaced by static 2.5R targets in live trading.</p>
+    </div>
+    <div class="col-8-12 hero-stat-block">
+      <div class="hero-num">20 / 25</div>
+      <p class="hero-num-caption">Setups in the published <a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/audit/INSTITUTIONAL_ROBUST_ALPHA_BASKET.csv" target="_blank" rel="noopener noreferrer">Institutional Alpha Basket</a> depend on trailing-stop ratchets that are inflated by a post-hoc fill bug in simulation and completely absent from the live MT5 execution daemon.</p>
+    </div>
+    <div class="col-1-12 scope-note">
+      <strong>Audit scope &amp; execution constraint:</strong> This review inspects the verbatim source code on the <code>main</code> branch across <code>engine/</code>, <code>scripts/</code>, <code>tests/</code>, and <code>audit/</code>, and independently reconciles all 25 rows of <code>audit/INSTITUTIONAL_ROBUST_ALPHA_BASKET.csv</code>. Because outbound network access is disabled in the isolated audit sandbox, <code>Blueberry_Data/*.parquet</code> could not be cloned locally to re-execute <code>pytest</code> or re-run the grid scripts; note also that <code>scripts/optimize_multidim_basket.py</code> currently fails with a tuple-unpacking <code>ValueError</code> against <code>engine/multidim_grid_backtest.py</code>.
+    </div>
+  </div>
+</header>
+
+<section>
+  <h2>Three compounding breaks sever research results from live PnL</h2>
+  <p class="measure">Before examining individual modules, the end-to-end pipeline reveals a structural chain of leakage and parity loss. Parameters are optimized on 100% of historical bars before any train/test split occurs, filtered through a miscalibrated Deflated Sharpe Ratio with an explicit bypass clause, and finally handed to a live MT5 daemon that trades fixed minimum lots with no trailing-stop logic.</p>
+
+  <figure>
+    <div class="fig-title">Lookahead selection, bypassed statistical gates, and live execution drift compound across all three stages</div>
+    <svg viewBox="0 0 700 220" width="100%" role="img" aria-label="Three-stage pipeline fault diagram showing full-history optimization, post-hoc split and broken DSR, and live runner parity breakdown">
+      <!-- Stage 1 -->
+      <rect x="8" y="20" width="204" height="156" fill="none" stroke="#991B1B" stroke-width="2"/>
+      <text x="22" y="48" font-family="IBM Plex Sans, sans-serif" font-size="15" font-weight="700" fill="#0F172A">1. Grid Optimization</text>
+      <text x="22" y="70" font-family="IBM Plex Mono, monospace" font-size="13" fill="#991B1B">optimize_multidim_basket.py</text>
+      <text x="22" y="96" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#334155">Sweeps 100% of history</text>
+      <text x="22" y="116" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#334155">before 70/30 split.</text>
+      <text x="22" y="140" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#334155">Post-hoc trailing ratchet</text>
+      <text x="22" y="160" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#334155">creates phantom R fills.</text>
+
+      <!-- Arrow 1->2 -->
+      <line x1="212" y1="98" x2="242" y2="98" stroke="#0F172A" stroke-width="2"/>
+      <polygon points="246,98 236,92 236,104" fill="#0F172A"/>
+
+      <!-- Stage 2 -->
+      <rect x="248" y="20" width="204" height="156" fill="none" stroke="#991B1B" stroke-width="2"/>
+      <text x="262" y="48" font-family="IBM Plex Sans, sans-serif" font-size="15" font-weight="700" fill="#0F172A">2. Statistical Gate</text>
+      <text x="262" y="70" font-family="IBM Plex Mono, monospace" font-size="13" fill="#991B1B">quant_robustness.py</text>
+      <text x="262" y="96" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#334155">DSR mixes annualized SR</text>
+      <text x="262" y="116" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#334155">with 0.40 arbitrary factor.</text>
+      <text x="262" y="140" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#334155">OR clause lets 6 setups</text>
+      <text x="262" y="160" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#334155">pass with DSR = 0.0.</text>
+
+      <!-- Arrow 2->3 -->
+      <line x1="452" y1="98" x2="482" y2="98" stroke="#0F172A" stroke-width="2"/>
+      <polygon points="486,98 476,92 476,104" fill="#0F172A"/>
+
+      <!-- Stage 3 -->
+      <rect x="488" y="20" width="204" height="156" fill="none" stroke="#991B1B" stroke-width="2"/>
+      <text x="502" y="48" font-family="IBM Plex Sans, sans-serif" font-size="15" font-weight="700" fill="#0F172A">3. Live Execution</text>
+      <text x="502" y="70" font-family="IBM Plex Mono, monospace" font-size="13" fill="#991B1B">live_multicriteria_runner.py</text>
+      <text x="502" y="96" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#334155">Converts all trail_* setups</text>
+      <text x="502" y="116" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#334155">into static 2.5R targets.</text>
+      <text x="502" y="140" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#334155">Hardcodes info.volume_min</text>
+      <text x="502" y="160" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#334155">with zero margin checks.</text>
+
+      <text x="8" y="204" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475569">Result: Simulated OOS +1,225.00 R does not represent the strategy actually executed on MT5.</text>
+    </svg>
+    <figcaption>Audit map of code defects across <a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/scripts/optimize_multidim_basket.py" target="_blank" rel="noopener noreferrer">optimize_multidim_basket.py</a>, <a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/quant_robustness.py" target="_blank" rel="noopener noreferrer">quant_robustness.py</a>, and <a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/live_multicriteria_runner.py" target="_blank" rel="noopener noreferrer">live_multicriteria_runner.py</a>.</figcaption>
+  </figure>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Audit Domain</th>
+          <th>Primary Module</th>
+          <th>Severity</th>
+          <th>Verified Code Defect</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Simulation &amp; Costs</strong></td>
+          <td><a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/multidim_grid_backtest.py" target="_blank" rel="noopener noreferrer">multidim_grid_backtest.py</a></td>
+          <td class="sev-crit">CRITICAL</td>
+          <td>Post-hoc trailing ratchet fills above next-bar open; adverse sequencing fails on opposite-polarity bars; <code>commission_usd = 0.05</code> excluded from <code>r_multiple</code>; zero spread/slippage.</td>
+        </tr>
+        <tr>
+          <td><strong>OOS Integrity</strong></td>
+          <td><a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/scripts/optimize_multidim_basket.py" target="_blank" rel="noopener noreferrer">optimize_multidim_basket.py</a></td>
+          <td class="sev-crit">CRITICAL</td>
+          <td>Full-history optimization precedes the 70/30 split in <code>run_quant_validation_and_monte_carlo.py</code>; script also crashes unpacking 2 values from a 3-tuple return.</td>
+        </tr>
+        <tr>
+          <td><strong>DSR &amp; Monte Carlo</strong></td>
+          <td><a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/quant_robustness.py" target="_blank" rel="noopener noreferrer">quant_robustness.py</a></td>
+          <td class="sev-crit">CRITICAL</td>
+          <td>Arbitrary <code>0.40</code> DSR hurdle multiplier; annualized SR plugged into per-trade variance; <code>n_trials=40</code> vs. 180+ actual; <code>OR</code> backdoor passes 6 zero-DSR setups; IID bootstrap ignores clustering.</td>
+        </tr>
+        <tr>
+          <td><strong>Price Action</strong></td>
+          <td><a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/candle_rejection.py" target="_blank" rel="noopener noreferrer">candle_rejection.py</a></td>
+          <td class="sev-med">HIGH</td>
+          <td>Dead second clause in <code>detect_rejection_wick</code> allows opposite-close dojis; unnormalized 5 bps EMA slope filter; fixed <code>0.20*ATR</code> and <code>1e-5</code> floor uncalibrated across asset regimes.</td>
+        </tr>
+        <tr>
+          <td><strong>Live Execution</strong></td>
+          <td><a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/live_multicriteria_runner.py" target="_blank" rel="noopener noreferrer">live_multicriteria_runner.py</a></td>
+          <td class="sev-crit">CRITICAL</td>
+          <td>No trailing-stop loop (maps <code>trail_*</code> and <code>2.0r</code> to flat <code>2.5R</code>); hardcodes <code>info.volume_min</code> instead of risk-normalized sizing; no pre-trade margin check; frozen-tick latency blind spot.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="grid-12">
+    <div class="col-1-4">
+      <h2>Backtest engine inflates trailing stops and omits costs from R</h2>
+    </div>
+    <div class="col-5-12">
+      <p>Inspecting <code>simulate_with_signals</code> (lines 181–335 of <a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/multidim_grid_backtest.py" target="_blank" rel="noopener noreferrer">engine/multidim_grid_backtest.py</a>) confirms that bar-to-bar signal evaluation avoids direct future-close peeking: signals fire on closed bar <code>i</code> and enter at <code>o[i + 1]</code>, with SL/TP checked starting on bar <code>i + 1</code>. However, four concrete simulation bugs severely overstate performance:</p>
+
+      <h3>1. Post-hoc trailing ratchet creates phantom-profit fills</h3>
+      <p>Lines 277–286 update <code>pos_sl</code> at the end of bar <code>i</code> using the bar's peak excursion (<code>pos_mfe</code>). If a long trade spikes to <code>+2.0R</code> intrabar and reverses to close at <code>+0.2R</code> (without hitting the original stop), the engine ratchets <code>pos_sl</code> to <code>+1.5R</code> after the bar has already closed at <code>+0.2R</code>. On bar <code>i + 1</code>, which opens at <code>+0.2R</code>, line 251 sees <code>touch_price &lt;= pos_sl</code> and fills the exit at <code>pos_sl = +1.5R</code> instead of <code>o[i + 1] = +0.2R</code>. Because <strong>20 of 25 champions</strong> use <code>trail_*</code> exits, this single bug systematically manufactures profit on spike-and-reverse bars.</p>
+
+      <h3>2. Intrabar adverse sequencing is optimistic on half of all bars</h3>
+      <p>Lines 242–245 set <code>seq = [("LOW", bar_l), ("HIGH", bar_h)] if bullish else [("HIGH", bar_h), ("LOW", bar_l)]</code>. That logic is <em>not</em> universally adverse: for a <strong>long position on a bearish bar</strong> (<code>c[i] &lt; o[i]</code>), the loop evaluates <code>HIGH</code> before <code>LOW</code>, awarding <code>TP_HIT</code> before testing <code>SL_HIT</code>. Symmetrically, for a <strong>short position on a bullish bar</strong>, it evaluates <code>LOW</code> before <code>HIGH</code>. True worst-case sequencing must test SL before TP based strictly on <code>pos_side</code>, never bar polarity.</p>
+
+      <h3>3. Commission is excluded from R-multiples and spread/slippage is zero</h3>
+      <p>Line 291 computes <code>exit_r = (exit_p - pos_entry) / pos_rd</code> and only deducts <code>commission_usd = 0.05</code> from <code>pnl_usd</code> on line 292. Every downstream metric—<code>net_r</code>, <code>profit_factor</code>, <code>expectancy_r</code>, Monte Carlo, and DSR—uses raw, cost-free <code>r_multiple</code>. Even if deducted, <code>$0.05</code> on <code>$5.00</code> risk (<code>0.01R</code>) ignores bid-ask spread, stop-out slippage, gap-through fills (filling gapped stops at exact <code>pos_sl</code> rather than <code>o[i]</code>), and overnight swaps on 1H/4H holds. On 5M <code>DJ30.p</code> (<code>0.047R/trade</code>) or 15M <code>EURUSD.pi</code> (<code>0.051R/trade</code>), realistic <code>0.08R–0.15R</code> round-trip friction erases the entire edge.</p>
+
+      <h3>4. Session VWAP anchor drifts during DST and relies on tick volume</h3>
+      <p>In <a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/vwap_bands.py" target="_blank" rel="noopener noreferrer">engine/vwap_bands.py</a>, <code>anchor_mode == "broker"</code> shifts timestamps by a hardcoded <code>+2 hours</code>. Broker NY-close servers alternate between UTC+2 (winter) and UTC+3 (summer), causing VWAP session resets to drift by one hour for half the year. Additionally, <code>tick_volume</code> counts broker quote updates rather than transacted volume, making standard deviation bands broker-dependent.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Deflated Sharpe implementation breaks Bailey &amp; López de Prado and has an OR backdoor</h2>
+  <p class="measure">A line-by-line review of <a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/quant_robustness.py" target="_blank" rel="noopener noreferrer">engine/quant_robustness.py</a> and <a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/scripts/run_quant_validation_and_monte_carlo.py" target="_blank" rel="noopener noreferrer">scripts/run_quant_validation_and_monte_carlo.py</a> shows that the statistical validation layer does not protect against selection bias.</p>
+
+  <div class="strip-3">
+    <div>
+      <div class="metric-val fail">0.40x</div>
+      <p class="metric-desc">Arbitrary multiplier on <code>expected_max_sr</code> (line 111), replacing the required cross-sectional standard deviation of trial Sharpe ratios and slashing the multiple-testing hurdle by 60%.</p>
+    </div>
+    <div>
+      <div class="metric-val fail">6 / 25</div>
+      <p class="metric-desc">Setups labeled <code>INSTITUTIONAL_ALPHA</code> with <code>deflated_sharpe = 0.0</code>, admitted via the <code>OR (oos_net_r &gt;= 15.0 and oos_pf &gt;= 1.20)</code> bypass on line 175.</p>
+    </div>
+    <div>
+      <div class="metric-val fail">10 / 25</div>
+      <p class="metric-desc">Champions whose OOS expectancy is more than <strong>2x</strong> their IS expectancy (up to <code>14.6x</code> on <code>ETHUSD.pi 1H</code>)—a hallmark of post-hoc splitting after full-history selection.</p>
+    </div>
+  </div>
+
+  <pre># engine/quant_robustness.py (lines 100-122 &amp; 172-175)
+sr = (mean_r / std_r) * ann_factor                           # Annualized SR
+sr_benchmark = expected_max_sr * 0.40                        # Arbitrary 0.40 haircut (not std({SR_n}))
+var_sr = (1.0 - skewness * sr + ((kurt - 1.0) / 4.0) * (sr ** 2)) / max(1.0, float(n - 1))  # Unit mismatch
+...
+mc_robust = mc_p_profit &gt;= 0.90 and mc_max_dd_95 &lt;= 75.0     # 75R cap (spec claims &lt;= 50R)
+stat_pass = dsr &gt;= 0.50 or (oos_net_r &gt;= 15.0 and oos_pf &gt;= 1.20)  # Bypasses DSR = 0.0</pre>
+
+  <div class="strip-2">
+    <div>
+      <h3>Four mathematical errors in DSR</h3>
+      <ul>
+        <li><strong>Annualized vs. per-trade unit mismatch:</strong> <code>sr</code> is scaled by <code>sqrt(min(max(n, 10), 252))</code>, then plugged into the non-annualized Sharpe variance formula, inflating <code>sr ** 2</code> by up to 252x while comparing against an unannualized benchmark.</li>
+        <li><strong>Severe under-counting of trials:</strong> <code>run_quant_validation_and_monte_carlo.py</code> passes <code>n_trials=40</code>, whereas <code>optimize_multidim_basket.py</code> sweeps <code>4 TFs × 5 models × 9 exits = 180</code> trials per symbol (<code>4,140</code> across 23 symbols).</li>
+        <li><strong>Full-sample contamination:</strong> Both DSR and the 10,000-path Monte Carlo run on <code>full_trades</code> (IS + OOS combined) instead of strict OOS trades.</li>
+        <li><strong>Post-hoc 70/30 split:</strong> <code>optimize_multidim_basket.py</code> selects winning parameters on 100% of bars before <code>run_quant_validation_and_monte_carlo.py</code> slices 70/30, invalidating OOS independence.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Why IID Monte Carlo understates tail risk</h3>
+      <p><code>_simulate_bootstrap_paths_numba</code> resamples individual trades IID with replacement (<code>np.random.randint(0, n_trades)</code>). In mean-reversion VWAP/EMA systems, losses cluster heavily during trending macro regimes and volatility shocks. IID resampling breaks autocorrelation and systematically underestimates losing streaks.</p>
+      <p>Even under optimistic IID sampling, <strong>8 of 25 champions exceed the stated 50R <code>DD_95%</code> limit</strong> (up to <code>73.93R</code> on <code>DJ30.p 5M</code>), and <strong>17 of 25 carry a &ge; 50% probability of hitting a 20R drawdown</strong>. Replace IID sampling with a <strong>Stationary Block Bootstrap</strong> (geometrically distributed block lengths, mean block size <code>L ≈ n^(1/3)</code>) or regime-conditioned Markov sampling, plus <strong>synchronized portfolio-level resampling</strong> to capture cross-asset correlation spikes across SP500, DJ30, NAS100, and crypto CFDs.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Price action detectors suffer from dead logic and unnormalized regime thresholds</h2>
+  <p class="measure">Inspecting <a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/candle_rejection.py" target="_blank" rel="noopener noreferrer">engine/candle_rejection.py</a> reveals that the five rejection variants share rigid magic numbers calibrated without regard to asset-class microstructure, tick size, or volatility regime.</p>
+
+  <div class="strip-2">
+    <div>
+      <h3>Code-level pattern flaws</h3>
+      <ul>
+        <li><strong>Redundant pinbar close filter:</strong> In <code>detect_rejection_wick</code> (lines 22–23), <code>lower_wick = (min(o, c) - l) / rng &gt;= 0.35</code> mathematically implies <code>(c - l) / rng &gt;= 0.35</code>. The second clause is dead code, allowing a bearish-close candle with a 36% lower wick and 60% upper wick to fire a bullish pinbar.</li>
+        <li><strong>Unnormalized 5 bps EMA slope filter:</strong> <code>check_ema_rejection_signal</code> requires <code>ema_val &gt;= ema_prev * 0.9995</code>. A flat 5 bps tolerance is trivially satisfied on 5M FX bars (where typical bar-to-bar EMA drift is &lt; 1 bp) while acting as a tight hurdle on 4H crypto.</li>
+        <li><strong>Pattern conflation &amp; priority shadowing:</strong> <code>detect_two_bar_reversal</code> and <code>detect_three_bar_sweep</code> overlap on nearly identical bar-<code>i</code> reclaim rules, and <code>evaluate_level_rejection</code> short-circuits in fixed order, preventing isolated attribution of each variant's incremental alpha.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Regime-adaptive volatility calibration</h3>
+      <p>Fixed tolerances (<code>tol = 0.20 * atr</code>, <code>0.15 * atr</code> in VWAP checks, <code>risk_dist &gt;= 1.2 * atr</code>, and a <code>1e-5</code> floor that distorts low-nominal-price crypto like <code>XLMUSD</code>) fail at both ends of the volatility spectrum:</p>
+      <ul>
+        <li><strong>Low-volatility drift:</strong> 14-period Wilder ATR compresses until <code>1.2 * ATR</code> approaches broker spread width, causing spread-noise stop-outs. Floor tolerances using live spread: <code>max(alpha * ATR_14, k * spread_live)</code> with <code>k &gt;= 4</code>.</li>
+        <li><strong>High-volatility flash events:</strong> Trailing ATR lags sudden expansion and stays bloated afterward. Scale tolerances by the volatility ratio <code>ATR_14 / ATR_100</code> (or Garman-Klass realized volatility percentile) and replace fixed <code>0.35</code> wick ratios with asset-specific rolling Z-scores of wick-to-range ratios.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="grid-12">
+    <div class="col-1-4">
+      <h2>Live MT5 daemon diverges from backtests and lacks margin governance</h2>
+    </div>
+    <div class="col-5-12">
+      <p>The widest operational gap sits inside <a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/live_multicriteria_runner.py" target="_blank" rel="noopener noreferrer">engine/live_multicriteria_runner.py</a>. Even if the historical backtest were bug-free, the live daemon executes a fundamentally different strategy:</p>
+
+      <ul>
+        <li><strong>Zero trailing-stop execution:</strong> Lines 231–240 map <code>elif "2.0" in exit_mode or "trail" in exit_mode: target_rr = 2.5</code> and send a single static SL/TP market order. There is no breakeven ratchet or trailing-stop management loop anywhere in the daemon—every <code>trail_0.5r</code>, <code>trail_1.0r</code>, and <code>trail_1.5r</code> champion (20 of 25 setups) is silently capped at <code>2.5R</code>, and <code>fixed_2.0r</code> is misrouted to <code>2.5R</code>.</li>
+        <li><strong>Hardcoded minimum lot sizing:</strong> Although <code>calculate_position_lot_size</code> is imported on line 33, line 219 hardcodes <code>volume = float(info.volume_min)</code>. Dollar risk per trade is completely unnormalized across assets and stop widths, invalidating equal-R portfolio math.</li>
+        <li><strong>Latency guard blind spots:</strong> Computing <code>elapsed_since_close = tick.time - forming_bar_open_time</code> relies on the broker's last quote timestamp rather than monotonic UTC wall-clock time. During feed freezes or weekend/rollover boundaries, a stale <code>tick.time</code> can appear fresh; conversely, on illiquid pairs (<code>GBPNOK.pi</code>, <code>HK50.p</code>), a 30-second first-tick delay silently drops valid 5M signals. Add a dual guard: <code>abs(server_now - tick.time) &lt;= 10s</code> and a live spread filter (<code>spread / risk_dist &lt;= 0.15</code>).</li>
+        <li><strong>Margin starvation on 1:2 Crypto CFDs:</strong> The daemon performs zero pre-trade <code>mt5.order_check()</code> or free-margin checks. One <code>XRPUSD</code> min-lot at <code>$483</code> margin (1:2 leverage) can exhaust free margin and trigger <code>NO_MONEY</code> rejections on high-Sharpe FX/Index setups. Implement a <strong>Margin-Budgeted Capital Allocator</strong> with (1) hard free-margin floor (<code>margin_level &gt;= 300%</code>), (2) asset-class margin caps (max 20% in Crypto CFDs), (3) Return-on-Margin (RoM) priority queuing, and (4) automatic skip whenever <code>min_lot_risk &gt; 1.5 × target_risk_usd</code>.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Published basket reconciliation exposes fragile 5M/15M edge and cleaner 4H profiles</h2>
+  <p class="measure">Reconciling all 25 rows of <a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/audit/INSTITUTIONAL_ROBUST_ALPHA_BASKET.csv" target="_blank" rel="noopener noreferrer">audit/INSTITUTIONAL_ROBUST_ALPHA_BASKET.csv</a> (published totals: <strong>+3,008.11 R</strong> full-period across 27,186 trades; <strong>+1,225.00 R</strong> OOS across 8,127 trades; median OOS PF <strong>1.27</strong>; median MC <code>DD_95%</code> <strong>40.96 R</strong>, max <strong>73.93 R</strong>) reveals a stark divergence between intraday and 4H timeframes.</p>
+
+  <figure>
+    <div class="fig-title">4H setups deliver 2.5x the per-trade expectancy of 15M setups with half the 95th-percentile drawdown and zero DSR failures</div>
+    <svg viewBox="0 0 700 340" width="100%" role="img" aria-label="Grouped comparison of mean full-sample expectancy and mean Monte Carlo 95th percentile drawdown across 5M, 15M, 1H, and 4H timeframes">
+      <!-- Left panel: Mean Full Expectancy (R/trade) -->
+      <text x="10" y="24" font-family="IBM Plex Sans, sans-serif" font-size="14" font-weight="600" fill="#0F172A">Mean Full Expectancy (R / trade)</text>
+      <!-- Gridlines Left: x from 70 to 310 (scale 0 to 0.25R -> 960 px per R) -->
+      <line x1="70" y1="42" x2="70" y2="278" stroke="#0F172A" stroke-width="1"/>
+      <line x1="166" y1="42" x2="166" y2="278" stroke="#CBD5E1" stroke-width="1"/>
+      <line x1="262" y1="42" x2="262" y2="278" stroke="#CBD5E1" stroke-width="1"/>
+      <text x="70" y="298" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475569" text-anchor="middle">0.00</text>
+      <text x="166" y="298" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475569" text-anchor="middle">0.10</text>
+      <text x="262" y="298" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475569" text-anchor="middle">0.20</text>
+
+      <!-- Bars Left -->
+      <!-- 4H: 0.209 -> 200.6px -->
+      <text x="58" y="84" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="600" fill="#0F172A" text-anchor="end">4H</text>
+      <rect x="70" y="62" width="201" height="32" fill="#0F766E"/>
+      <text x="279" y="83" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="600" fill="#115E59">0.209 R</text>
+
+      <!-- 1H: 0.170 -> 163.2px -->
+      <text x="58" y="142" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="600" fill="#0F172A" text-anchor="end">1H</text>
+      <rect x="70" y="120" width="163" height="32" fill="#0F766E" opacity="0.72"/>
+      <text x="241" y="141" font-family="IBM Plex Mono, monospace" font-size="14" fill="#0F172A">0.170 R</text>
+
+      <!-- 5M: 0.109 -> 104.6px -->
+      <text x="58" y="200" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="600" fill="#0F172A" text-anchor="end">5M</text>
+      <rect x="70" y="178" width="105" height="32" fill="#B91C1C" opacity="0.8"/>
+      <text x="183" y="199" font-family="IBM Plex Mono, monospace" font-size="14" fill="#991B1B">0.109 R</text>
+
+      <!-- 15M: 0.083 -> 79.7px -->
+      <text x="58" y="258" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="600" fill="#0F172A" text-anchor="end">15M</text>
+      <rect x="70" y="236" width="80" height="32" fill="#B91C1C"/>
+      <text x="158" y="257" font-family="IBM Plex Mono, monospace" font-size="14" font-weight="600" fill="#991B1B">0.083 R</text>
+
+      <!-- Right panel: Mean MC DD_95% (R) -->
+      <text x="380" y="24" font-family="IBM Plex Sans, sans-serif" font-size="14" font-weight="600" fill="#0F172A">Mean MC DD 95% (R) &amp; DSR = 0 count</text>
+      <!-- Gridlines Right: x from 380 to 620 (scale 0 to 60R -> 4 px per R) -->
+      <line x1="380" y1="42" x2="380" y2="278" stroke="#0F172A" stroke-width="1"/>
+      <line x1="480" y1="42" x2="480" y2="278" stroke="#CBD5E1" stroke-width="1"/>
+      <line x1="580" y1="42" x2="580" y2="278" stroke="#991B1B" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="380" y="298" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475569" text-anchor="middle">0R</text>
+      <text x="480" y="298" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475569" text-anchor="middle">25R</text>
+      <text x="580" y="298" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#991B1B" text-anchor="middle">50R cap</text>
+
+      <!-- 4H: 27.33R -> 109.3px -->
+      <rect x="380" y="62" width="109" height="32" fill="#0F766E"/>
+      <text x="497" y="83" font-family="IBM Plex Mono, monospace" font-size="13" fill="#115E59">27.3R (0 zero-DSR)</text>
+
+      <!-- 1H: 40.12R -> 160.5px -->
+      <rect x="380" y="120" width="160" height="32" fill="#64748B"/>
+      <text x="548" y="141" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0F172A">40.1R (1 zero-DSR)</text>
+
+      <!-- 5M: 50.09R -> 200.4px -->
+      <rect x="380" y="178" width="200" height="32" fill="#B91C1C" opacity="0.8"/>
+      <text x="588" y="199" font-family="IBM Plex Mono, monospace" font-size="13" fill="#991B1B">50.1R (2)</text>
+
+      <!-- 15M: 53.81R -> 215.2px -->
+      <rect x="380" y="236" width="215" height="32" fill="#B91C1C"/>
+      <text x="603" y="257" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#991B1B">53.8R (3)</text>
+
+      <text x="10" y="328" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#475569">Dashed red line marks the stated 50R DD_95% limit; code relaxes limit to 75R.</text>
+    </svg>
+    <figcaption>Aggregated from all 25 setups in <a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/audit/INSTITUTIONAL_ROBUST_ALPHA_BASKET.csv" target="_blank" rel="noopener noreferrer">audit/INSTITUTIONAL_ROBUST_ALPHA_BASKET.csv</a> (7 setups on 4H, 6 on 1H, 7 on 5M, 5 on 15M).</figcaption>
+  </figure>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Timeframe</th>
+          <th class="num">Setups</th>
+          <th class="num">Full Net R</th>
+          <th class="num">OOS Net R</th>
+          <th class="num">Mean Exp (R)</th>
+          <th class="num">Mean MC DD95</th>
+          <th class="num">DSR = 0</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>4H</strong></td>
+          <td class="num">7</td>
+          <td class="num">+438.10</td>
+          <td class="num">+167.98</td>
+          <td class="num">0.209</td>
+          <td class="num">27.33 R</td>
+          <td class="num">0</td>
+        </tr>
+        <tr>
+          <td><strong>1H</strong></td>
+          <td class="num">6</td>
+          <td class="num">+575.37</td>
+          <td class="num">+202.57</td>
+          <td class="num">0.170</td>
+          <td class="num">40.12 R</td>
+          <td class="num">1</td>
+        </tr>
+        <tr>
+          <td><strong>5M</strong></td>
+          <td class="num">7</td>
+          <td class="num">+1,206.54</td>
+          <td class="num">+468.55</td>
+          <td class="num">0.109</td>
+          <td class="num">50.09 R</td>
+          <td class="num">2</td>
+        </tr>
+        <tr>
+          <td><strong>15M</strong></td>
+          <td class="num">5</td>
+          <td class="num">+788.10</td>
+          <td class="num">+385.90</td>
+          <td class="num">0.083</td>
+          <td class="num">53.81 R</td>
+          <td class="num">3</td>
+        </tr>
+        <tr>
+          <td><strong>Total / Avg</strong></td>
+          <td class="num">25</td>
+          <td class="num">+3,008.11</td>
+          <td class="num">+1,225.00</td>
+          <td class="num">0.111</td>
+          <td class="num">42.19 R</td>
+          <td class="num">6</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <figure>
+    <div class="fig-title">Deducting realistic 0.10R round-trip spread and slippage turns 8 of 25 champions negative on full-sample Net R</div>
+    <svg viewBox="0 0 700 440" width="100%" role="img" aria-label="Horizontal bar chart showing full-sample Net R after 0.10R round-trip friction for the 8 lowest-expectancy setups in the published basket">
+      <!-- Zero axis at x = 350; scale: 1R = 1.6px (-120R -> 158, +140R -> 574) -->
+      <line x1="190" y1="36" x2="190" y2="388" stroke="#CBD5E1" stroke-width="1"/>
+      <line x1="270" y1="36" x2="270" y2="388" stroke="#CBD5E1" stroke-width="1"/>
+      <line x1="350" y1="36" x2="350" y2="388" stroke="#0F172A" stroke-width="1.5"/>
+      <line x1="430" y1="36" x2="430" y2="388" stroke="#CBD5E1" stroke-width="1"/>
+      <line x1="510" y1="36" x2="510" y2="388" stroke="#CBD5E1" stroke-width="1"/>
+
+      <text x="190" y="408" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475569" text-anchor="middle">-100R</text>
+      <text x="270" y="408" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475569" text-anchor="middle">-50R</text>
+      <text x="350" y="408" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#0F172A" text-anchor="middle">0R</text>
+      <text x="430" y="408" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475569" text-anchor="middle">+50R</text>
+      <text x="510" y="408" font-family="IBM Plex Mono, monospace" font-size="13" fill="#475569" text-anchor="middle">+100R</text>
+
+      <!-- Row 1: DJ30.p 5M: 94.96 - 201.8 = -106.84R -> width 170.9 left of 350 -->
+      <text x="148" y="66" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0F172A" text-anchor="end">DJ30.p 5M</text>
+      <rect x="179" y="48" width="171" height="24" fill="#B91C1C"/>
+      <text x="360" y="65" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#991B1B">-106.8 R (was +95.0 R)</text>
+
+      <!-- Row 2: EURUSD.pi 15M: 73.20 - 143.6 = -70.40R -> width 112.6 -->
+      <text x="148" y="110" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0F172A" text-anchor="end">EURUSD.pi 15M</text>
+      <rect x="237" y="92" width="113" height="24" fill="#B91C1C"/>
+      <text x="360" y="109" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#991B1B">-70.4 R (was +73.2 R)</text>
+
+      <!-- Row 3: CADJPY.pi 5M: 176.04 - 212.2 = -36.16R -> width 57.9 -->
+      <text x="148" y="154" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0F172A" text-anchor="end">CADJPY.pi 5M</text>
+      <rect x="292" y="136" width="58" height="24" fill="#B91C1C"/>
+      <text x="360" y="153" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#991B1B">-36.2 R (was +176.0 R)</text>
+
+      <!-- Row 4: GBPNOK.pi 15M: 180.64 - 214.8 = -34.16R -> width 54.7 -->
+      <text x="148" y="198" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0F172A" text-anchor="end">GBPNOK.pi 15M</text>
+      <rect x="295" y="180" width="55" height="24" fill="#B91C1C"/>
+      <text x="360" y="197" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#991B1B">-34.2 R (was +180.6 R)</text>
+
+      <!-- Row 5: ETHUSD.pi 1H: 70.85 - 102.8 = -31.95R -> width 51.1 -->
+      <text x="148" y="242" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0F172A" text-anchor="end">ETHUSD.pi 1H</text>
+      <rect x="299" y="224" width="51" height="24" fill="#B91C1C"/>
+      <text x="360" y="241" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#991B1B">-32.0 R (was +70.9 R)</text>
+
+      <!-- Row 6: BTCUSD.pi 15M: 119.95 - 145.0 = -25.05R -> width 40.1 -->
+      <text x="148" y="286" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0F172A" text-anchor="end">BTCUSD.pi 15M</text>
+      <rect x="310" y="268" width="40" height="24" fill="#B91C1C"/>
+      <text x="360" y="285" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#991B1B">-25.1 R (was +120.0 R)</text>
+
+      <!-- Row 7: USWTI.p 15M: 232.94 - 253.5 = -20.56R -> width 32.9 -->
+      <text x="148" y="330" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0F172A" text-anchor="end">USWTI.p 15M</text>
+      <rect x="317" y="312" width="33" height="24" fill="#B91C1C"/>
+      <text x="360" y="329" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#991B1B">-20.6 R (was +232.9 R)</text>
+
+      <!-- Row 8: SP500.p 5M: 136.80 - 141.6 = -4.80R -> width 7.7 -->
+      <text x="148" y="374" font-family="IBM Plex Mono, monospace" font-size="13" fill="#0F172A" text-anchor="end">SP500.p 5M</text>
+      <rect x="342" y="356" width="8" height="24" fill="#B91C1C"/>
+      <text x="360" y="373" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#991B1B">-4.8 R (was +136.8 R)</text>
+
+      <text x="10" y="432" font-family="IBM Plex Sans, sans-serif" font-size="13" fill="#475569">Stress test: full_net_r minus (0.10 R × full_trades). All 8 setups are trail_0.5r intraday strategies.</text>
+    </svg>
+    <figcaption>Friction sensitivity computed from <code>full_net_r</code> and <code>full_trades</code> in <a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/audit/INSTITUTIONAL_ROBUST_ALPHA_BASKET.csv" target="_blank" rel="noopener noreferrer">audit/INSTITUTIONAL_ROBUST_ALPHA_BASKET.csv</a>.</figcaption>
+  </figure>
+</section>
+
+<div class="pull-quote">
+  “Zero-cost backtests with post-hoc trailing fills and post-hoc train/test splits do not measure alpha—they measure simulator artifacts.”
+</div>
+
+<section class="full-band">
+  <h2>Priority vulnerabilities and highest-leverage alpha upgrades</h2>
+  <p class="measure">Remediation should freeze live deployment, repair simulator and statistical integrity first, and then layer portfolio-level risk and microstructure intelligence onto the surviving 1H/4H core.</p>
+
+  <div class="strip-2">
+    <div>
+      <h3>Top 3 quantitative vulnerabilities</h3>
+      <ol class="ranked-list">
+        <li><strong>Backtest-to-live trailing-stop breakdown &amp; phantom fills:</strong> 80% of the basket relies on <code>trail_*</code> exits that collect impossible next-bar open fills in <code>simulate_with_signals</code> and are never executed in <code>live_multicriteria_runner.py</code> (silently capped at 2.5R). Fix gap-aware fills (<code>min(o[i+1], pos_sl)</code> for longs), enforce side-based adverse sequencing, deduct live-calibrated spread+slippage directly from <code>r_multiple</code>, and implement an asynchronous MT5 position-ratchet loop.</li>
+        <li><strong>Post-hoc OOS splitting &amp; bypassed DSR:</strong> Selecting champions on 100% of data in <code>optimize_multidim_basket.py</code> before the 70/30 split—combined with the broken <code>0.40</code> DSR formula, <code>n_trials=40</code> undercount, and <code>OR</code> bypass—invalidates all 25 "verified" setups. Move to anchored/rolling <strong>Purged K-Fold / Walk-Forward Optimization</strong> where parameter selection occurs strictly inside each training fold, and enforce true Bailey &amp; López de Prado DSR (&ge; 0.95) on OOS returns only.</li>
+        <li><strong>Unnormalized min-lot sizing &amp; unguarded margin exhaustion:</strong> Trading <code>info.volume_min</code> without pre-trade <code>mt5.order_check()</code> breaks constant-R expectancy and allows 1:2 leverage Crypto CFDs to starve higher-Sharpe FX/Index signals. Activate volatility-targeted lot sizing with hard per-class margin caps and a skip rule when <code>min_lot_risk &gt; 1.5 × target_risk_usd</code>.</li>
+      </ol>
+    </div>
+    <div>
+      <h3>Top 3 high-impact next-stage alpha additions</h3>
+      <ol class="ranked-list alpha">
+        <li><strong>Hierarchical Risk Parity (HRP) &amp; cross-asset correlation throttling:</strong> The basket stacks highly correlated risk-on bets (<code>SP500</code>, <code>DJ30</code>, <code>NAS100</code>, <code>BTCUSD</code>, <code>ETHUSD</code>, <code>XRPUSD</code>, <code>XLMUSD</code>). Computing rolling 60-day return covariance and capping concurrent gross beta exposure prevents synchronized macro stop-outs that IID Monte Carlo fails to predict.</li>
+        <li><strong>Explicit market-regime gating (Trend vs. Mean-Reversion):</strong> Mean-reversion VWAP SD-band fades bleed during high-ADX / macro breakout regimes. Conditioning entry eligibility on rolling Hurst exponent, <code>ADX(14)</code>, or realized volatility percentile (<code>ATR_14 / ATR_100</code>) suppresses counter-trend bleed without adding fragile candle parameters.</li>
+        <li><strong>True order-flow &amp; microstructure confirmation (Volume Delta / Spread-to-ATR):</strong> Replace broker tick-volume VWAP proxies with tick-rule signed delta (Lee-Ready / uptick-downtick cumulative volume delta divergence at structural bands) paired with a hard execution filter rejecting entries when live spread exceeds 12–15% of stop distance.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Sources</h2>
+  <ol class="sources-list">
+    <li><a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business" target="_blank" rel="noopener noreferrer">kbsingh1399/Delta_Fibonacci_Institutional_Business</a> — Repository root, directory structure, and test/data inventory.</li>
+    <li><a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/multidim_grid_backtest.py" target="_blank" rel="noopener noreferrer">engine/multidim_grid_backtest.py</a> — Signal precomputation, intrabar adverse sequencing, trailing ratchet state machine, and metric calculation.</li>
+    <li><a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/quant_robustness.py" target="_blank" rel="noopener noreferrer">engine/quant_robustness.py</a> — Numba IID Monte Carlo bootstrap, Deflated Sharpe Ratio implementation, 70/30 splitter, and anti-curve-fit gate.</li>
+    <li><a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/candle_rejection.py" target="_blank" rel="noopener noreferrer">engine/candle_rejection.py</a> — Five price-action rejection detectors and unified level-rejection evaluator.</li>
+    <li><a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/vwap_bands.py" target="_blank" rel="noopener noreferrer">engine/vwap_bands.py</a> — Session VWAP and standard-deviation band construction with +2h broker anchor shift.</li>
+    <li><a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/engine/live_multicriteria_runner.py" target="_blank" rel="noopener noreferrer">engine/live_multicriteria_runner.py</a> — MT5 live execution daemon, latency guard, min-lot sizing, and static TP/SL order dispatch.</li>
+    <li><a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/scripts/optimize_multidim_basket.py" target="_blank" rel="noopener noreferrer">scripts/optimize_multidim_basket.py</a> — Full-history parameter sweep and champion selection script.</li>
+    <li><a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/scripts/run_quant_validation_and_monte_carlo.py" target="_blank" rel="noopener noreferrer">scripts/run_quant_validation_and_monte_carlo.py</a> — Post-hoc 70/30 split runner and full-sample Monte Carlo / DSR orchestrator.</li>
+    <li><a href="https://github.com/kbsingh1399/Delta_Fibonacci_Institutional_Business/blob/main/audit/INSTITUTIONAL_ROBUST_ALPHA_BASKET.csv" target="_blank" rel="noopener noreferrer">audit/INSTITUTIONAL_ROBUST_ALPHA_BASKET.csv</a> — Published 25-strategy output ledger reconciled for timeframe, DSR, drawdown, and friction analysis.</li>
+  </ol>
+</section>
+
+</body>
+</html>
