@@ -60,6 +60,14 @@ TIMEFRAME_SECONDS = {
     "4H": 14400,
 }
 
+# Maximum latency allowed after bar closure before considering signal stale (seconds)
+MAX_LATENCY_SECONDS = {
+    "5M": 25,
+    "15M": 45,
+    "1H": 90,
+    "4H": 180,
+}
+
 
 class MT5MultiCriteriaLiveRunner:
     def __init__(self, risk_mode: str = "min_lot"):
@@ -121,6 +129,22 @@ class MT5MultiCriteriaLiveRunner:
         else:
             return mt5.ORDER_FILLING_RETURN
 
+    def prime_candle_times(self):
+        """Primes the last candle timestamps on startup so no historical stale bars are punched."""
+        logger.info("⏳ Priming candle timestamps for all setups to prevent stale boot executions...")
+        count = 0
+        for sym, setups in self.basket.items():
+            for s in setups:
+                tf = s["tf"]
+                key = f"{sym}_{tf}"
+                if key in self.last_candle_times:
+                    continue
+                df = self.fetch_rates_dataframe(sym, tf, count=60)
+                if df is not None and len(df) >= 2:
+                    self.last_candle_times[key] = int(df["time"].iloc[-2].timestamp())
+                    count += 1
+        logger.info(f"✅ Primed {count} setups. Engine will only punch upon FRESH confirmed candle closures.")
+
     def check_and_execute_setup(self, symbol: str, setup_cfg: Dict[str, Any]):
         tf = setup_cfg["tf"]
         model = setup_cfg["model"]
@@ -134,13 +158,29 @@ class MT5MultiCriteriaLiveRunner:
 
         # Latest completed closed bar is index -2 (bar -1 is currently forming)
         closed_bar_time = int(df["time"].iloc[-2].timestamp())
+        forming_bar_open_time = int(df["time"].iloc[-1].timestamp())
         last_seen = self.last_candle_times.get(key, 0)
 
         # Only evaluate on a FRESH confirmed candle close
         if closed_bar_time <= last_seen:
             return
 
+        # Bar -2 closed the exact second Bar -1 opened.
+        # Elapsed seconds since Bar -2 closed is: current_tick_time - forming_bar_open_time.
+        tick = mt5.symbol_info_tick(symbol)
+        if tick is None or tick.time == 0:
+            return
+
+        elapsed_since_close = tick.time - forming_bar_open_time
+        max_latency = MAX_LATENCY_SECONDS.get(tf, 30)
+
+        # If elapsed time exceeds max allowed latency, this bar closed in the past
+        if elapsed_since_close > max_latency:
+            self.last_candle_times[key] = closed_bar_time
+            return
+
         self.last_candle_times[key] = closed_bar_time
+        logger.info(f"🔔 [FRESH BAR CLOSURE] {symbol} {tf} | Elapsed since close: {elapsed_since_close}s | Evaluating setup...")
 
         # Evaluate signal on the confirmed closed candle
         sig = evaluate_live_setup_signal(df, symbol, tf, model, param)
@@ -322,6 +362,7 @@ class MT5MultiCriteriaLiveRunner:
             f"🚀 [MULTI-CRITERIA TRADER STARTED] Tracking {len(self.basket)} symbols and "
             f"{sum(len(v) for v in self.basket.values())} Institutional Alpha setups."
         )
+        self.prime_candle_times()
 
         try:
             while self.is_running:

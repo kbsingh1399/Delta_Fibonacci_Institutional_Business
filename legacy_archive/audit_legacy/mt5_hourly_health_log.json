@@ -1,0 +1,254 @@
+[
+  {
+    "iteration": 1,
+    "timestamp": "2026-11-16T07:22:29+00:00",
+    "terminal": "MetaTrader 5 v6230",
+    "connected": true,
+    "ping_ms": 189.2,
+    "account": 11808165,
+    "server": "FundedNext-Server",
+    "balance": 4701.64,
+    "equity": 4701.64,
+    "margin_free": 4701.64,
+    "open_positions": 0,
+    "daemon_status": "HEALTHY",
+    "daemon_heartbeat_age_s": 8.2,
+    "dashboard_server_status": "HEALTHY (serving localhost:8088)",
+    "market_status": "28/28 Alpha symbols OPEN",
+    "closest_approaching": [
+      {
+        "symbol": "AMD",
+        "shelf": "EMA89",
+        "dist_atr": 0.03,
+        "status": "TOUCHING"
+      },
+      {
+        "symbol": "META",
+        "shelf": "EMA233",
+        "dist_atr": 0.07,
+        "status": "TESTING"
+      },
+      {
+        "symbol": "USDMXN",
+        "shelf": "EMA89",
+        "dist_atr": 0.08,
+        "status": "TESTING"
+      },
+      {
+        "symbol": "GBPJPY",
+        "shelf": "EMA233",
+        "dist_atr": 0.11,
+        "status": "TESTING"
+      },
+      {
+        "symbol": "NKE",
+        "shelf": "EMA89",
+        "dist_atr": 0.14,
+        "status": "TESTING"
+      },
+      {
+        "symbol": "US30",
+        "shelf": "EMA89",
+        "dist_atr": 0.16,
+        "status": "TESTING"
+      }
+    ]
+  },
+  {
+    "iteration": 2,
+    "timestamp": "2026-11-16T08:22:07+00:00",
+    "terminal": "MetaTrader 5 v6230",
+    "connected": true,
+    "ping_ms": 189.2,
+    "account": 11808165,
+    "server": "FundedNext-Server",
+    "balance": 4701.64,
+    "equity": 4701.64,
+    "margin_free": 4701.64,
+    "open_positions": 0,
+    "daemon_status": "HEALTHY",
+    "daemon_heartbeat_age_s": 1.7,
+    "dashboard_server_status": "HEALTHY (serving localhost:8088)",
+    "market_status": "28/28 Alpha symbols OPEN"
+  },
+  {
+    "iteration": 3,
+    "timestamp": "2026-11-16T09:22:05+00:00",
+    "terminal": "MetaTrader 5 v6230",
+    "connected": true,
+    "ping_ms": 189.2,
+    "account": 11808165,
+    "server": "FundedNext-Server",
+    "balance": 4701.64,
+    "equity": 4701.64,
+    "margin_free": 4701.64,
+    "open_positions": 0,
+    "daemon_status": "HEALTHY (Elite 21 Basket + EMA89 Shelf Focus)",
+    "daemon_heartbeat_age_s": 9.3,
+    "dashboard_server_status": "HEALTHY (serving localhost:8088)",
+    "market_status": "21/21 Elite Alpha symbols OPEN",
+    "closest_approaching": [
+      {
+        "symbol": "AMD",
+        "shelf": "EMA89",
+        "dist_atr": 0.02,
+        "status": "TOUCHING"
+      },
+      {
+        "symbol": "NKE",
+        "shelf": "EMA89",
+        "dist_atr": 0.12,
+        "status": "TESTING"
+      },
+      {
+        "symbol": "META",
+        "shelf": "EMA233",
+        "dist_atr": 0.21,
+        "status": "APPROACHING"
+      },
+      {
+        "symbol": "USDMXN",
+        "shelf": "EMA89",
+        "dist_atr": 0.28,
+        "status": "APPROACHING"
+      },
+      {
+        "symbol": "BMW",
+        "shelf": "EMA89",
+        "dist_atr": 0.28,
+        "status": "APPROACHING"
+      },
+      {
+        "symbol": "SGDJPY",
+        "shelf": "EMA89",
+        "dist_atr": 0.32,
+        "status": "APPROACHING"
+      },
+      {
+        "symbol": "EURNOK",
+        "shelf": "EMA233",
+        "dist_atr": 0.36,
+        "status": "APPROACHING"
+      },
+      {
+        "symbol": "MSFT",
+        "shelf": "EMA89",
+        "dist_atr": 0.42,
+        "status": "APPROACHING"
+      },
+      {
+        "symbol": "EURCAD",
+        "shelf": "EMA89",
+        "dist_atr": 0.49,
+        "status": "APPROACHING"
+      },
+      {
+        "symbol": "US30",
+        "shelf": "EMA89",
+        "dist_atr": 0.49,
+        "status": "APPROACHING"
+      }
+    ],
+    "next_h4_close_in_sec": 2270
+  },
+  {
+    "iteration": 4,
+    "timestamp": "2026-11-16T10:22:05+00:00",
+    "terminal": "MetaTrader 5 v6230",
+    "connected": true,
+    "ping_ms": 189.2,
+    "account": 11808165,
+    "server": "FundedNext-Server",
+    "balance": 4701.64,
+    "equity": 4701.64,
+    "margin_free": 4701.64,
+    "open_positions": 0,
+    "daemon_status": "HEALTHY (Elite 21 Basket + RAM Optimized)",
+    "daemon_heartbeat_age_s": 4.8,
+    "dashboard_server_status": "HEALTHY (serving localhost:8088)",
+    "market_status": "21/21 Elite Alpha symbols OPEN",
+    "closest_approaching": [
+      {
+        "symbol": "AMD",
+        "shelf": "EMA89",
+        "dist_atr": 0.02,
+        "status": "TOUCHING"
+      },
+      {
+        "symbol": "NKE",
+        "shelf": "EMA89",
+        "dist_atr": 0.12,
+        "status": "TESTING"
+      },
+      {
+        "symbol": "MSFT",
+        "shelf": "EMA89",
+        "dist_atr": 0.42,
+        "status": "APPROACHING"
+      },
+      {
+        "symbol": "US30",
+        "shelf": "EMA89",
+        "dist_atr": 0.52,
+        "status": "APPROACHING"
+      },
+      {
+        "symbol": "EURNOK",
+        "shelf": "EMA233",
+        "dist_atr": 0.68,
+        "status": "PULLBACK"
+      }
+    ],
+    "next_h4_close_in_sec": 13071
+  },
+  {
+    "iteration": 5,
+    "timestamp": "2026-11-16T11:22:33.860614+00:00",
+    "terminal": "MetaTrader 5 v6230",
+    "connected": true,
+    "ping_ms": 227.1,
+    "account": 11808165,
+    "server": "FundedNext-Server",
+    "balance": 4701.64,
+    "equity": 4701.64,
+    "margin_free": 4701.64,
+    "open_positions": 0,
+    "daemon_status": "HEALTHY (Elite 21 Basket + Pullback Origin Invariant Enforced)",
+    "daemon_heartbeat_age_s": 6.0,
+    "dashboard_server_status": "HEALTHY (serving localhost:8088)",
+    "market_status": "21/21 Elite Alpha symbols OPEN",
+    "closest_approaching": [
+      {
+        "symbol": "AMD",
+        "shelf": "EMA89",
+        "dist_atr": 0.02,
+        "status": "TOUCHING (Blocked by came_from_above invariant)"
+      },
+      {
+        "symbol": "NKE",
+        "shelf": "EMA89",
+        "dist_atr": 0.12,
+        "status": "TESTING"
+      },
+      {
+        "symbol": "MSFT",
+        "shelf": "EMA89",
+        "dist_atr": 0.42,
+        "status": "APPROACHING"
+      },
+      {
+        "symbol": "US30",
+        "shelf": "EMA89",
+        "dist_atr": 0.43,
+        "status": "APPROACHING"
+      },
+      {
+        "symbol": "EURNOK",
+        "shelf": "EMA233",
+        "dist_atr": 0.59,
+        "status": "PULLBACK"
+      }
+    ],
+    "next_h4_close_in_sec": 9473
+  }
+]

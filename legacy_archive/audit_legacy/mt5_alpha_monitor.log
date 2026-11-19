@@ -1,0 +1,689 @@
+2026-11-16 03:46:29,138 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 03:46:29,138 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 OPTIMAL ALPHA BASKET LIVE MONITOR
+2026-11-16 03:46:29,138 [INFO] [MT5_ALPHA_MONITOR] Risk per trade: $10.00 USD | Max Concurrency: 3
+2026-11-16 03:46:29,138 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 11 symbols across 7 uncorrelated clusters
+2026-11-16 03:46:29,138 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 03:46:29,150 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,666.19
+2026-11-16 03:46:29,150 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 60-second autonomous scanning loop...
+2026-11-16 04:39:38,308 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 04:39:38,308 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 OPTIMAL ALPHA BASKET LIVE MONITOR
+2026-11-16 04:39:38,308 [INFO] [MT5_ALPHA_MONITOR] Risk per trade: $10.00 USD | Max Concurrency: 3
+2026-11-16 04:39:38,308 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 13 symbols across 7 uncorrelated clusters
+2026-11-16 04:39:38,308 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 04:39:38,320 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,666.19
+2026-11-16 04:39:38,320 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 60-second autonomous scanning loop...
+2026-11-16 04:45:51,744 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 04:45:51,744 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 OPTIMAL ALPHA BASKET LIVE MONITOR
+2026-11-16 04:45:51,744 [INFO] [MT5_ALPHA_MONITOR] Risk per trade: $10.00 USD | Max Concurrency: 3
+2026-11-16 04:45:51,744 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 13 symbols across 7 uncorrelated clusters
+2026-11-16 04:45:51,744 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 04:45:51,756 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,666.19
+2026-11-16 04:45:51,756 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 60-second autonomous scanning loop...
+2026-11-16 05:39:33,167 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 05:39:33,168 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 OPTIMAL ALPHA BASKET LIVE MONITOR
+2026-11-16 05:39:33,168 [INFO] [MT5_ALPHA_MONITOR] Risk per trade: $10.00 USD | Max Concurrency: 3
+2026-11-16 05:39:33,168 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 13 symbols across 7 uncorrelated clusters
+2026-11-16 05:39:33,168 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 05:39:33,184 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,672.70
+2026-11-16 05:39:33,185 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 60-second autonomous scanning loop...
+2026-11-16 05:39:33,185 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] XAUUSD Ticket: 210199455 | SELL 0.01 lots @ 3900.52 | SL: 3916.5 | TP: 3865.0 | Risk: $15.98 | Cluster: Commodity_Energy
+2026-11-16 05:41:32,771 [INFO] [MT5_ALPHA_MONITOR] Loaded 1 active positions from state.
+2026-11-16 05:41:40,049 [INFO] [MT5_ALPHA_MONITOR] Loaded 1 active positions from state.
+2026-11-16 05:43:23,932 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 05:43:23,933 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 OPTIMAL ALPHA BASKET LIVE MONITOR
+2026-11-16 05:43:23,933 [INFO] [MT5_ALPHA_MONITOR] Risk per trade: $10.00 USD | Max Concurrency: 3
+2026-11-16 05:43:23,933 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 13 symbols across 7 uncorrelated clusters
+2026-11-16 05:43:23,933 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 05:43:23,946 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,675.34
+2026-11-16 05:43:23,947 [INFO] [MT5_ALPHA_MONITOR] Loaded 1 active positions from state.
+2026-11-16 05:43:23,947 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 60-second autonomous scanning loop...
+2026-11-16 06:33:24,549 [INFO] [MT5_ALPHA_MONITOR] 🏁 [BROKER POSITION CLOSED] XAUUSD Ticket: 210199455 resolved on MT5
+2026-11-16 10:35:12,600 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ Terminating old daemon instance PID 23980 to prevent split-brain collision.
+2026-11-16 10:35:13,602 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 10:35:13,603 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 EXPANDED 28-ALPHA UNIVERSE LIVE MONITOR
+2026-11-16 10:35:13,603 [INFO] [MT5_ALPHA_MONITOR] Risk per trade: $10.00 USD | Max Concurrency: 3
+2026-11-16 10:35:13,603 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 28 symbols across 8 uncorrelated clusters
+2026-11-16 10:35:13,603 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 10:35:13,603 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 10:35:13,618 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,701.64
+2026-11-16 10:35:13,618 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 10:35:13,618 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 12:03:48,712 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 12:03:48,712 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 EXPANDED 28-ALPHA UNIVERSE LIVE MONITOR
+2026-11-16 12:03:48,712 [INFO] [MT5_ALPHA_MONITOR] Risk per trade: $10.00 USD | Max Concurrency: 3
+2026-11-16 12:03:48,712 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 28 symbols across 8 uncorrelated clusters
+2026-11-16 12:03:48,712 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 12:03:48,712 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 12:03:48,721 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,701.64
+2026-11-16 12:03:48,722 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 12:03:48,722 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 13:12:20,501 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ Terminating old daemon instance PID 18404 to prevent split-brain collision.
+2026-11-16 13:12:21,502 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 13:12:21,502 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 EXPANDED 28-ALPHA UNIVERSE LIVE MONITOR
+2026-11-16 13:12:21,502 [INFO] [MT5_ALPHA_MONITOR] Risk per trade: $10.00 USD | Max Concurrency: 3
+2026-11-16 13:12:21,502 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 28 symbols across 8 uncorrelated clusters
+2026-11-16 13:12:21,503 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 13:12:21,503 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 13:12:21,514 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,701.64
+2026-11-16 13:12:21,515 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 13:12:21,515 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 13:31:35,255 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ Terminating old daemon instance PID 20684 to prevent split-brain collision.
+2026-11-16 13:31:36,257 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 13:31:36,257 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 EXPANDED 28-ALPHA UNIVERSE LIVE MONITOR
+2026-11-16 13:31:36,257 [INFO] [MT5_ALPHA_MONITOR] Risk per trade: $10.00 USD | Max Concurrency: 3
+2026-11-16 13:31:36,257 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 28 symbols across 8 uncorrelated clusters
+2026-11-16 13:31:36,257 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 13:31:36,258 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 13:31:36,270 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,701.64
+2026-11-16 13:31:36,271 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 13:31:36,271 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 13:39:51,953 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ Terminating old daemon instance PID 20896 to prevent split-brain collision.
+2026-11-16 13:39:52,954 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 13:39:52,954 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 EXPANDED 28-ALPHA UNIVERSE LIVE MONITOR
+2026-11-16 13:39:52,954 [INFO] [MT5_ALPHA_MONITOR] Risk per trade: $10.00 USD | Max Concurrency: 3
+2026-11-16 13:39:52,954 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 28 symbols across 8 uncorrelated clusters
+2026-11-16 13:39:52,955 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 13:39:52,955 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 13:39:52,966 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,701.64
+2026-11-16 13:39:52,967 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 13:39:52,967 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 14:06:27,402 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ Terminating old daemon instance PID 21932 to prevent split-brain collision.
+2026-11-16 14:06:28,403 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 14:06:28,403 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 EXPANDED 28-ALPHA UNIVERSE LIVE MONITOR
+2026-11-16 14:06:28,403 [INFO] [MT5_ALPHA_MONITOR] Risk per trade: $10.00 USD | Max Concurrency: 3
+2026-11-16 14:06:28,403 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 21 symbols across 8 uncorrelated clusters
+2026-11-16 14:06:28,403 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 14:06:28,403 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 14:06:28,413 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,701.64
+2026-11-16 14:06:28,413 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 14:06:28,413 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 15:29:58,857 [INFO] [MT5_ALPHA_MONITOR] 🚀 [SIGNAL DETECTED] BUY USDJPY | Lot: 0.05 | Entry: 159.564 | SL: 159.26588 | TP: 160.30931 | Risk: $9.34 | Setup: turbo_tri_tier
+2026-11-16 15:29:58,858 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ [API RESTRICTION] MT5 order_send returned: AutoTrading disabled by server
+2026-11-16 15:36:48,334 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ Terminating old daemon instance PID 23296 to prevent split-brain collision.
+2026-11-16 15:36:49,335 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 15:36:49,335 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 EXPANDED 28-ALPHA UNIVERSE LIVE MONITOR
+2026-11-16 15:36:49,335 [INFO] [MT5_ALPHA_MONITOR] Risk per trade: $10.00 USD | Max Concurrency: 3
+2026-11-16 15:36:49,335 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 21 symbols across 8 uncorrelated clusters
+2026-11-16 15:36:49,335 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 15:36:49,335 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 15:36:49,345 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,701.64
+2026-11-16 15:36:49,346 [INFO] [MT5_ALPHA_MONITOR] Loaded 1 active positions from state.
+2026-11-16 15:36:49,346 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 16:33:05,679 [INFO] [MT5_ALPHA_MONITOR] Loaded 1 active positions from state.
+2026-11-16 16:33:14,127 [INFO] [MT5_ALPHA_MONITOR] Loaded 1 active positions from state.
+2026-11-16 16:37:06,445 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ Terminating old daemon instance PID 17520 to prevent split-brain collision.
+2026-11-16 16:37:07,447 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 16:37:07,447 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 EXPANDED 28-ALPHA UNIVERSE LIVE MONITOR
+2026-11-16 16:37:07,447 [INFO] [MT5_ALPHA_MONITOR] Risk per trade: $10.00 USD | Max Concurrency: 3
+2026-11-16 16:37:07,447 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 21 symbols across 8 uncorrelated clusters
+2026-11-16 16:37:07,447 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 16:37:07,447 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 16:37:07,461 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,701.64
+2026-11-16 16:37:07,461 [INFO] [MT5_ALPHA_MONITOR] Loaded 1 active positions from state.
+2026-11-16 16:37:07,461 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 16:39:49,103 [INFO] [MT5_ALPHA_MONITOR] Loaded 1 active positions from state.
+2026-11-16 17:02:15,875 [INFO] [MT5_ALPHA_MONITOR] Loaded 1 active positions from state.
+2026-11-16 17:02:15,877 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] New server day 20773. Day anchor equity set to $4,701.64
+2026-11-16 17:03:27,063 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 17:03:27,063 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 ELITE ALPHA MONITOR WITH CRO RISK GOVERNANCE
+2026-11-16 17:03:27,063 [INFO] [MT5_ALPHA_MONITOR] Target Risk per trade: $10.00 USD | 1.1R Hard Cap: $11.00 USD
+2026-11-16 17:03:27,063 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 3 | Max per Cluster: 1
+2026-11-16 17:03:27,063 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 21 symbols across 8 uncorrelated clusters
+2026-11-16 17:03:27,063 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 17:03:27,063 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 17:03:27,079 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,701.64
+2026-11-16 17:03:27,080 [INFO] [MT5_ALPHA_MONITOR] Loaded 1 active positions from state.
+2026-11-16 17:03:27,080 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 17:03:27,080 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] New server day 20773. Day anchor equity set to $4,701.64
+2026-11-16 17:30:14,530 [INFO] [MT5_ALPHA_MONITOR] Loaded 1 active positions from state.
+2026-11-16 18:33:45,151 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 18:33:45,151 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 ELITE ALPHA MONITOR WITH CRO RISK GOVERNANCE
+2026-11-16 18:33:45,151 [INFO] [MT5_ALPHA_MONITOR] Target Risk per trade: $10.00 USD | 1.1R Hard Cap: $11.00 USD
+2026-11-16 18:33:45,151 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 3 | Max per Cluster: 1
+2026-11-16 18:33:45,151 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 21 symbols across 8 uncorrelated clusters
+2026-11-16 18:33:45,152 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 18:33:45,152 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 18:33:45,164 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,701.64
+2026-11-16 18:33:45,164 [INFO] [MT5_ALPHA_MONITOR] Loaded 1 active positions from state.
+2026-11-16 18:33:45,165 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 18:33:45,165 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] New server day 20773. Day anchor equity set to $4,701.64
+2026-11-16 18:33:45,165 [INFO] [MT5_ALPHA_MONITOR] 🏁 [BROKER POSITION CLOSED] USDJPY Ticket: 1794823198 resolved on MT5
+2026-11-16 18:36:39,233 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 18:36:39,234 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 ELITE ALPHA MONITOR WITH CRO RISK GOVERNANCE
+2026-11-16 18:36:39,234 [INFO] [MT5_ALPHA_MONITOR] Target Risk per trade: $10.00 USD | 1.1R Hard Cap: $11.00 USD
+2026-11-16 18:36:39,234 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 3 | Max per Cluster: 1
+2026-11-16 18:36:39,234 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 21 symbols across 8 uncorrelated clusters
+2026-11-16 18:36:39,234 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 18:36:39,234 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 18:36:39,248 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,701.64
+2026-11-16 18:36:39,249 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 18:36:39,249 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 18:36:39,249 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] New server day 20773. Day anchor equity set to $4,701.64
+2026-11-16 18:39:58,442 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 18:39:58,442 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 ELITE ALPHA MONITOR WITH CRO RISK GOVERNANCE
+2026-11-16 18:39:58,442 [INFO] [MT5_ALPHA_MONITOR] Target Risk per trade: $10.00 USD | 1.1R Hard Cap: $11.00 USD
+2026-11-16 18:39:58,442 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 3 | Max per Cluster: 1
+2026-11-16 18:39:58,442 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 25 symbols across 8 uncorrelated clusters
+2026-11-16 18:39:58,442 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 18:39:58,443 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 18:39:58,461 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,701.64
+2026-11-16 18:39:58,461 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 18:39:58,461 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 18:39:58,462 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] New server day 20773. Day anchor equity set to $4,701.64
+2026-11-16 18:40:21,134 [ERROR] [MT5_ALPHA_MONITOR] Error emitting health status: [Errno 22] Invalid argument: 'C:\\Users\\SIGMA\\Documents\\Delta_Fibonacci_Institutional_Business\\audit\\mt5_health_status.json'
+2026-11-16 18:57:57,287 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 18:57:57,287 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 ELITE ALPHA MONITOR WITH CRO RISK GOVERNANCE
+2026-11-16 18:57:57,287 [INFO] [MT5_ALPHA_MONITOR] Target Risk per trade: $10.00 USD | 1.1R Hard Cap: $11.00 USD
+2026-11-16 18:57:57,287 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-16 18:57:57,287 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 20 symbols across 8 uncorrelated clusters
+2026-11-16 18:57:57,287 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 18:57:57,287 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 18:57:57,299 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,701.64
+2026-11-16 18:57:57,300 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 18:57:57,300 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 18:57:57,300 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] New server day 20773. Day anchor equity set to $4,701.64
+2026-11-16 19:29:58,112 [INFO] [MT5_ALPHA_MONITOR] 🚀 [SIGNAL DETECTED] SELL USDCNH | Lot: 0.17 | Entry: 6.66587 | SL: 6.66968 | TP: 6.65444 | Risk: $9.72 | Setup: canonical
+2026-11-16 19:29:58,115 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ [API RESTRICTION] MT5 order_send returned: AutoTrading disabled by server
+2026-11-16 19:30:01,936 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:30:01,940 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:30:01,945 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:30:01,950 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:30:01,955 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:30:01,959 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:30:01,963 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:30:01,967 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:30:01,971 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:30:01,976 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:30:01,979 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:30:01,980 [INFO] [MT5_ALPHA_MONITOR] 🚀 [SIGNAL DETECTED] BUY USDJPY | Lot: 0.04 | Entry: 159.643 | SL: 159.28459 | TP: 160.53903 | Risk: $8.98 | Setup: turbo_tri_tier
+2026-11-16 19:30:01,980 [ERROR] [MT5_ALPHA_MONITOR] ❌ [ORDER REJECTED - NOT RECORDED] USDJPY retcode 10026: AutoTrading disabled by server
+2026-11-16 19:30:01,984 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:30:01,988 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:30:01,991 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:30:01,991 [INFO] [MT5_ALPHA_MONITOR] ⚠️ [FRICTION GATE BLOCKED] USDCNH spread 0.00064 is 16.8% of 1R (exceeds 15.0% institutional ceiling) - SKIP
+2026-11-16 19:30:01,995 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:53:20,729 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:53:20,730 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:53:25,156 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:53:25,158 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:53:25,159 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:53:25,160 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:53:25,167 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:53:30,773 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:53:30,774 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:53:35,187 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:53:35,189 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:53:35,189 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:53:35,191 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:53:35,195 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:53:40,795 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:53:40,796 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:53:45,220 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:53:45,222 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:53:45,223 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:53:45,224 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:53:45,229 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:53:50,816 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:53:50,818 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:53:55,254 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:53:55,256 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:53:55,256 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:53:55,258 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:53:55,261 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:00,840 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:54:00,841 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:54:05,283 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:54:05,285 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:05,285 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:54:05,286 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:05,289 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:10,859 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:54:10,860 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:54:15,307 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:54:15,309 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:15,309 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:54:15,311 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:15,314 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:20,879 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:54:20,880 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:54:25,334 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:54:25,336 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:25,336 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:54:25,337 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:25,340 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:30,898 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:54:30,899 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:54:35,361 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:54:35,363 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:35,363 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:54:35,364 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:35,368 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:40,920 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:54:40,921 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:54:45,389 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:54:45,391 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:45,391 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:54:45,392 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:45,396 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:50,942 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:54:50,943 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:54:55,415 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:54:55,416 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:55,417 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:54:55,418 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:54:55,421 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:00,961 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:55:00,962 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:55:05,442 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:55:05,443 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:05,444 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:55:05,445 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:05,448 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:11,028 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:55:11,029 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:55:15,472 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:55:15,474 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:15,474 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:55:15,475 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:15,480 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:21,047 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:55:21,048 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:55:25,510 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:55:25,512 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:25,512 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:55:25,513 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:25,517 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:31,067 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:55:31,068 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:55:35,574 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:55:35,576 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:35,577 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:55:35,578 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:35,584 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:41,087 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:55:41,088 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:55:45,610 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:55:45,612 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:45,612 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:55:45,613 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:45,616 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:51,110 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:55:51,111 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:55:55,636 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:55:55,638 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:55,638 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:55:55,639 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:55:55,643 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:56:01,129 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:56:01,130 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:56:05,663 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:56:05,665 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:56:05,665 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:56:05,667 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:56:05,671 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:56:11,152 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:56:11,153 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:56:15,698 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:56:15,699 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:56:15,700 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:56:15,701 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:56:15,705 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:56:21,178 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:56:21,179 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:56:25,725 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:56:25,727 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:56:25,727 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:56:25,728 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:56:25,731 [ERROR] [MT5_ALPHA_MONITOR] Error saving state atomically: Object of type int64 is not JSON serializable
+2026-11-16 19:56:31,203 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:56:31,204 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:56:41,227 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:56:41,228 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:56:51,252 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:56:51,253 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:57:01,270 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:57:01,271 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:57:11,290 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:57:11,291 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:57:21,307 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:57:21,308 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:57:31,325 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:57:31,325 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:57:41,384 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:57:41,385 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:57:51,409 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:57:51,410 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:58:01,428 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:58:01,429 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:58:11,447 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:58:11,448 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:58:21,473 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:58:21,474 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:58:22,370 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 19:58:22,370 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 ELITE ALPHA MONITOR WITH CRO RISK GOVERNANCE
+2026-11-16 19:58:22,371 [INFO] [MT5_ALPHA_MONITOR] Target Risk per trade: $10.00 USD | 1.1R Hard Cap: $11.00 USD
+2026-11-16 19:58:22,371 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-16 19:58:22,371 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 20 symbols across 8 uncorrelated clusters
+2026-11-16 19:58:22,371 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 19:58:22,371 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 19:58:22,384 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,705.03
+2026-11-16 19:58:22,384 [INFO] [MT5_ALPHA_MONITOR] Loaded 2 active positions from state.
+2026-11-16 19:58:22,385 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 19:58:22,385 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] New server day 20773. Day anchor equity set to $4,705.03
+2026-11-16 19:58:22,386 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $39.7 | Cluster: Indices
+2026-11-16 19:58:22,386 [INFO] [MT5_ALPHA_MONITOR] 🏁 [BROKER POSITION CLOSED] USDJPY Ticket: 1794823198 resolved on MT5
+2026-11-16 19:58:22,386 [INFO] [MT5_ALPHA_MONITOR] 🏁 [BROKER POSITION CLOSED] USDCNH Ticket: 1794837598 resolved on MT5
+2026-11-16 19:58:31,493 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:58:31,494 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:58:41,512 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:58:41,513 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:58:51,531 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:58:51,532 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:59:01,554 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:59:01,555 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:59:11,574 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:59:11,575 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 19:59:21,594 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $52.29 | Cluster: Indices
+2026-11-16 19:59:21,595 [INFO] [MT5_ALPHA_MONITOR] 🏁 [POSITION CLOSED] US30 Reason: TP_HIT | Result: -100.00R
+2026-11-16 20:00:22,424 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 20:00:22,424 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 ELITE ALPHA MONITOR WITH CRO RISK GOVERNANCE
+2026-11-16 20:00:22,424 [INFO] [MT5_ALPHA_MONITOR] Target Risk per trade: $10.00 USD | 1.1R Hard Cap: $11.00 USD
+2026-11-16 20:00:22,425 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-16 20:00:22,425 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 20 symbols across 8 uncorrelated clusters
+2026-11-16 20:00:22,425 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 20:00:22,425 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 20:00:22,435 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,700.33
+2026-11-16 20:00:22,436 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 20:00:22,436 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 20:00:22,436 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] New server day 20773. Day anchor equity set to $4,700.33
+2026-11-16 20:00:22,437 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] US30 Ticket: 210389716 | BUY 0.01 lots @ 52288.6 | SL: 0.0 | TP: 0.0 | Risk: $39.94 | Cluster: Indices
+2026-11-16 20:53:30,889 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 20:53:30,889 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 ELITE ALPHA MONITOR WITH CRO RISK GOVERNANCE
+2026-11-16 20:53:30,889 [INFO] [MT5_ALPHA_MONITOR] Target Risk per trade: $10.00 USD | 1.1R Hard Cap: $11.00 USD
+2026-11-16 20:53:30,889 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-16 20:53:30,889 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 20 symbols across 8 uncorrelated clusters
+2026-11-16 20:53:30,889 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 20:53:30,889 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 20:53:30,912 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,670.41
+2026-11-16 20:53:30,913 [INFO] [MT5_ALPHA_MONITOR] Loaded 1 active positions from state.
+2026-11-16 20:53:30,913 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 20:53:30,914 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] New server day 20773. Day anchor equity set to $4,670.41
+2026-11-16 20:53:30,914 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER SL UPDATE] US30 SL updated to 51952.19
+2026-11-16 20:53:30,914 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER TP UPDATE] US30 TP updated to 52859.83
+2026-11-16 20:55:11,192 [INFO] [MT5_ALPHA_MONITOR] 🏁 [BROKER POSITION CLOSED] US30 Ticket: 210389716 resolved on MT5
+2026-11-16 22:14:58,267 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 22:34:41,799 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ Terminating old daemon instance PID 25980 to prevent split-brain collision.
+2026-11-16 22:34:42,800 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 22:34:42,801 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 ELITE ALPHA MONITOR WITH CRO RISK GOVERNANCE
+2026-11-16 22:34:42,801 [INFO] [MT5_ALPHA_MONITOR] Target Risk per trade: $10.00 USD | 1.1R Hard Cap: $11.00 USD
+2026-11-16 22:34:42,801 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-16 22:34:42,801 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 20 symbols across 8 uncorrelated clusters
+2026-11-16 22:34:42,801 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 22:34:42,801 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 22:34:42,815 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,667.91
+2026-11-16 22:34:42,816 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 22:34:42,816 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 22:34:42,816 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] New server day 20773. Day anchor equity set to $4,667.91
+2026-11-16 22:34:42,981 [INFO] [MT5_ALPHA_MONITOR] 🚀 [SIGNAL DETECTED] BUY USDJPY | Lot: 0.1 | Entry: 159.625 | SL: 159.45774 | TP: 160.62859 | Risk: $10.48 | Setup: MODEL_2_RECLAIM_EMA50
+2026-11-16 22:34:42,981 [ERROR] [MT5_ALPHA_MONITOR] ❌ [ORDER REJECTED - NOT RECORDED] USDJPY retcode 10027: AutoTrading disabled by client
+2026-11-16 23:04:47,909 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 23:12:45,952 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 23:13:44,042 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 23:58:30,229 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ Terminating old daemon instance PID 18520 to prevent split-brain collision.
+2026-11-16 23:58:31,232 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 23:58:31,232 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 ELITE ALPHA MONITOR WITH CRO RISK GOVERNANCE
+2026-11-16 23:58:31,232 [INFO] [MT5_ALPHA_MONITOR] Target Risk per trade: $10.00 USD | 1.1R Hard Cap: $11.00 USD
+2026-11-16 23:58:31,232 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-16 23:58:31,232 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 20 symbols across 8 uncorrelated clusters
+2026-11-16 23:58:31,232 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-16 23:58:31,232 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-16 23:58:31,251 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,667.91
+2026-11-16 23:58:31,251 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-16 23:58:31,252 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-16 23:58:31,252 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] New server day 20773. Day anchor equity set to $4,667.91
+2026-11-17 03:33:25,740 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-17 03:33:25,742 [WARNING] [MT5_ALPHA_MONITOR] MT5 account_info() unavailable. Skipping sweep.
+2026-11-17 03:33:59,044 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-17 03:33:59,047 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] Server Day 20774. Anchor set to max(balance, equity) = $4,667.91
+2026-11-17 03:34:21,296 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ Terminating old daemon instance PID 24472 to prevent split-brain collision.
+2026-11-17 03:34:22,299 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-17 03:34:22,299 [INFO] [MT5_ALPHA_MONITOR] STARTING FUNDEDNEXT MT5 ELITE ALPHA MONITOR WITH CRO RISK GOVERNANCE
+2026-11-17 03:34:22,299 [INFO] [MT5_ALPHA_MONITOR] Target Risk per trade: $10.00 USD | 1.1R Hard Cap: $11.00 USD
+2026-11-17 03:34:22,300 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-17 03:34:22,300 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 20 symbols across 8 uncorrelated clusters
+2026-11-17 03:34:22,300 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-17 03:34:22,300 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-17 03:34:22,314 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (FundedNext-Server) | Login: 11808165 | Equity: $4,667.91
+2026-11-17 03:34:22,314 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-17 03:34:22,315 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-17 20:52:37,960 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-17 20:52:37,961 [INFO] [MT5_ALPHA_MONITOR] STARTING BLUEBERRY MARKETS MT5 ELITE ALPHA MONITOR WITH RISK GOVERNANCE
+2026-11-17 20:52:37,961 [INFO] [MT5_ALPHA_MONITOR] Target Risk: $5.00 USD (Min lot execution) | Max Cap: $6.00 USD
+2026-11-17 20:52:37,961 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-17 20:52:37,961 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 23 symbols across 6 uncorrelated clusters
+2026-11-17 20:52:37,961 [INFO] [MT5_ALPHA_MONITOR] Isolation Protocol: comment='fib_orders' | magic=202611
+2026-11-17 20:52:37,961 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-17 20:52:37,961 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-17 20:52:37,980 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (BlueberryMarketsSVG-Live) | Login: 5126976 | Equity: $2,499.96
+2026-11-17 20:52:37,981 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-17 20:52:37,981 [INFO] [MT5_ALPHA_MONITOR] Running single pass scan (--once mode)...
+2026-11-17 20:52:40,840 [INFO] [MT5_ALPHA_MONITOR] Single pass scan completed successfully.
+2026-11-17 21:21:17,275 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-17 21:21:17,275 [INFO] [MT5_ALPHA_MONITOR] STARTING BLUEBERRY MARKETS MT5 ELITE ALPHA MONITOR WITH RISK GOVERNANCE
+2026-11-17 21:21:17,275 [INFO] [MT5_ALPHA_MONITOR] Target Risk: $5.00 USD (Min lot execution) | Max Cap: $6.00 USD
+2026-11-17 21:21:17,275 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-17 21:21:17,276 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 23 symbols across 6 uncorrelated clusters
+2026-11-17 21:21:17,276 [INFO] [MT5_ALPHA_MONITOR] Isolation Protocol: comment='fib_orders' | magic=202611
+2026-11-17 21:21:17,276 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-17 21:21:17,276 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-17 21:21:17,288 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (BlueberryMarketsSVG-Live) | Login: 5126976 | Equity: $2,498.78
+2026-11-17 21:21:17,288 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-17 21:21:17,288 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-17 21:32:30,049 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-17 23:09:42,598 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ Terminating old daemon instance PID 16344 to prevent split-brain collision.
+2026-11-17 23:09:43,600 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-17 23:09:43,600 [INFO] [MT5_ALPHA_MONITOR] STARTING BLUEBERRY MARKETS MT5 ELITE ALPHA MONITOR WITH RISK GOVERNANCE
+2026-11-17 23:09:43,600 [INFO] [MT5_ALPHA_MONITOR] Target Risk: $10.00 USD (Min lot execution) | Max Cap: $12.00 USD
+2026-11-17 23:09:43,600 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-17 23:09:43,600 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 23 symbols across 6 uncorrelated clusters
+2026-11-17 23:09:43,600 [INFO] [MT5_ALPHA_MONITOR] Isolation Protocol: comment='fib_orders' | magic=202611
+2026-11-17 23:09:43,600 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-17 23:09:43,600 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-17 23:09:43,611 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (BlueberryMarketsSVG-Live) | Login: 5126976 | Equity: $2,507.70
+2026-11-17 23:09:43,612 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-17 23:09:43,612 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-18 01:19:27,436 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ Terminating old daemon instance PID 16324 to prevent split-brain collision.
+2026-11-18 01:19:28,439 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-18 01:19:28,440 [INFO] [MT5_ALPHA_MONITOR] STARTING BLUEBERRY MARKETS MT5 ELITE ALPHA MONITOR WITH RISK GOVERNANCE
+2026-11-18 01:19:28,440 [INFO] [MT5_ALPHA_MONITOR] Target Risk: $10.00 USD (Min lot execution) | Max Cap: $12.00 USD
+2026-11-18 01:19:28,440 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-18 01:19:28,440 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 23 symbols across 6 uncorrelated clusters
+2026-11-18 01:19:28,440 [INFO] [MT5_ALPHA_MONITOR] Isolation Protocol: comment='fib_orders' | magic=202611
+2026-11-18 01:19:28,440 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-18 01:19:28,440 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-18 01:19:28,461 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (BlueberryMarketsSVG-Live) | Login: 5126976 | Equity: $2,525.33
+2026-11-18 01:19:28,462 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-18 01:19:28,462 [INFO] [MT5_ALPHA_MONITOR] Running single pass scan (--once mode)...
+2026-11-18 01:19:28,563 [INFO] [MT5_ALPHA_MONITOR] Single pass scan completed successfully.
+2026-11-18 01:32:06,737 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-18 01:32:06,737 [INFO] [MT5_ALPHA_MONITOR] STARTING BLUEBERRY MARKETS MT5 ELITE ALPHA MONITOR WITH RISK GOVERNANCE
+2026-11-18 01:32:06,737 [INFO] [MT5_ALPHA_MONITOR] Target Risk: $10.00 USD (Min lot execution) | Max Cap: $12.00 USD
+2026-11-18 01:32:06,737 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-18 01:32:06,737 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 23 symbols across 6 uncorrelated clusters
+2026-11-18 01:32:06,737 [INFO] [MT5_ALPHA_MONITOR] Isolation Protocol: comment='fib_orders' | magic=202611
+2026-11-18 01:32:06,737 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-18 01:32:06,737 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-18 01:32:06,749 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (BlueberryMarketsSVG-Live) | Login: 5126976 | Equity: $2,529.55
+2026-11-18 01:32:06,750 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-18 01:32:06,750 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-18 02:24:35,650 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ Terminating old daemon instance PID 21892 to prevent split-brain collision.
+2026-11-18 02:24:36,652 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-18 02:24:36,652 [INFO] [MT5_ALPHA_MONITOR] STARTING BLUEBERRY MARKETS MT5 ELITE ALPHA MONITOR WITH RISK GOVERNANCE
+2026-11-18 02:24:36,652 [INFO] [MT5_ALPHA_MONITOR] Target Risk: $10.00 USD (Min lot execution) | Max Cap: $12.00 USD
+2026-11-18 02:24:36,652 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-18 02:24:36,652 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 23 symbols across 6 uncorrelated clusters
+2026-11-18 02:24:36,652 [INFO] [MT5_ALPHA_MONITOR] Isolation Protocol: comment='fib_orders' | magic=202611
+2026-11-18 02:24:36,652 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-18 02:24:36,652 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-18 02:24:36,666 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (BlueberryMarketsSVG-Live) | Login: 5126976 | Equity: $2,525.86
+2026-11-18 02:24:36,666 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-18 02:24:36,667 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-18 03:03:15,963 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-18 03:03:15,963 [INFO] [MT5_ALPHA_MONITOR] STARTING BLUEBERRY MARKETS MT5 ELITE ALPHA MONITOR WITH RISK GOVERNANCE
+2026-11-18 03:03:15,964 [INFO] [MT5_ALPHA_MONITOR] Target Risk: $10.00 USD (Min lot execution) | Max Cap: $12.00 USD
+2026-11-18 03:03:15,964 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-18 03:03:15,964 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 23 symbols across 6 uncorrelated clusters
+2026-11-18 03:03:15,964 [INFO] [MT5_ALPHA_MONITOR] Isolation Protocol: comment='fib_orders' | magic=202611
+2026-11-18 03:03:15,964 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-18 03:03:15,964 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-18 03:03:15,977 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (BlueberryMarketsSVG-Live) | Login: 5126976 | Equity: $2,513.22
+2026-11-18 03:03:15,978 [INFO] [MT5_ALPHA_MONITOR] Loaded 0 active positions from state.
+2026-11-18 03:03:15,978 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-18 03:30:04,528 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] Server Day 20775. Anchor set to max(balance, equity) = $2,523.36
+2026-11-18 04:29:54,926 [INFO] [MT5_ALPHA_MONITOR] ⚠️ [FRICTION GATE BLOCKED] USDCAD.pi spread 0.00061 is 34.7% of 1R (exceeds 15.0% institutional ceiling) - SKIP
+2026-11-18 05:29:53,790 [WARNING] [MT5_ALPHA_MONITOR] [NAS100.p] Lot calculation returned 0 (CALCULATED RISK $37.24 > $12.00 cap - SKIP)
+2026-11-18 05:29:53,850 [WARNING] [MT5_ALPHA_MONITOR] [GBPNOK.pi] Lot calculation returned 0 (CALCULATED RISK $12.55 > $12.00 cap - SKIP)
+2026-11-18 06:29:52,636 [WARNING] [MT5_ALPHA_MONITOR] [NAS100.p] Lot calculation returned 0 (CALCULATED RISK $36.35 > $12.00 cap - SKIP)
+2026-11-18 07:29:51,913 [INFO] [MT5_ALPHA_MONITOR] 🚀 [SIGNAL DETECTED] SELL NZDSGD.pi | Lot: 0.01 | Entry: 0.7083 | SL: 0.7099 | TP: 0.7027 | Risk: $1.24 | Setup: MODEL_1_PULLBACK_EMA100
+2026-11-18 07:29:52,387 [INFO] [MT5_ALPHA_MONITOR] ✅ [MT5 AUTO-FILL SUCCESS] NZDSGD.pi Ticket: 20236066 @ 0.7083
+2026-11-18 09:29:59,670 [INFO] [MT5_ALPHA_MONITOR] 🚀 [SIGNAL DETECTED] BUY USDCAD.pi | Lot: 0.01 | Entry: 1.4309 | SL: 1.42935 | TP: 1.43633 | Risk: $1.08 | Setup: MODEL_1_PULLBACK_EMA55
+2026-11-18 09:30:00,209 [INFO] [MT5_ALPHA_MONITOR] ✅ [MT5 AUTO-FILL SUCCESS] USDCAD.pi Ticket: 20239250 @ 1.4309
+2026-11-18 11:05:27,173 [WARNING] [MT5_ALPHA_MONITOR] ⚠️ Terminating old daemon instance PID 18976 to prevent split-brain collision.
+2026-11-18 11:05:28,174 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-18 11:05:28,174 [INFO] [MT5_ALPHA_MONITOR] STARTING BLUEBERRY MARKETS MT5 ELITE ALPHA MONITOR WITH RISK GOVERNANCE
+2026-11-18 11:05:28,174 [INFO] [MT5_ALPHA_MONITOR] Target Risk: $5.00 USD (Min lot fallback) | Max Cap: $40.00 USD
+2026-11-18 11:05:28,174 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-18 11:05:28,174 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 23 symbols across 6 uncorrelated clusters
+2026-11-18 11:05:28,175 [INFO] [MT5_ALPHA_MONITOR] Isolation Protocol: comment='fib_orders' | magic=202611
+2026-11-18 11:05:28,175 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-18 11:05:28,175 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-18 11:05:28,186 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (BlueberryMarketsSVG-Live) | Login: 5126976 | Equity: $2,589.22
+2026-11-18 11:05:28,186 [INFO] [MT5_ALPHA_MONITOR] Loaded 2 active positions from state.
+2026-11-18 11:05:28,187 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-18 11:05:28,188 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] Server Day 20775. Anchor set to max(balance, equity) = $2,589.22
+2026-11-18 17:08:49,404 [INFO] [MT5_ALPHA_MONITOR] Loaded 2 active positions from state.
+2026-11-18 17:10:34,011 [INFO] [MT5_ALPHA_MONITOR] Loaded 2 active positions from state.
+2026-11-18 17:14:51,355 [INFO] [MT5_ALPHA_MONITOR] Loaded 2 active positions from state.
+2026-11-18 18:02:03,668 [INFO] [MT5_ALPHA_MONITOR] Loaded 2 active positions from state.
+2026-11-18 19:04:16,768 [INFO] [MT5_ALPHA_MONITOR] Loaded 2 active positions from state.
+2026-11-18 19:29:54,467 [INFO] [MT5_ALPHA_MONITOR] 🚀 [SIGNAL DETECTED] SELL USWTI.p | Lot: 0.06 | Entry: 85.134 | SL: 85.96596 | TP: 80.14221 | Risk: $4.99 | Setup: MODEL_1_PULLBACK_EMA50
+2026-11-18 19:29:54,990 [INFO] [MT5_ALPHA_MONITOR] ✅ [MT5 AUTO-FILL SUCCESS] USWTI.p Ticket: 20263241 @ 85.134
+2026-11-18 19:30:05,042 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER SL UPDATE] USWTI.p SL updated to 85.966
+2026-11-18 19:30:05,042 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER TP UPDATE] USWTI.p TP updated to 80.142
+2026-11-18 20:02:34,591 [INFO] [MT5_ALPHA_MONITOR] Loaded 3 active positions from state.
+2026-11-18 20:42:04,812 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER SL UPDATE] USWTI.p SL updated to 85.55
+2026-11-18 21:01:54,665 [INFO] [MT5_ALPHA_MONITOR] Loaded 3 active positions from state.
+2026-11-18 22:01:09,860 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 84.294 (MFE: +1.51R | Mode: trail_0.5r)
+2026-11-18 22:01:20,059 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 84.26 (MFE: +1.55R | Mode: trail_0.5r)
+2026-11-18 22:01:28,364 [INFO] [MT5_ALPHA_MONITOR] Loaded 3 active positions from state.
+2026-11-18 22:01:30,229 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 84.244 (MFE: +1.57R | Mode: trail_0.5r)
+2026-11-18 22:01:40,419 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 84.235 (MFE: +1.58R | Mode: trail_0.5r)
+2026-11-18 22:02:00,609 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 84.186 (MFE: +1.64R | Mode: trail_0.5r)
+2026-11-18 22:02:30,898 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 84.169 (MFE: +1.66R | Mode: trail_0.5r)
+2026-11-18 22:15:02,515 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 84.061 (MFE: +1.79R | Mode: trail_0.5r)
+2026-11-18 22:15:12,675 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 84.011 (MFE: +1.85R | Mode: trail_0.5r)
+2026-11-18 22:15:32,887 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.969 (MFE: +1.9R | Mode: trail_0.5r)
+2026-11-18 22:18:33,346 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.936 (MFE: +1.94R | Mode: trail_0.5r)
+2026-11-18 22:19:53,637 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.903 (MFE: +1.98R | Mode: trail_0.5r)
+2026-11-18 22:20:03,801 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.844 (MFE: +2.05R | Mode: trail_0.5r)
+2026-11-18 22:20:13,970 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.82 (MFE: +2.08R | Mode: trail_0.5r)
+2026-11-18 22:20:34,174 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.811 (MFE: +2.09R | Mode: trail_0.5r)
+2026-11-18 22:20:44,332 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.778 (MFE: +2.13R | Mode: trail_0.5r)
+2026-11-18 22:20:54,493 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.77 (MFE: +2.14R | Mode: trail_0.5r)
+2026-11-18 22:21:04,659 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.736 (MFE: +2.18R | Mode: trail_0.5r)
+2026-11-18 22:21:34,847 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.711 (MFE: +2.21R | Mode: trail_0.5r)
+2026-11-18 22:21:55,025 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.695 (MFE: +2.23R | Mode: trail_0.5r)
+2026-11-18 22:22:05,186 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.67 (MFE: +2.26R | Mode: trail_0.5r)
+2026-11-18 22:22:45,428 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.628 (MFE: +2.31R | Mode: trail_0.5r)
+2026-11-18 22:22:55,595 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.57 (MFE: +2.38R | Mode: trail_0.5r)
+2026-11-18 22:23:05,794 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.553 (MFE: +2.4R | Mode: trail_0.5r)
+2026-11-18 22:23:15,965 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.528 (MFE: +2.43R | Mode: trail_0.5r)
+2026-11-18 22:23:26,126 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.512 (MFE: +2.45R | Mode: trail_0.5r)
+2026-11-18 22:23:36,286 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.495 (MFE: +2.47R | Mode: trail_0.5r)
+2026-11-18 22:26:46,793 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.428 (MFE: +2.55R | Mode: trail_0.5r)
+2026-11-18 22:27:37,014 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.412 (MFE: +2.57R | Mode: trail_0.5r)
+2026-11-18 22:27:47,184 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.32 (MFE: +2.68R | Mode: trail_0.5r)
+2026-11-18 22:27:57,363 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.295 (MFE: +2.71R | Mode: trail_0.5r)
+2026-11-18 22:29:57,744 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.279 (MFE: +2.73R | Mode: trail_0.5r)
+2026-11-18 22:30:08,047 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.254 (MFE: +2.76R | Mode: trail_0.5r)
+2026-11-18 22:30:18,219 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.196 (MFE: +2.83R | Mode: trail_0.5r)
+2026-11-18 22:30:28,392 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.187 (MFE: +2.84R | Mode: trail_0.5r)
+2026-11-18 22:30:38,622 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.129 (MFE: +2.91R | Mode: trail_0.5r)
+2026-11-18 22:30:48,789 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.079 (MFE: +2.97R | Mode: trail_0.5r)
+2026-11-18 22:30:58,950 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.062 (MFE: +2.99R | Mode: trail_0.5r)
+2026-11-18 22:31:09,110 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 83.046 (MFE: +3.01R | Mode: trail_0.5r)
+2026-11-18 22:31:19,269 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 82.996 (MFE: +3.07R | Mode: trail_0.5r)
+2026-11-18 22:31:29,434 [INFO] [MT5_ALPHA_MONITOR] 🛡️ [BROKER TRAIL ADVANCED] USWTI.p Ticket: 20263241 New SL: 82.971 (MFE: +3.1R | Mode: trail_0.5r)
+2026-11-18 22:58:02,443 [INFO] [MT5_ALPHA_MONITOR] 🏁 [BROKER POSITION RESOLVED] USWTI.p Ticket: 20263241 | Reason: SL_HIT | Exit: 82.976 | Net PnL: $12.94 | R: +2.59R
+2026-11-18 23:02:53,802 [INFO] [MT5_ALPHA_MONITOR] Loaded 2 active positions from state.
+2026-11-18 23:14:37,426 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-18 23:14:37,426 [INFO] [MT5_ALPHA_MONITOR] STARTING BLUEBERRY MARKETS MT5 ELITE ALPHA MONITOR WITH RISK GOVERNANCE
+2026-11-18 23:14:37,426 [INFO] [MT5_ALPHA_MONITOR] Target Risk: $5.00 USD (Min lot fallback) | Max Cap: $40.00 USD
+2026-11-18 23:14:37,426 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-18 23:14:37,426 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 23 symbols across 6 uncorrelated clusters
+2026-11-18 23:14:37,426 [INFO] [MT5_ALPHA_MONITOR] Isolation Protocol: comment='fib_orders' | magic=202611
+2026-11-18 23:14:37,426 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-18 23:14:37,426 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-18 23:14:37,437 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (BlueberryMarketsSVG-Live) | Login: 5126976 | Equity: $2,603.20
+2026-11-18 23:14:37,437 [INFO] [MT5_ALPHA_MONITOR] Loaded 2 active positions from state.
+2026-11-18 23:14:37,438 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-18 23:29:52,253 [INFO] [MT5_ALPHA_MONITOR] 🚀 [SIGNAL DETECTED] SELL NAS100.p | Lot: 0.01 | Entry: 27062.45 | SL: 27328.12143 | TP: 25468.42143 | Risk: $26.57 | Setup: MODEL_1_PULLBACK_EMA55
+2026-11-18 23:29:52,687 [INFO] [MT5_ALPHA_MONITOR] ✅ [MT5 AUTO-FILL SUCCESS] NAS100.p Ticket: 20274831 @ 27062.45
+2026-11-18 23:29:52,729 [INFO] [MT5_ALPHA_MONITOR] 🚀 [SIGNAL DETECTED] SELL XLMUSD.p | Lot: 0.1 | Entry: 0.13872 | SL: 0.14104 | TP: 0.13061 | Risk: $23.16 | Setup: MODEL_2_RECLAIM_EMA65
+2026-11-18 23:29:53,097 [INFO] [MT5_ALPHA_MONITOR] ✅ [MT5 AUTO-FILL SUCCESS] XLMUSD.p Ticket: 20274832 @ 0.13872
+2026-11-18 23:30:03,109 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER SL UPDATE] NAS100.p SL updated to 27328.12
+2026-11-18 23:30:03,109 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER TP UPDATE] NAS100.p TP updated to 25468.42
+2026-11-19 00:01:09,404 [INFO] [MT5_ALPHA_MONITOR] Loaded 4 active positions from state.
+2026-11-19 01:01:02,536 [INFO] [MT5_ALPHA_MONITOR] Loaded 4 active positions from state.
+2026-11-19 02:00:42,059 [INFO] [MT5_ALPHA_MONITOR] Loaded 4 active positions from state.
+2026-11-19 03:00:40,945 [INFO] [MT5_ALPHA_MONITOR] Loaded 4 active positions from state.
+2026-11-19 03:30:05,703 [INFO] [MT5_ALPHA_MONITOR] 🌅 [GOVERNOR 00:00 SERVER RESET] Server Day 20776. Anchor set to max(balance, equity) = $2,619.29
+2026-11-19 04:00:49,714 [INFO] [MT5_ALPHA_MONITOR] Loaded 4 active positions from state.
+2026-11-19 04:00:49,818 [INFO] [MT5_ALPHA_MONITOR] ⚠️ [FRICTION GATE BLOCKED] USDCAD.pi spread 0.00041 is 25.0% of 1R (exceeds 15.0% institutional ceiling) - SKIP
+2026-11-19 04:52:59,920 [INFO] [MT5_ALPHA_MONITOR] 🏁 [BROKER POSITION RESOLVED] NAS100.p Ticket: 20274831 | Reason: SL_HIT | Exit: 27328.29 | Net PnL: $-26.64 | R: -1.00R
+2026-11-19 05:00:45,572 [INFO] [MT5_ALPHA_MONITOR] Loaded 3 active positions from state.
+2026-11-19 05:29:56,222 [INFO] [MT5_ALPHA_MONITOR] 🚀 [SIGNAL DETECTED] SELL JP225.p | Lot: 0.12 | Entry: 59002.0 | SL: 59649.84786 | TP: 55114.91286 | Risk: $4.88 | Setup: MODEL_1_PULLBACK_EMA65
+2026-11-19 05:29:56,689 [INFO] [MT5_ALPHA_MONITOR] ✅ [MT5 AUTO-FILL SUCCESS] JP225.p Ticket: 20279252 @ 59002.0
+2026-11-19 05:30:06,764 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER SL UPDATE] JP225.p SL updated to 59649.85
+2026-11-19 05:30:06,764 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER TP UPDATE] JP225.p TP updated to 55114.91
+2026-11-19 06:03:05,450 [INFO] [MT5_ALPHA_MONITOR] Loaded 4 active positions from state.
+2026-11-19 06:20:59,740 [INFO] [MT5_ALPHA_MONITOR] 🏁 [BROKER POSITION RESOLVED] JP225.p Ticket: 20279252 | Reason: SL_HIT | Exit: 59651.0 | Net PnL: $-4.94 | R: -1.00R
+2026-11-19 07:00:47,238 [INFO] [MT5_ALPHA_MONITOR] Loaded 3 active positions from state.
+2026-11-19 08:00:57,897 [INFO] [MT5_ALPHA_MONITOR] Loaded 3 active positions from state.
+2026-11-19 09:00:47,983 [INFO] [MT5_ALPHA_MONITOR] Loaded 3 active positions from state.
+2026-11-19 10:00:44,228 [INFO] [MT5_ALPHA_MONITOR] Loaded 3 active positions from state.
+2026-11-19 11:35:31,528 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-19 11:35:31,528 [INFO] [MT5_ALPHA_MONITOR] STARTING BLUEBERRY MARKETS MT5 ELITE ALPHA MONITOR WITH RISK GOVERNANCE
+2026-11-19 11:35:31,528 [INFO] [MT5_ALPHA_MONITOR] Target Risk: $5.00 USD (Min lot fallback) | Max Cap: $40.00 USD
+2026-11-19 11:35:31,528 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-19 11:35:31,528 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 23 symbols across 6 uncorrelated clusters
+2026-11-19 11:35:31,528 [INFO] [MT5_ALPHA_MONITOR] Isolation Protocol: comment='fib_orders' | magic=202611
+2026-11-19 11:35:31,528 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-19 11:35:31,528 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-19 11:35:31,540 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (BlueberryMarketsSVG-Live) | Login: 5126976 | Equity: $2,589.86
+2026-11-19 11:35:31,541 [INFO] [MT5_ALPHA_MONITOR] Loaded 3 active positions from state.
+2026-11-19 11:35:31,541 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-19 12:00:33,959 [INFO] [MT5_ALPHA_MONITOR] Loaded 3 active positions from state.
+2026-11-19 13:00:30,395 [INFO] [MT5_ALPHA_MONITOR] Loaded 3 active positions from state.
+2026-11-19 13:27:05,393 [INFO] [MT5_ALPHA_MONITOR] 🏁 [BROKER POSITION RESOLVED] NZDSGD.pi Ticket: 20236066 | Reason: SL_HIT | Exit: 0.7099 | Net PnL: $-1.47 | R: -1.00R
+2026-11-19 18:46:40,446 [INFO] [MT5_ALPHA_MONITOR] 🏁 [BROKER POSITION RESOLVED] USDCAD.pi Ticket: 20239250 | Reason: SL_HIT | Exit: 1.42935 | Net PnL: $-1.11 | R: -1.00R
+2026-11-19 18:46:40,489 [INFO] [MT5_ALPHA_MONITOR] 🚀 [SIGNAL DETECTED] BUY EURUSD.pi | Lot: 0.03 | Entry: 1.09923 | SL: 1.09763 | TP: 1.10885 | Risk: $4.81 | Setup: MODEL_1_PULLBACK_EMA55
+2026-11-19 18:46:41,020 [INFO] [MT5_ALPHA_MONITOR] ✅ [MT5 AUTO-FILL SUCCESS] EURUSD.pi Ticket: 20304057 @ 1.09923
+2026-11-19 19:17:51,512 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-19 19:17:51,513 [INFO] [MT5_ALPHA_MONITOR] STARTING BLUEBERRY MARKETS MT5 ELITE ALPHA MONITOR WITH RISK GOVERNANCE
+2026-11-19 19:17:51,513 [INFO] [MT5_ALPHA_MONITOR] Target Risk: $5.00 USD (Min lot fallback) | Max Cap: $40.00 USD
+2026-11-19 19:17:51,513 [INFO] [MT5_ALPHA_MONITOR] Max Concurrency: 4 | Max per Cluster: 1
+2026-11-19 19:17:51,513 [INFO] [MT5_ALPHA_MONITOR] Target Assets: 23 symbols across 6 uncorrelated clusters
+2026-11-19 19:17:51,513 [INFO] [MT5_ALPHA_MONITOR] Isolation Protocol: comment='fib_orders' | magic=202611
+2026-11-19 19:17:51,513 [INFO] [MT5_ALPHA_MONITOR] High-Speed Tick & Bar Scan Loop: 10s interval
+2026-11-19 19:17:51,513 [INFO] [MT5_ALPHA_MONITOR] ================================================================================
+2026-11-19 19:17:51,527 [INFO] [MT5_ALPHA_MONITOR] Connected to MT5: MetaTrader 5 (BlueberryMarketsSVG-Live) | Login: 5126976 | Equity: $2,568.42
+2026-11-19 19:17:51,527 [INFO] [MT5_ALPHA_MONITOR] Loaded 2 active positions from state.
+2026-11-19 19:17:51,528 [INFO] [MT5_ALPHA_MONITOR] Entering continuous 10-second autonomous scanning loop...
+2026-11-19 19:29:48,073 [INFO] [MT5_ALPHA_MONITOR] 🚀 [SIGNAL DETECTED] SELL GBPJPY.pi | Lot: 0.01 | Entry: 210.329 | SL: 211.09807 | TP: 208.40632 | Risk: $4.81 | Setup: MODEL_1_PULLBACK_EMA160
+2026-11-19 19:29:48,567 [INFO] [MT5_ALPHA_MONITOR] ✅ [MT5 AUTO-FILL SUCCESS] GBPJPY.pi Ticket: 20306391 @ 210.329
+2026-11-19 19:29:54,004 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER POSITION] GBPJPY.pi Ticket: 20306391 | SELL 0.01 lots @ 210.329 | SL: 211.098 | TP: 208.406 | Risk: $4.81 | Cluster: Forex_JPY
+2026-11-19 19:29:58,602 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER SL UPDATE] GBPJPY.pi SL updated to 211.098
+2026-11-19 19:29:58,603 [INFO] [MT5_ALPHA_MONITOR] 🔄 [SYNCED BROKER TP UPDATE] GBPJPY.pi TP updated to 208.406
+2026-11-19 20:35:50,050 [INFO] [MT5_ALPHA_MONITOR] 🏁 [BROKER POSITION RESOLVED] EURUSD.pi Ticket: 20304057 | Reason: BROKER_CLOSE | Exit: 1.09915 | Net PnL: $-0.42 | R: -0.05R
+2026-11-19 20:35:55,813 [INFO] [MT5_ALPHA_MONITOR] 🏁 [BROKER POSITION RESOLVED] EURUSD.pi Ticket: 20304057 | Reason: BROKER_CLOSE | Exit: 1.09915 | Net PnL: $-0.42 | R: -0.05R

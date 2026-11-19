@@ -1,0 +1,12 @@
+symbol,cluster,setup,exit_mode,trades,net_r,max_dd,calmar,win_rate
+US30,Indices,wyckoff_institutional_filtered,fixed_3.5,36,34.2,4.2,8.14,44.4
+BABA,US_Equities,turbo_tri_tier,step_trail,16,22.42,3.15,7.12,62.5
+AUDJPY,Forex_JPY,wyckoff_institutional_filtered,fixed_2.5,49,18.55,4.2,4.42,40.8
+ZARJPY,Forex_JPY,turbo_tri_tier,fixed_2.5,51,26.95,5.25,5.13,45.1
+ETHUSD,Crypto,wyckoff_institutional_filtered,step_trail,20,30.33,5.85,5.18,55.0
+CADJPY,Forex_JPY,wyckoff_swing_sweep,fixed_3.0,56,21.2,6.3,3.37,35.7
+MC,EU_Equities,canonical,fixed_3.5,36,16.2,6.3,2.57,33.3
+USDCHF,Forex_USD,wyckoff_institutional_filtered,fixed_3.0,44,25.8,6.3,4.1,40.9
+XAGUSD,Commodity_Energy,turbo_tri_tier,step_trail,105,42.68,16.11,2.65,41.0
+HK50,Indices,wyckoff_institutional_filtered,fixed_2.5,42,8.4,11.2,0.75,35.7
+USDJPY,Forex_JPY,turbo_tri_tier,fixed_2.5,135,43.75,7.35,5.95,39.3
