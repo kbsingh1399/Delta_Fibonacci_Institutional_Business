@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-11-20 17:50:57 UTC",
+  "timestamp_utc": "2026-11-20 18:48:49 UTC",
   "quarantine_map": {
     "XAUUSD.pi:1H:VWAP_M2_LONG": "Excessive Dollar Volatility: 1H Gold ATR creates single-trade stop risk > $10. Restrict to 5M/15M.",
     "USDCHF.pi:4H:VWAP_M2_LONG": "Severe Bleed: Net PnL $-3.28 with low win rate (0.0%).",
@@ -12,6 +12,7 @@
     "USWTI.p:1H:VWAP_0_LONG": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited.",
     "USWTI.p:4H:VWAP_M2_LONG": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited.",
     "NZDSGD.pi:5M:VWAP_0_SHORT": "Toxic Drift: 3 trades, 0 wins, net PnL $-1.38 (0% Win Rate).",
+    "USWTI.p:5M:EMA20_BOUNCE": "Toxic Drift: 3 trades, 0 wins, net PnL $-1.15 (0% Win Rate).",
     "USWTI.p:1H:VWAP_M2_LONG": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited.",
     "USWTI.p:1H:VWAP_M2_TWO_BAR_BULLISH": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited.",
     "USWTI.p:15M:VWAP_0_LONG": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited.",

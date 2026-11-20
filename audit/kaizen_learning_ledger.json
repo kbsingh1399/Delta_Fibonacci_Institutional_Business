@@ -1,8 +1,8 @@
 {
-  "timestamp_utc": "2026-11-20 17:50:57 UTC",
-  "total_alpha_trades": 100,
-  "total_setups_evaluated": 56,
-  "quarantined_count": 15,
+  "timestamp_utc": "2026-11-20 18:48:49 UTC",
+  "total_alpha_trades": 105,
+  "total_setups_evaluated": 57,
+  "quarantined_count": 16,
   "champions_count": 5,
   "quarantine_keys": [
     "XAUUSD.pi:1H:VWAP_M2_LONG",
@@ -16,6 +16,7 @@
     "USWTI.p:1H:VWAP_0_LONG",
     "USWTI.p:4H:VWAP_M2_LONG",
     "NZDSGD.pi:5M:VWAP_0_SHORT",
+    "USWTI.p:5M:EMA20_BOUNCE",
     "USWTI.p:1H:VWAP_M2_LONG",
     "USWTI.p:1H:VWAP_M2_TWO_BAR_BULLISH",
     "USWTI.p:15M:VWAP_0_LONG",
@@ -197,6 +198,22 @@
       "net_pnl": -1.38,
       "status": "QUARANTINED",
       "quarantine_reason": "Toxic Drift: 3 trades, 0 wins, net PnL $-1.38 (0% Win Rate)."
+    },
+    {
+      "key": "USWTI.p:5M:EMA20_BOUNCE",
+      "symbol": "USWTI.p",
+      "tf": "5M",
+      "setup": "EMA20_BOUNCE",
+      "trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_win": 0.0,
+      "gross_loss": 1.15,
+      "net_pnl": -1.15,
+      "status": "QUARANTINED",
+      "quarantine_reason": "Toxic Drift: 3 trades, 0 wins, net PnL $-1.15 (0% Win Rate)."
     },
     {
       "key": "USWTI.p:1H:VWAP_M2_LONG",
@@ -539,22 +556,6 @@
       "quarantine_reason": ""
     },
     {
-      "key": "USWTI.p:5M:EMA20_REJECTION",
-      "symbol": "USWTI.p",
-      "tf": "5M",
-      "setup": "EMA20_REJECTION",
-      "trades": 3,
-      "wins": 2,
-      "losses": 0,
-      "win_rate": 66.7,
-      "profit_factor": 99.0,
-      "gross_win": 0.45,
-      "gross_loss": 0.0,
-      "net_pnl": 0.45,
-      "status": "ACTIVE",
-      "quarantine_reason": ""
-    },
-    {
       "key": "NZDSGD.pi:5M:VWAP_0_PINBAR_KISS",
       "symbol": "NZDSGD.pi",
       "tf": "5M",
@@ -571,6 +572,22 @@
       "quarantine_reason": ""
     },
     {
+      "key": "NZDSGD.pi:5M:VWAP_M2_LONG",
+      "symbol": "NZDSGD.pi",
+      "tf": "5M",
+      "setup": "VWAP_M2_LONG",
+      "trades": 3,
+      "wins": 3,
+      "losses": 0,
+      "win_rate": 100.0,
+      "profit_factor": 99.0,
+      "gross_win": 0.34,
+      "gross_loss": 0.0,
+      "net_pnl": 0.34,
+      "status": "ACTIVE",
+      "quarantine_reason": ""
+    },
+    {
       "key": "GBPNOK.pi:15M:VWAP_P2_SHORT",
       "symbol": "GBPNOK.pi",
       "tf": "15M",
@@ -583,22 +600,6 @@
       "gross_win": 0.32,
       "gross_loss": 0.0,
       "net_pnl": 0.32,
-      "status": "ACTIVE",
-      "quarantine_reason": ""
-    },
-    {
-      "key": "NZDSGD.pi:5M:VWAP_M2_LONG",
-      "symbol": "NZDSGD.pi",
-      "tf": "5M",
-      "setup": "VWAP_M2_LONG",
-      "trades": 1,
-      "wins": 1,
-      "losses": 0,
-      "win_rate": 100.0,
-      "profit_factor": 99.0,
-      "gross_win": 0.26,
-      "gross_loss": 0.0,
-      "net_pnl": 0.26,
       "status": "ACTIVE",
       "quarantine_reason": ""
     },
@@ -715,6 +716,22 @@
       "quarantine_reason": ""
     },
     {
+      "key": "USWTI.p:5M:EMA20_REJECTION",
+      "symbol": "USWTI.p",
+      "tf": "5M",
+      "setup": "EMA20_REJECTION",
+      "trades": 4,
+      "wins": 2,
+      "losses": 1,
+      "win_rate": 50.0,
+      "profit_factor": 0.96,
+      "gross_win": 0.45,
+      "gross_loss": 0.47,
+      "net_pnl": -0.02,
+      "status": "ACTIVE",
+      "quarantine_reason": ""
+    },
+    {
       "key": "EURUSD.pi:15M:VWAP_M2_DOUBLE_TAP_BULLISH",
       "symbol": "EURUSD.pi",
       "tf": "15M",
@@ -811,6 +828,22 @@
       "quarantine_reason": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited."
     },
     {
+      "key": "NZDSGD.pi:5M:VWAP_M2_TWO_BAR_BULLISH",
+      "symbol": "NZDSGD.pi",
+      "tf": "5M",
+      "setup": "VWAP_M2_TWO_BAR_BULLISH",
+      "trades": 1,
+      "wins": 0,
+      "losses": 1,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_win": 0.0,
+      "gross_loss": 0.34,
+      "net_pnl": -0.34,
+      "status": "ACTIVE",
+      "quarantine_reason": ""
+    },
+    {
       "key": "USWTI.p:15M:VWAP_0_PINBAR_KISS",
       "symbol": "USWTI.p",
       "tf": "15M",
@@ -891,22 +924,6 @@
       "quarantine_reason": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited."
     },
     {
-      "key": "USWTI.p:5M:EMA20_BOUNCE",
-      "symbol": "USWTI.p",
-      "tf": "5M",
-      "setup": "EMA20_BOUNCE",
-      "trades": 2,
-      "wins": 0,
-      "losses": 2,
-      "win_rate": 0.0,
-      "profit_factor": 0.0,
-      "gross_win": 0.0,
-      "gross_loss": 0.7,
-      "net_pnl": -0.7,
-      "status": "ACTIVE",
-      "quarantine_reason": ""
-    },
-    {
       "key": "EURUSD.pi:15M:VWAP_P2_TWO_BAR_BEARISH",
       "symbol": "EURUSD.pi",
       "tf": "15M",
@@ -985,6 +1002,22 @@
       "net_pnl": -1.1,
       "status": "QUARANTINED",
       "quarantine_reason": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited."
+    },
+    {
+      "key": "USWTI.p:5M:EMA20_BOUNCE",
+      "symbol": "USWTI.p",
+      "tf": "5M",
+      "setup": "EMA20_BOUNCE",
+      "trades": 3,
+      "wins": 0,
+      "losses": 3,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_win": 0.0,
+      "gross_loss": 1.15,
+      "net_pnl": -1.15,
+      "status": "QUARANTINED",
+      "quarantine_reason": "Toxic Drift: 3 trades, 0 wins, net PnL $-1.15 (0% Win Rate)."
     },
     {
       "key": "USDJPY.pi:1H:EMA50_TWO_BAR_BULLISH",
