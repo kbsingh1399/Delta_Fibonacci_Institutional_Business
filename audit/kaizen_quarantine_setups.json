@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-11-20 14:40:33 UTC",
+  "timestamp_utc": "2026-11-20 14:52:27 UTC",
   "quarantine_map": {
     "XAUUSD.pi:1H:VWAP_M2_LONG": "Excessive Dollar Volatility: 1H Gold ATR creates single-trade stop risk > $10. Restrict to 5M/15M.",
     "USDCHF.pi:4H:VWAP_M2_LONG": "Severe Bleed: Net PnL $-3.28 with low win rate (0.0%).",

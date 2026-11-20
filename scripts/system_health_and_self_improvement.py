@@ -32,6 +32,7 @@ AUDIT_DIR = os.path.join(BASE_DIR, "audit")
 os.makedirs(AUDIT_DIR, exist_ok=True)
 
 from engine.kaizen_self_improvement import evaluate_kaizen_trade_attribution
+from engine.kaizen_agent_bridge import run_kaizen_agent_suite, format_kaizen_agent_report_section
 
 HEALTH_REPORT_FILE = os.path.join(AUDIT_DIR, "CRON_HEALTH_REPORT.md")
 SELF_IMPROVING_LEDGER_FILE = os.path.join(AUDIT_DIR, "self_improvement_ledger.json")
@@ -215,7 +216,8 @@ def generate_markdown_report(
     runner_res: Dict[str, Any],
     acc_res: Dict[str, Any],
     history: List[Dict[str, Any]],
-    kaizen_res: Dict[str, Any]
+    kaizen_res: Dict[str, Any],
+    kaizen_agent_res: Dict[str, Any] = None
 ) -> str:
     """Generates a comprehensive executive health and adaptive learning markdown document."""
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -250,6 +252,8 @@ def generate_markdown_report(
     else:
         c_rows.append("| *None* | `$0.00` | `0%` | `0.00` | Accumulating trade samples. |")
     c_table = "\n".join(c_rows)
+
+    kaizen_agent_section = format_kaizen_agent_report_section(kaizen_agent_res) if kaizen_agent_res else ""
 
     md = f"""# Autonomous Institutional Trading Desk — Hourly Health & Adaptation Report
 **Generated:** `{now_str}`  
@@ -314,6 +318,10 @@ def generate_markdown_report(
 1. **Via Negativa Execution**: The fastest way to increase portfolio Sharpe ratio is cutting toxic bleed. The live runner strictly refuses entry on quarantined setups.
 2. **Macro Trend Alignment**: Counter-trend mean reversion entries during established directional regimes (e.g., Oil longs during macro sell-offs) are permanently vetoed.
 3. **Volatility Sizing Disconnect**: 1H Gold ATR requires >$10 dollar stop distance on minimum lots, creating disproportionate risk. Restricting Gold exclusively to 5M/15M ensures tight risk-reward asymmetry.
+
+---
+
+{kaizen_agent_section}
 """
     with open(HEALTH_REPORT_FILE, "w", encoding="utf-8") as f:
         f.write(md)
@@ -333,13 +341,15 @@ def run_health_and_self_improvement():
 
     history = update_self_improving_ledger(acc_res)
     kaizen_res = evaluate_kaizen_trade_attribution()
-    report_md = generate_markdown_report(term_res, runner_res, acc_res, history, kaizen_res)
+    kaizen_agent_res = run_kaizen_agent_suite()
+    report_md = generate_markdown_report(term_res, runner_res, acc_res, history, kaizen_res, kaizen_agent_res)
 
     print(f"Terminal Server : {'OK' if term_res.get('ok') else 'FAIL'}")
     print(f"Live Runner     : {'OK' if runner_res.get('ok') else 'FAIL'}")
     print(f"MT5 Account     : Balance=${acc_res.get('balance'):,.2f} | Equity=${acc_res.get('equity'):,.2f}")
     print(f"24h Realized PnL: ${acc_res.get('total_realized_profit_24h'):+,.2f} (PF: {acc_res.get('profit_factor_24h')})")
     print(f"Kaizen Setups   : {kaizen_res.get('total_setups_evaluated')} evaluated | {kaizen_res.get('quarantined_count')} Quarantined | {kaizen_res.get('champions_count')} Champions")
+    print(f"Kaizen Agent    : {kaizen_agent_res.get('passed_tests')}/{kaizen_agent_res.get('total_tests')} Passed (Score: {'100%' if kaizen_agent_res.get('success') else 'Partial'})")
     print(f"Report written to: {HEALTH_REPORT_FILE}")
     print("=" * 70)
 

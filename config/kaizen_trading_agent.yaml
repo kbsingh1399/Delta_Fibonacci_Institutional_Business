@@ -1,0 +1,64 @@
+name: Institutional Kaizen Trading Agent Evaluation
+language: python
+file_path: engine/kaizen_self_improvement.py
+description: |
+  Kaizen Agent autonomous test suite for institutional trading setup evaluation.
+  Validates that negative expectancy, excessive volatility, and macro regime violating
+  setups are rigorously quarantined (Via Negativa), while prime champions are permitted.
+
+agent:
+  module: engine.kaizen_self_improvement
+  class: KaizenTradingAgent
+  method: evaluate_setup
+
+evaluation:
+  evaluation_targets:
+    - name: quarantine_precision
+      source: return
+      criteria: "The evaluate_setup method must return True for quarantined setups (Oil longs, 1H Gold, toxic bleeders) and False for statistical champions."
+      description: "Evaluates the accuracy of the trade avoidance quarantine filter"
+      weight: 1.0
+
+files_to_fix:
+  - engine/kaizen_self_improvement.py
+
+steps:
+  - name: Macro Oil Bear Regime Long Veto
+    description: "Verify that counter-trend oil longs are quarantined"
+    input:
+      input: "USWTI.p:4H:VWAP_M2_LONG"
+    assertions:
+      - type: equals
+        expected: true
+
+  - name: Macro Oil 5M Bullish Veto
+    description: "Verify that oil 5M bullish setups are quarantined in bear regime"
+    input:
+      input: "USWTI.p:5M:VWAP_M2_TWO_BAR_BULLISH"
+    assertions:
+      - type: equals
+        expected: true
+
+  - name: Gold 1H Volatility Risk Cap Veto
+    description: "Verify that 1H Gold is quarantined due to excessive dollar stop distance"
+    input:
+      input: "XAUUSD.pi:1H:VWAP_M2_LONG"
+    assertions:
+      - type: equals
+        expected: true
+
+  - name: EURUSD 15M Champion Setup Permitted
+    description: "Verify that EURUSD 15M Bullish champion is permitted (not quarantined)"
+    input:
+      input: "EURUSD.pi:15M:VWAP_M2_TWO_BAR_BULLISH"
+    assertions:
+      - type: equals
+        expected: false
+
+  - name: NZDSGD 5M Champion Setup Permitted
+    description: "Verify that NZDSGD 5M champion is permitted (not quarantined)"
+    input:
+      input: "NZDSGD.pi:5M:VWAP_0_LONG"
+    assertions:
+      - type: equals
+        expected: false

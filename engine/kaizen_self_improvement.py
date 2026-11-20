@@ -245,6 +245,46 @@ def check_kaizen_quarantine(symbol: str, tf: str, setup_name: str) -> Tuple[bool
     return False, ""
 
 
+class KaizenTradingAgent:
+    """Agent entry point for Kaizen-agent autonomous test & continuous improvement framework.
+    Evaluates setups against active quarantine ledgers and macro invariant vetoes.
+    """
+
+    def __init__(self):
+        pass
+
+    def evaluate_setup(self, setup_query: str) -> bool:
+        """Evaluates whether a setup should be QUARANTINED (True) or PERMITTED (False).
+        Input format: 'SYMBOL:TIMEFRAME:SETUP_NAME' (e.g. 'USWTI.p:4H:VWAP_M2_LONG')
+        Returns True if quarantined/avoided, False if safe/permitted.
+        """
+        parts = setup_query.split(":")
+        if len(parts) >= 3:
+            sym, tf, setup = parts[0], parts[1], ":".join(parts[2:])
+        else:
+            return False
+        is_q, _ = check_kaizen_quarantine(sym, tf, setup)
+        return is_q
+
+    def get_setup_verdict(self, setup_query: str) -> Dict[str, Any]:
+        """Detailed verdict returning disposition, risk classification, and reason."""
+        parts = setup_query.split(":")
+        if len(parts) >= 3:
+            sym, tf, setup = parts[0], parts[1], ":".join(parts[2:])
+        else:
+            return {"quarantined": False, "reason": "Invalid format", "key": setup_query}
+        is_q, reason = check_kaizen_quarantine(sym, tf, setup)
+        return {
+            "key": setup_query,
+            "symbol": sym,
+            "tf": tf,
+            "setup": setup,
+            "quarantined": is_q,
+            "status": "QUARANTINED" if is_q else "PERMITTED_CHAMPION",
+            "reason": reason if is_q else "Active Champion / Permitted Setup"
+        }
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     res = evaluate_kaizen_trade_attribution()

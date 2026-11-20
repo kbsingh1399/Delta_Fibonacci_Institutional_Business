@@ -37,6 +37,9 @@ desktop.ini
 # Data
 FundedNext_Data/
 
+# Tools and external repos
+tools/
+
 # Audit runtime logs and process locks
 audit/*.log
 audit/*.pid
