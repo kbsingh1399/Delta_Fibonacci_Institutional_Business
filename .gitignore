@@ -44,3 +44,4 @@ audit/mt5_*.json
 audit/mt5_multicriteria_*.log
 audit/mt5_multicriteria_live_ledger.csv
 audit/trade_cooldowns.json
+audit/self_improvement_ledger.json
