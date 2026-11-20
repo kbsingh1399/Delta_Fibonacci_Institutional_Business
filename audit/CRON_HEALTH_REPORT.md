@@ -1,5 +1,5 @@
 # Autonomous Institutional Trading Desk — Hourly Health & Adaptation Report
-**Generated:** `2026-11-20 14:38:10 UTC`  
+**Generated:** `2026-11-20 14:40:33 UTC`  
 **Operating Server:** `BlueberryMarketsSVG-Live` | **Login:** `5126976`
 
 ---
@@ -8,29 +8,29 @@
 | Component | Status | Details |
 | :--- | :--- | :--- |
 | **Next.js Terminal Server (:3000)** | ✅ ONLINE (200 OK) | Serving 228 live assets |
-| **MT5 Live Multi-Criteria Runner** | ✅ ONLINE (PIDs: [14136, 23452]) | 15 Symbols / 18 Institutional Alpha Setups |
+| **MT5 Live Multi-Criteria Runner** | ✅ ONLINE (PIDs: [14136, 19716, 23452, 25240]) | 15 Symbols / 18 Institutional Alpha Setups |
 | **Positions without SL Guard** | ✅ 0 Missing (Protected) | Strict risk invariance enforced |
 
 ---
 
 ## 2. Real-Time Account Telemetry & Solvency
 * **Account Balance:** `$2,621.59`
-* **Account Equity:** `$2,636.86`
-* **Free Margin:** `$1,466.04` (Solvency Buffer: `55.6%`)
-* **Open Positions:** `28` active orders
+* **Account Equity:** `$2,635.93`
+* **Free Margin:** `$1,468.68` (Solvency Buffer: `55.7%`)
+* **Open Positions:** `29` active orders
 
 ---
 
 ## 3. Performance Breakdown (Dedicated Alpha_ Engine vs Account Total)
 | Performance Metric | Dedicated Alpha_ Engine | Other Account Trades (Manual/Swing) | Account Total (24h) |
 | :--- | :--- | :--- | :--- |
-| **Closed Deals** | `76` trades | `5` trades | `81` trades |
-| **Net Realized Profit** | `$+1.34` | `$+88.61` | `$+89.95` |
-| **Win / Loss Record** | `28W / 48L` | - | `31W / 50L` |
-| **Win Rate** | `36.8%` | - | `38.3%` |
-| **Profit Factor** | `1.02` | - | `2.45` |
-| **Active Open Positions** | `26` (Unrealized: `$+11.13`) | `2` | `28` |
-* **Equity Trend:** `+$-8.53 (+-0.32%) over 13 recorded cycle(s)`
+| **Closed Deals** | `77` trades | `5` trades | `82` trades |
+| **Net Realized Profit** | `$+2.66` | `$+88.61` | `$+91.27` |
+| **Win / Loss Record** | `29W / 48L` | - | `32W / 50L` |
+| **Win Rate** | `37.7%` | - | `39.0%` |
+| **Profit Factor** | `1.04` | - | `2.47` |
+| **Active Open Positions** | `27` (Unrealized: `$+8.07`) | `2` | `29` |
+* **Equity Trend:** `+$-9.46 (+-0.36%) over 14 recorded cycle(s)`
 
 ---
 
@@ -43,9 +43,9 @@
 ---
 
 ## 5. Kaizen Continuous Improvement & Trade Avoidance (改善)
-* **Evaluated Dataset:** `76` closed Alpha trades forensically attributed across `50` distinct `(Symbol, TF, Setup)` factors.
+* **Evaluated Dataset:** `77` closed Alpha trades forensically attributed across `50` distinct `(Symbol, TF, Setup)` factors.
 * **Active Quarantine Avoidance List:** `15` setups dynamically blocked from execution.
-* **Prime Champion Portfolio:** `4` setups demonstrating statistical positive expectancy ($PF \ge 1.50$, $WR \ge 50\%$).
+* **Prime Champion Portfolio:** `4` setups demonstrating statistical positive expectancy ($PF >= 1.50$, $WR >= 50%$).
 
 ### 🛑 Actively Quarantined / Avoided Setups (Via Negativa Pruning):
 | Factor (Symbol:TF:Setup) | Realized PnL | Win Rate | Kaizen Quarantine Diagnosis & Avoidance Rule |
@@ -62,8 +62,8 @@
 ### ⭐ Prime Champion Setups (Positive Expectancy Drivers):
 | Factor (Symbol:TF:Setup) | Realized PnL | Win Rate | Profit Factor | Status |
 | :--- | :--- | :--- | :--- | :--- |
+| `EURUSD.pi:15M:VWAP_M2_TWO_BAR_BULLISH` | `$+2.70` | `80.0%` (4W/1L) | `6.09` | ⭐ **PRIME CHAMPION** |
 | `EURUSD.pi:15M:VWAP_P1_LONG` | `$+2.14` | `100.0%` (2W/0L) | `99.00` | ⭐ **PRIME CHAMPION** |
-| `EURUSD.pi:15M:VWAP_M2_TWO_BAR_BULLISH` | `$+1.38` | `75.0%` (3W/1L) | `3.60` | ⭐ **PRIME CHAMPION** |
 | `EURUSD.pi:15M:VWAP_P2_SHORT` | `$+1.36` | `75.0%` (3W/1L) | `3.06` | ⭐ **PRIME CHAMPION** |
 | `NZDSGD.pi:5M:VWAP_0_LONG` | `$+0.81` | `66.7%` (2W/1L) | `3.45` | ⭐ **PRIME CHAMPION** |
 
