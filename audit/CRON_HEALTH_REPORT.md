@@ -1,5 +1,5 @@
 # Autonomous Institutional Trading Desk — Hourly Health & Adaptation Report
-**Generated:** `2026-11-20 12:13:40 UTC`  
+**Generated:** `2026-11-20 13:13:32 UTC`  
 **Operating Server:** `BlueberryMarketsSVG-Live` | **Login:** `5126976`
 
 ---
@@ -14,23 +14,23 @@
 ---
 
 ## 2. Real-Time Account Telemetry & Solvency
-* **Account Balance:** `$2,631.41`
-* **Account Equity:** `$2,648.19`
-* **Free Margin:** `$1,994.25` (Solvency Buffer: `75.3%`)
-* **Open Positions:** `20` active orders
+* **Account Balance:** `$2,628.70`
+* **Account Equity:** `$2,639.79`
+* **Free Margin:** `$1,675.05` (Solvency Buffer: `63.5%`)
+* **Open Positions:** `18` active orders
 
 ---
 
 ## 3. Performance Breakdown (Dedicated Alpha_ Engine vs Account Total)
 | Performance Metric | Dedicated Alpha_ Engine | Other Account Trades (Manual/Swing) | Account Total (24h) |
 | :--- | :--- | :--- | :--- |
-| **Closed Deals** | `69` trades | `5` trades | `74` trades |
-| **Net Realized Profit** | `$+4.52` | `$+88.61` | `$+93.13` |
-| **Win / Loss Record** | `24W / 45L` | - | `27W / 47L` |
-| **Win Rate** | `34.8%` | - | `36.5%` |
-| **Profit Factor** | `1.08` | - | `2.62` |
-| **Active Open Positions** | `18` (Unrealized: `$+4.51`) | `2` | `20` |
-* **Equity Trend:** `+$2.80 (+0.11%) over 10 recorded cycle(s)`
+| **Closed Deals** | `73` trades | `5` trades | `78` trades |
+| **Net Realized Profit** | `$+2.01` | `$+88.61` | `$+90.62` |
+| **Win / Loss Record** | `26W / 47L` | - | `29W / 49L` |
+| **Win Rate** | `35.6%` | - | `37.2%` |
+| **Profit Factor** | `1.03` | - | `2.49` |
+| **Active Open Positions** | `16` (Unrealized: `$+5.69`) | `2` | `18` |
+* **Equity Trend:** `+$-5.60 (+-0.21%) over 11 recorded cycle(s)`
 
 ---
 
