@@ -1,5 +1,5 @@
 # Autonomous Institutional Trading Desk — Hourly Health & Adaptation Report
-**Generated:** `2026-11-20 14:52:00 UTC`  
+**Generated:** `2026-11-20 15:48:51 UTC`  
 **Operating Server:** `BlueberryMarketsSVG-Live` | **Login:** `5126976`
 
 ---
@@ -14,23 +14,23 @@
 ---
 
 ## 2. Real-Time Account Telemetry & Solvency
-* **Account Balance:** `$2,620.73`
-* **Account Equity:** `$2,635.43`
-* **Free Margin:** `$1,478.12` (Solvency Buffer: `56.1%`)
-* **Open Positions:** `27` active orders
+* **Account Balance:** `$2,645.83`
+* **Account Equity:** `$2,656.71`
+* **Free Margin:** `$2,167.17` (Solvency Buffer: `81.6%`)
+* **Open Positions:** `23` active orders
 
 ---
 
 ## 3. Performance Breakdown (Dedicated Alpha_ Engine vs Account Total)
 | Performance Metric | Dedicated Alpha_ Engine | Other Account Trades (Manual/Swing) | Account Total (24h) |
 | :--- | :--- | :--- | :--- |
-| **Closed Deals** | `77` trades | `5` trades | `82` trades |
-| **Net Realized Profit** | `$+2.66` | `$+88.61` | `$+91.27` |
-| **Win / Loss Record** | `29W / 48L` | - | `32W / 50L` |
-| **Win Rate** | `37.7%` | - | `39.0%` |
-| **Profit Factor** | `1.04` | - | `2.47` |
-| **Active Open Positions** | `25` (Unrealized: `$+7.02`) | `2` | `27` |
-* **Equity Trend:** `+$-9.96 (+-0.38%) over 15 recorded cycle(s)`
+| **Closed Deals** | `82` trades | `4` trades | `86` trades |
+| **Net Realized Profit** | `$-7.16` | `$+89.69` | `$+82.53` |
+| **Win / Loss Record** | `31W / 51L` | - | `34W / 52L` |
+| **Win Rate** | `37.8%` | - | `39.5%` |
+| **Profit Factor** | `0.9` | - | `2.15` |
+| **Active Open Positions** | `22` (Unrealized: `$+9.60`) | `1` | `23` |
+* **Equity Trend:** `+$11.32 (+0.43%) over 16 recorded cycle(s)`
 
 ---
 
@@ -43,27 +43,27 @@
 ---
 
 ## 5. Kaizen Continuous Improvement & Trade Avoidance (改善)
-* **Evaluated Dataset:** `77` closed Alpha trades forensically attributed across `50` distinct `(Symbol, TF, Setup)` factors.
-* **Active Quarantine Avoidance List:** `15` setups dynamically blocked from execution.
+* **Evaluated Dataset:** `82` closed Alpha trades forensically attributed across `53` distinct `(Symbol, TF, Setup)` factors.
+* **Active Quarantine Avoidance List:** `16` setups dynamically blocked from execution.
 * **Prime Champion Portfolio:** `4` setups demonstrating statistical positive expectancy ($PF >= 1.50$, $WR >= 50%$).
 
 ### 🛑 Actively Quarantined / Avoided Setups (Via Negativa Pruning):
 | Factor (Symbol:TF:Setup) | Realized PnL | Win Rate | Kaizen Quarantine Diagnosis & Avoidance Rule |
 | :--- | :--- | :--- | :--- |
 | `XAUUSD.pi:1H:VWAP_M2_LONG` | `$-18.47` | `0.0%` (0W/1L) | 🛑 **QUARANTINED**: Excessive Dollar Volatility: 1H Gold ATR creates single-trade stop risk > $10. Restrict to 5M/15M. |
+| `XAUUSD.pi:5M:EMA200_BOUNCE` | `$-8.16` | `0.0%` (0W/1L) | 🛑 **QUARANTINED**: Severe Bleed: Net PnL $-8.16 with low win rate (0.0%). |
 | `USDCHF.pi:4H:VWAP_M2_LONG` | `$-3.28` | `0.0%` (0W/1L) | 🛑 **QUARANTINED**: Severe Bleed: Net PnL $-3.28 with low win rate (0.0%). |
 | `GBPNOK.pi:5M:VWAP_P1_LONG` | `$-3.06` | `0.0%` (0W/1L) | 🛑 **QUARANTINED**: Severe Bleed: Net PnL $-3.06 with low win rate (0.0%). |
 | `XRPUSD.pi:4H:EMA20_BOUNCE` | `$-3.00` | `0.0%` (0W/1L) | 🛑 **QUARANTINED**: Severe Bleed: Net PnL $-3.00 with low win rate (0.0%). |
 | `USDCHF.pi:4H:VWAP_M2_TWO_BAR_BULLISH` | `$-2.96` | `0.0%` (0W/1L) | 🛑 **QUARANTINED**: Severe Bleed: Net PnL $-2.96 with low win rate (0.0%). |
 | `USDJPY.pi:4H:VWAP_M2_LONG` | `$-2.74` | `0.0%` (0W/1L) | 🛑 **QUARANTINED**: Severe Bleed: Net PnL $-2.74 with low win rate (0.0%). |
 | `GBPNOK.pi:15M:VWAP_P2_TWO_BAR_BEARISH` | `$-2.31` | `0.0%` (0W/2L) | 🛑 **QUARANTINED**: Toxic Drift: 2 trades, 0 wins, net PnL $-2.31 (0% Win Rate). |
-| `USWTI.p:4H:VWAP_M2_LONG` | `$-1.97` | `0.0%` (0W/1L) | 🛑 **QUARANTINED**: Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited. |
 
 ### ⭐ Prime Champion Setups (Positive Expectancy Drivers):
 | Factor (Symbol:TF:Setup) | Realized PnL | Win Rate | Profit Factor | Status |
 | :--- | :--- | :--- | :--- | :--- |
+| `EURUSD.pi:15M:VWAP_P1_LONG` | `$+3.35` | `100.0%` (3W/0L) | `99.00` | ⭐ **PRIME CHAMPION** |
 | `EURUSD.pi:15M:VWAP_M2_TWO_BAR_BULLISH` | `$+2.70` | `80.0%` (4W/1L) | `6.09` | ⭐ **PRIME CHAMPION** |
-| `EURUSD.pi:15M:VWAP_P1_LONG` | `$+2.14` | `100.0%` (2W/0L) | `99.00` | ⭐ **PRIME CHAMPION** |
 | `EURUSD.pi:15M:VWAP_P2_SHORT` | `$+1.36` | `75.0%` (3W/1L) | `3.06` | ⭐ **PRIME CHAMPION** |
 | `NZDSGD.pi:5M:VWAP_0_LONG` | `$+0.81` | `66.7%` (2W/1L) | `3.45` | ⭐ **PRIME CHAMPION** |
 
@@ -77,7 +77,7 @@
 ### 🧪 Kaizen Agent Framework Verification (✅ PASSED)
 * **Suite Name:** `Institutional Kaizen Trading Agent Evaluation`
 * **Target Spec:** [`kaizen.yaml`](file:///c:/Users/SIGMA/Documents/Delta_Fibonacci_Institutional_Business/kaizen.yaml) → [`engine/kaizen_self_improvement.py`](file:///c:/Users/SIGMA/Documents/Delta_Fibonacci_Institutional_Business/engine/kaizen_self_improvement.py)
-* **Score:** `5/5 Passed` (`0.656s` execution)
+* **Score:** `5/5 Passed` (`0.623s` execution)
 
 | Test Invariant | Expected | Actual | Outcome |
 | :--- | :--- | :--- | :--- |
