@@ -25,8 +25,13 @@ import psutil
 import MetaTrader5 as mt5
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
 AUDIT_DIR = os.path.join(BASE_DIR, "audit")
 os.makedirs(AUDIT_DIR, exist_ok=True)
+
+from engine.kaizen_self_improvement import evaluate_kaizen_trade_attribution
 
 HEALTH_REPORT_FILE = os.path.join(AUDIT_DIR, "CRON_HEALTH_REPORT.md")
 SELF_IMPROVING_LEDGER_FILE = os.path.join(AUDIT_DIR, "self_improvement_ledger.json")
@@ -209,7 +214,8 @@ def generate_markdown_report(
     terminal_res: Dict[str, Any],
     runner_res: Dict[str, Any],
     acc_res: Dict[str, Any],
-    history: List[Dict[str, Any]]
+    history: List[Dict[str, Any]],
+    kaizen_res: Dict[str, Any]
 ) -> str:
     """Generates a comprehensive executive health and adaptive learning markdown document."""
     now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -224,6 +230,26 @@ def generate_markdown_report(
 
     term_status = "✅ ONLINE (200 OK)" if terminal_res.get("ok") else f"❌ OFFLINE ({terminal_res.get('error')})"
     runner_status = f"✅ ONLINE (PIDs: {runner_res.get('active_pids')})" if runner_res.get("ok") else "❌ OFFLINE"
+
+    # Format Kaizen sections
+    quarantine_list = kaizen_res.get("quarantine_details", [])
+    champion_list = kaizen_res.get("champions_details", [])
+
+    q_rows = []
+    if quarantine_list:
+        for q in quarantine_list[:8]:
+            q_rows.append(f"| `{q['key']}` | `${q['net_pnl']:+,.2f}` | `{q['win_rate']:.1f}%` ({q['wins']}W/{q['losses']}L) | 🛑 **QUARANTINED**: {q['quarantine_reason']} |")
+    else:
+        q_rows.append("| *None* | `$0.00` | `0%` | Zero active setups currently quarantined. |")
+    q_table = "\n".join(q_rows)
+
+    c_rows = []
+    if champion_list:
+        for c in champion_list[:8]:
+            c_rows.append(f"| `{c['key']}` | `${c['net_pnl']:+,.2f}` | `{c['win_rate']:.1f}%` ({c['wins']}W/{c['losses']}L) | `{c['profit_factor']:.2f}` | ⭐ **PRIME CHAMPION** |")
+    else:
+        c_rows.append("| *None* | `$0.00` | `0%` | `0.00` | Accumulating trade samples. |")
+    c_table = "\n".join(c_rows)
 
     md = f"""# Autonomous Institutional Trading Desk — Hourly Health & Adaptation Report
 **Generated:** `{now_str}`  
@@ -265,7 +291,29 @@ def generate_markdown_report(
 * **Dynamic Trailing Stops:** Active ratchets locking profit at MFE >= 1.0R (+0.05R BE) and MFE >= 1.5R trailing.
 * **Friction Calibration:** Spread guard set to $0.12R$, blocking illiquid spikes and protecting execution quality.
 * **Rollover Window Guard:** Auto-pauses entries during daily 21:55–22:15 UTC interbank spread expansion.
-* **Adaptive Recommendation:** Portfolio health is robust, capital solvency is pristine, and forward expectancy is positive. Maintain current 18-champion execution configuration.
+* **Adaptive Recommendation:** Portfolio health is robust, capital solvency is pristine, and forward expectancy is positive.
+
+---
+
+## 5. Kaizen Continuous Improvement & Trade Avoidance (改善)
+* **Evaluated Dataset:** `{kaizen_res.get('total_alpha_trades', 0)}` closed Alpha trades forensically attributed across `{kaizen_res.get('total_setups_evaluated', 0)}` distinct `(Symbol, TF, Setup)` factors.
+* **Active Quarantine Avoidance List:** `{kaizen_res.get('quarantined_count', 0)}` setups dynamically blocked from execution.
+* **Prime Champion Portfolio:** `{kaizen_res.get('champions_count', 0)}` setups demonstrating statistical positive expectancy ($PF >= 1.50$, $WR >= 50%$).
+
+### 🛑 Actively Quarantined / Avoided Setups (Via Negativa Pruning):
+| Factor (Symbol:TF:Setup) | Realized PnL | Win Rate | Kaizen Quarantine Diagnosis & Avoidance Rule |
+| :--- | :--- | :--- | :--- |
+{q_table}
+
+### ⭐ Prime Champion Setups (Positive Expectancy Drivers):
+| Factor (Symbol:TF:Setup) | Realized PnL | Win Rate | Profit Factor | Status |
+| :--- | :--- | :--- | :--- | :--- |
+{c_table}
+
+### 🧠 Kaizen Quantitative Directives Enforced:
+1. **Via Negativa Execution**: The fastest way to increase portfolio Sharpe ratio is cutting toxic bleed. The live runner strictly refuses entry on quarantined setups.
+2. **Macro Trend Alignment**: Counter-trend mean reversion entries during established directional regimes (e.g., Oil longs during macro sell-offs) are permanently vetoed.
+3. **Volatility Sizing Disconnect**: 1H Gold ATR requires >$10 dollar stop distance on minimum lots, creating disproportionate risk. Restricting Gold exclusively to 5M/15M ensures tight risk-reward asymmetry.
 """
     with open(HEALTH_REPORT_FILE, "w", encoding="utf-8") as f:
         f.write(md)
@@ -275,7 +323,7 @@ def generate_markdown_report(
 
 def run_health_and_self_improvement():
     print("=" * 70)
-    print("AUTONOMOUS DESK HEALTH & SELF-IMPROVING AUDIT")
+    print("AUTONOMOUS DESK HEALTH & KAIZEN SELF-IMPROVING AUDIT")
     print(f"Timestamp: {datetime.now(timezone.utc).isoformat()}")
     print("=" * 70)
 
@@ -284,12 +332,14 @@ def run_health_and_self_improvement():
     acc_res = audit_mt5_account_and_positions()
 
     history = update_self_improving_ledger(acc_res)
-    report_md = generate_markdown_report(term_res, runner_res, acc_res, history)
+    kaizen_res = evaluate_kaizen_trade_attribution()
+    report_md = generate_markdown_report(term_res, runner_res, acc_res, history, kaizen_res)
 
     print(f"Terminal Server : {'OK' if term_res.get('ok') else 'FAIL'}")
     print(f"Live Runner     : {'OK' if runner_res.get('ok') else 'FAIL'}")
     print(f"MT5 Account     : Balance=${acc_res.get('balance'):,.2f} | Equity=${acc_res.get('equity'):,.2f}")
     print(f"24h Realized PnL: ${acc_res.get('total_realized_profit_24h'):+,.2f} (PF: {acc_res.get('profit_factor_24h')})")
+    print(f"Kaizen Setups   : {kaizen_res.get('total_setups_evaluated')} evaluated | {kaizen_res.get('quarantined_count')} Quarantined | {kaizen_res.get('champions_count')} Champions")
     print(f"Report written to: {HEALTH_REPORT_FILE}")
     print("=" * 70)
 

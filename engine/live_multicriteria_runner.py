@@ -34,6 +34,7 @@ from engine.mt5_multicriteria_trader import (
     calculate_position_lot_size,
     evaluate_live_setup_signal
 )
+from engine.kaizen_self_improvement import check_kaizen_quarantine
 from audit.EXPANDED_OPTIMAL_ALPHA_BASKET import ROBUST_ALPHA_BASKET
 
 # Configure Logging
@@ -286,6 +287,13 @@ class MT5MultiCriteriaLiveRunner:
             return
 
         setup_name = sig.get("setup", f"{model}_{tf}")
+
+        # Kaizen Dynamic Quarantine Guard: Check if setup is currently quarantined due to negative expectancy
+        is_quarantined, q_reason = check_kaizen_quarantine(symbol, tf, setup_name)
+        if is_quarantined:
+            logger.warning(f"🛑 [KAIZEN AVOIDANCE] {symbol} {tf} {setup_name} is QUARANTINED: {q_reason}. Skipping trade.")
+            return
+
         magic = generate_setup_magic(symbol, tf, setup_name)
 
         # Check existing positions with this setup's magic number
