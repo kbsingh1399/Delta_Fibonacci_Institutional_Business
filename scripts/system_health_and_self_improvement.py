@@ -99,21 +99,45 @@ def audit_mt5_account_and_positions() -> Dict[str, Any]:
             "magic": p.magic
         })
 
+    # Load Alpha tickets from ledger for exact isolation
+    alpha_tickets = set()
+    if os.path.exists(LIVE_LEDGER_FILE):
+        try:
+            df_led = pd.read_csv(LIVE_LEDGER_FILE)
+            alpha_tickets = set(df_led["ticket"].astype(int))
+        except Exception:
+            pass
+
     # Closed deals in last 24h
     now_utc = datetime.now(timezone.utc)
     from_dt = now_utc - timedelta(hours=24)
     deals = mt5.history_deals_get(from_dt, now_utc) or []
     closed_deals = [d for d in deals if d.entry == 1]  # entry out
 
+    # Account-wide totals
     wins = [d.profit for d in closed_deals if d.profit > 0]
     losses = [d.profit for d in closed_deals if d.profit < 0]
     total_realized_profit = sum(d.profit for d in closed_deals)
-
     win_count = len(wins)
     loss_count = len(losses)
     total_trades = win_count + loss_count
     win_rate = (win_count / total_trades * 100) if total_trades > 0 else 0.0
     profit_factor = (sum(wins) / abs(sum(losses))) if losses and sum(losses) != 0 else (999.0 if wins else 0.0)
+
+    # Strictly Alpha_ closed deals
+    alpha_closed = [d for d in closed_deals if d.position_id in alpha_tickets]
+    a_wins = [d.profit for d in alpha_closed if d.profit > 0]
+    a_losses = [d.profit for d in alpha_closed if d.profit < 0]
+    alpha_realized_profit = sum(d.profit for d in alpha_closed)
+    a_win_count = len(a_wins)
+    a_loss_count = len(a_losses)
+    a_total_trades = len(alpha_closed)
+    alpha_win_rate = (a_win_count / a_total_trades * 100) if a_total_trades > 0 else 0.0
+    alpha_pf = (sum(a_wins) / abs(sum(a_losses))) if a_losses and sum(a_losses) != 0 else (999.0 if a_wins else 0.0)
+
+    # Open positions breakdown
+    alpha_open_positions = [p for p in pos_details if p["ticket"] in alpha_tickets or (p["comment"] and p["comment"].startswith("Alpha_"))]
+    alpha_unrealized_profit = sum(p["profit"] for p in alpha_open_positions)
 
     acc_data = {
         "ok": True,
@@ -125,12 +149,22 @@ def audit_mt5_account_and_positions() -> Dict[str, Any]:
         "margin_level": float(getattr(account, "margin_level", 0.0)),
         "open_positions_count": len(positions),
         "positions_without_sl": positions_without_sl,
+        # Account totals
         "closed_24h_deals_count": len(closed_deals),
         "total_realized_profit_24h": round(total_realized_profit, 2),
         "win_count_24h": win_count,
         "loss_count_24h": loss_count,
         "win_rate_24h": round(win_rate, 1),
         "profit_factor_24h": round(profit_factor, 2),
+        # Pure Alpha_ totals
+        "alpha_deals_count": a_total_trades,
+        "alpha_realized_profit": round(alpha_realized_profit, 2),
+        "alpha_win_count": a_win_count,
+        "alpha_loss_count": a_loss_count,
+        "alpha_win_rate": round(alpha_win_rate, 1),
+        "alpha_profit_factor": round(alpha_pf, 2),
+        "alpha_open_count": len(alpha_open_positions),
+        "alpha_unrealized_profit": round(alpha_unrealized_profit, 2),
         "positions": pos_details
     }
 
@@ -214,11 +248,15 @@ def generate_markdown_report(
 
 ---
 
-## 3. Rolling 24-Hour Forward Performance
-* **Total Closed Deals:** `{acc_res.get('closed_24h_deals_count', 0)}` trades
-* **Net Realized Profit:** `${acc_res.get('total_realized_profit_24h', 0.0):+,.2f}`
-* **Win Rate:** `{acc_res.get('win_rate_24h', 0.0)}%` ({acc_res.get('win_count_24h', 0)} Wins / {acc_res.get('loss_count_24h', 0)} Losses)
-* **Profit Factor:** `{acc_res.get('profit_factor_24h', 0.0)}`
+## 3. Performance Breakdown (Dedicated Alpha_ Engine vs Account Total)
+| Performance Metric | Dedicated Alpha_ Engine | Other Account Trades (Manual/Swing) | Account Total (24h) |
+| :--- | :--- | :--- | :--- |
+| **Closed Deals** | `{acc_res.get('alpha_deals_count', 0)}` trades | `{acc_res.get('closed_24h_deals_count', 0) - acc_res.get('alpha_deals_count', 0)}` trades | `{acc_res.get('closed_24h_deals_count', 0)}` trades |
+| **Net Realized Profit** | `${acc_res.get('alpha_realized_profit', 0.0):+,.2f}` | `${acc_res.get('total_realized_profit_24h', 0.0) - acc_res.get('alpha_realized_profit', 0.0):+,.2f}` | `${acc_res.get('total_realized_profit_24h', 0.0):+,.2f}` |
+| **Win / Loss Record** | `{acc_res.get('alpha_win_count', 0)}W / {acc_res.get('alpha_loss_count', 0)}L` | - | `{acc_res.get('win_count_24h', 0)}W / {acc_res.get('loss_count_24h', 0)}L` |
+| **Win Rate** | `{acc_res.get('alpha_win_rate', 0.0)}%` | - | `{acc_res.get('win_rate_24h', 0.0)}%` |
+| **Profit Factor** | `{acc_res.get('alpha_profit_factor', 0.0)}` | - | `{acc_res.get('profit_factor_24h', 0.0)}` |
+| **Active Open Positions** | `{acc_res.get('alpha_open_count', 0)}` (Unrealized: `${acc_res.get('alpha_unrealized_profit', 0.0):+,.2f}`) | `{acc_res.get('open_positions_count', 0) - acc_res.get('alpha_open_count', 0)}` | `{acc_res.get('open_positions_count', 0)}` |
 * **Equity Trend:** `{trend_str}`
 
 ---
