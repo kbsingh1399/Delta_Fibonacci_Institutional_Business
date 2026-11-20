@@ -429,7 +429,9 @@ class MT5MultiCriteriaLiveRunner:
 
             expiry_sec = LIMIT_ORDER_EXPIRATIONS.get(tf, 900)
             type_time = mt5.ORDER_TIME_SPECIFIED
-            expiration_time = int(time.time()) + expiry_sec
+            # MT5 broker server timestamp is tick.time; local time.time() lacks the broker's UTC offset
+            server_time = int(tick.time) if (tick and tick.time > 0) else (int(time.time()) + 7200)
+            expiration_time = server_time + expiry_sec
             order_comment = f"Alpha_{setup_name[:8]}_Lmt"
 
         # 3. Pre-Trade Margin & Solvency Filter
@@ -697,9 +699,35 @@ class MT5MultiCriteriaLiveRunner:
         except Exception as e:
             logger.error(f"Error in manage_trailing_stops: {e}")
 
+    def clean_expired_pending_orders(self):
+        """Redundant safety sweep: Purges any pending limit orders that have passed their expiration window."""
+        try:
+            orders = mt5.orders_get()
+            if not orders:
+                return
+            for o in orders:
+                if not (o.comment and o.comment.startswith("Alpha_")):
+                    continue
+                tick = mt5.symbol_info_tick(o.symbol)
+                server_time = int(tick.time) if (tick and tick.time > 0) else (int(time.time()) + 7200)
+                if o.time_expiration > 0 and server_time >= o.time_expiration:
+                    req = {
+                        "action": mt5.TRADE_ACTION_REMOVE,
+                        "order": o.ticket,
+                    }
+                    res = mt5.order_send(req)
+                    if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+                        logger.info(f"🧹 [PURGED EXPIRED LIMIT] Ticket #{o.ticket} {o.symbol} removed (expired).")
+                    else:
+                        err = res.comment if res else str(mt5.last_error())
+                        logger.warning(f"⚠️ [PURGE LIMIT FAILED] Ticket #{o.ticket} retcode={getattr(res, 'retcode', 'NONE')}: {err}")
+        except Exception as e:
+            logger.error(f"Error in clean_expired_pending_orders: {e}")
+
     def run_cycle(self):
         """Executes a single monitoring cycle across all symbols and setups in the basket."""
         self.manage_trailing_stops()
+        self.clean_expired_pending_orders()
 
         for sym, setups in self.basket.items():
             for setup_cfg in setups:

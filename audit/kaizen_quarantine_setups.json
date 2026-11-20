@@ -1,14 +1,13 @@
 {
-  "timestamp_utc": "2026-11-20 17:15:19 UTC",
+  "timestamp_utc": "2026-11-20 17:50:57 UTC",
   "quarantine_map": {
     "XAUUSD.pi:1H:VWAP_M2_LONG": "Excessive Dollar Volatility: 1H Gold ATR creates single-trade stop risk > $10. Restrict to 5M/15M.",
-    "XAUUSD.pi:5M:EMA200_REJECTION": "Severe Bleed: Net PnL $-12.33 with low win rate (0.0%).",
     "USDCHF.pi:4H:VWAP_M2_LONG": "Severe Bleed: Net PnL $-3.28 with low win rate (0.0%).",
     "GBPNOK.pi:5M:VWAP_P1_LONG": "Severe Bleed: Net PnL $-3.06 with low win rate (0.0%).",
+    "USWTI.p:5M:EMA20_TWO_BAR_BULLISH": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited.",
     "XRPUSD.pi:4H:EMA20_BOUNCE": "Severe Bleed: Net PnL $-3.00 with low win rate (0.0%).",
     "USDCHF.pi:4H:VWAP_M2_TWO_BAR_BULLISH": "Severe Bleed: Net PnL $-2.96 with low win rate (0.0%).",
     "USDJPY.pi:4H:VWAP_M2_LONG": "Severe Bleed: Net PnL $-2.74 with low win rate (0.0%).",
-    "USWTI.p:5M:EMA20_TWO_BAR_BULLISH": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited.",
     "GBPNOK.pi:15M:VWAP_P2_TWO_BAR_BEARISH": "Toxic Drift: 2 trades, 0 wins, net PnL $-2.31 (0% Win Rate).",
     "USWTI.p:1H:VWAP_0_LONG": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited.",
     "USWTI.p:4H:VWAP_M2_LONG": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited.",
