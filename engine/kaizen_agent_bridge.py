@@ -125,9 +125,10 @@ def format_kaizen_agent_report_section(result: Dict[str, Any]) -> str:
         table_rows.append(f"| `{tc['name']}` | `{tc['expected_output']}` | `{tc['actual_output']}` | {icon} `{tc['status']}` |")
     
     rows_str = "\n".join(table_rows)
+    target = PROJECT_ROOT / (result.get("target_file") or "kaizen.yaml")
     return f"""### 🧪 Kaizen Agent Framework Verification ({status_icon})
 * **Suite Name:** `{result.get('suite_name')}`
-* **Target Spec:** [`kaizen.yaml`](file:///c:/Users/SIGMA/Documents/Delta_Fibonacci_Institutional_Business/kaizen.yaml) → [`{result.get('target_file')}`](file:///c:/Users/SIGMA/Documents/Delta_Fibonacci_Institutional_Business/{result.get('target_file')})
+* **Target Spec:** [`kaizen.yaml`]({(PROJECT_ROOT / "kaizen.yaml").as_uri()}) → [`{result.get('target_file')}`]({target.as_uri()})
 * **Score:** `{result.get('passed_tests')}/{result.get('total_tests')} Passed` (`{result.get('execution_time_sec')}s` execution)
 
 | Test Invariant | Expected | Actual | Outcome |

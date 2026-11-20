@@ -3,9 +3,13 @@ Verifies basket loading, candle close detection logic, magic number isolation,
 and minimum lot order structure without sending live orders.
 """
 
+from types import SimpleNamespace
+from unittest.mock import Mock
+
 import pytest
 import numpy as np
 import pandas as pd
+from engine import live_multicriteria_runner as live
 from engine.mt5_multicriteria_trader import (
     generate_setup_magic,
     calculate_position_lot_size,
@@ -279,3 +283,65 @@ def test_adaptive_lot_sizing_unranked_setup():
     assert lot == 0.01
     assert "Standard Base Minimum" in reason
 
+
+
+@pytest.mark.parametrize("risk,margin,should_send", [(5.0, 20.0, True), (7.0, 20.0, False), (5.0, None, False)])
+def test_pending_placement_risk_and_ack(tmp_path, monkeypatch, risk, margin, should_send):
+    import MetaTrader5 as mt5
+
+    login = 12345
+    candle_time = 1700000000
+    broker = SimpleNamespace(**{name: getattr(mt5, name) for name in dir(mt5) if name.isupper()})
+    for name in ("positions_get", "orders_get", "symbol_info_tick", "symbol_info", "account_info",
+                 "order_calc_margin", "order_calc_profit", "order_send"):
+        setattr(broker, name, Mock())
+    broker.positions_get.return_value = ()
+    broker.orders_get.return_value = ()
+    broker.symbol_info_tick.return_value = SimpleNamespace(time=candle_time + 10, bid=99.8, ask=100.0)
+    broker.symbol_info.return_value = SimpleNamespace(
+        visible=True, digits=2, volume_min=0.01, volume_max=1.0, volume_step=0.01
+    )
+    broker.account_info.return_value = SimpleNamespace(
+        login=login, currency="USD", margin_free=2000.0, margin_mode=mt5.ACCOUNT_MARGIN_MODE_RETAIL_HEDGING
+    )
+    broker.order_calc_margin.return_value = margin
+    broker.order_calc_profit.return_value = -risk
+    broker.order_send.return_value = SimpleNamespace(retcode=mt5.TRADE_RETCODE_PLACED, order=42)
+    monkeypatch.setattr(live, "mt5", broker)
+    monkeypatch.setattr(live, "LEDGER_FILE", tmp_path / "execution.csv")
+    monkeypatch.setattr(live, "TRAIL_STATE_FILE", tmp_path / "trail.json")
+    monkeypatch.setattr(live, "check_kaizen_quarantine", lambda *args: (False, ""))
+    monkeypatch.setattr(live, "is_in_rollover_window", lambda: False)
+    monkeypatch.setattr(live, "get_adaptive_sizing_multiplier", lambda *args: (1.0, "base"))
+    monkeypatch.setattr(live, "evaluate_live_setup_signal", lambda *args: {
+        "side": 1, "setup": "EMA20_BOUNCE", "risk_dist": 1.0
+    })
+    runner = live.MT5MultiCriteriaLiveRunner(account_login=login, max_stop_risk_usd=6.0)
+    monkeypatch.setattr(runner, "fetch_rates_dataframe", lambda *args, **kwargs: pd.DataFrame({
+        "time": pd.to_datetime([candle_time - 300, candle_time], unit="s", utc=True),
+        "close": [100.0, 100.0],
+    }))
+    setup = {"tf": "5M", "model": "EMA", "param": "EMA_20", "exit_mode": "trail_0.5r"}
+    runner.check_and_execute_setup("EURUSD.pi", setup)
+    if should_send:
+        broker.order_send.assert_called_once()
+        request = broker.order_send.call_args.args[0]
+        assert request["type_filling"] == mt5.ORDER_FILLING_RETURN
+        row = runner.read_execution_ledger()[42]
+        assert row["status"] == "PENDING_LIMIT"
+        assert row["magic"] == request["magic"]
+    else:
+        broker.order_send.assert_not_called()
+        assert runner.read_execution_ledger() == {}
+
+
+def test_management_requires_exact_ledger_and_broker_identity():
+    row = {"symbol": "EURUSD.pi", "magic": 23456789}
+    ledger = {101: row}
+    position = SimpleNamespace(
+        ticket=202, identifier=101, comment="Alpha_VWAP_M2_LONG", symbol="EURUSD.pi", magic=23456789
+    )
+    assert live.MT5MultiCriteriaLiveRunner.owned_execution(position, ledger, position=True) is row
+    assert live.MT5MultiCriteriaLiveRunner.owned_execution(position, {}, position=True) is None
+    position.magic = 42001
+    assert live.MT5MultiCriteriaLiveRunner.owned_execution(position, ledger, position=True) is None

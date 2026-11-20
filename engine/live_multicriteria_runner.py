@@ -6,13 +6,17 @@ Punches trades at the minimum lot size as soon as rejection criteria confirm at 
 Features independent 8-digit magic numbers for concurrent position stacking without caps.
 """
 
+import argparse
 import os
 import sys
 import time
 import json
 import logging
+import tempfile
+from math import isfinite
+from pathlib import Path
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 import MetaTrader5 as mt5
@@ -221,10 +225,14 @@ def calculate_adaptive_lot_size(
 
 
 class MT5MultiCriteriaLiveRunner:
-    def __init__(self, risk_mode: str = "min_lot"):
+    def __init__(self, risk_mode: str = "min_lot", *, account_login: int, max_stop_risk_usd: float):
+        if account_login <= 0 or not isfinite(max_stop_risk_usd) or max_stop_risk_usd <= 0:
+            raise ValueError("A valid MT5 login and positive finite stop-risk ceiling are required")
         self.risk_mode = risk_mode
+        self.account_login = account_login
+        self.max_stop_risk_usd = max_stop_risk_usd
         self.basket = ROBUST_ALPHA_BASKET
-        self.last_candle_times: Dict[str, int] = {}
+        self.last_candle_times: Dict[Tuple[str, str, str, str], int] = {}
         self.is_running = False
         self._init_ledger()
         self.trailing_state: Dict[str, Any] = self._load_trailing_state()
@@ -266,8 +274,9 @@ class MT5MultiCriteriaLiveRunner:
             return False
 
         account = mt5.account_info()
-        if not account:
-            logger.error("Failed to retrieve MT5 account info")
+        if not self.account_matches(account):
+            logger.error("Configured MT5 USD hedging account was not confirmed")
+            mt5.shutdown()
             return False
 
         logger.info(
@@ -275,6 +284,14 @@ class MT5MultiCriteriaLiveRunner:
             f"Balance: ${account.balance:,.2f} | Equity: ${account.equity:,.2f}"
         )
         return True
+
+    def account_matches(self, account) -> bool:
+        return (
+            account is not None
+            and account.login == self.account_login
+            and account.currency == "USD"
+            and account.margin_mode == mt5.ACCOUNT_MARGIN_MODE_RETAIL_HEDGING
+        )
 
     def fetch_rates_dataframe(self, symbol: str, tf_str: str, count: int = 100) -> Optional[pd.DataFrame]:
         tf_enum = TIMEFRAME_MAP.get(tf_str)
@@ -304,7 +321,7 @@ class MT5MultiCriteriaLiveRunner:
         for sym, setups in self.basket.items():
             for s in setups:
                 tf = s["tf"]
-                key = f"{sym}_{tf}"
+                key = (sym, tf, s["model"], s["param"])
                 if key in self.last_candle_times:
                     continue
                 df = self.fetch_rates_dataframe(sym, tf, count=60)
@@ -319,7 +336,7 @@ class MT5MultiCriteriaLiveRunner:
         param = setup_cfg["param"]
         exit_mode = setup_cfg["exit_mode"]
 
-        key = f"{symbol}_{tf}"
+        key = (symbol, tf, model, param)
         df = self.fetch_rates_dataframe(symbol, tf, count=80)
         if df is None:
             return
@@ -368,19 +385,21 @@ class MT5MultiCriteriaLiveRunner:
 
         # Check existing positions with this setup's magic number
         open_pos = mt5.positions_get(symbol=symbol)
-        if open_pos:
-            for p in open_pos:
-                if p.magic == magic:
-                    logger.info(f"⏭️ [ALREADY OPEN] {symbol} {tf} Magic: {magic} already active.")
-                    return
+        if open_pos is None:
+            logger.warning("Position inventory unavailable for %s", symbol)
+            return
+        if any(p.magic == magic for p in open_pos):
+            logger.info("Setup already has a position for %s %s (magic %s)", symbol, tf, magic)
+            return
 
         # Check existing pending limit orders with this setup's magic number
         open_orders = mt5.orders_get(symbol=symbol)
-        if open_orders:
-            for o in open_orders:
-                if o.magic == magic:
-                    logger.info(f"⏭️ [ALREADY PENDING] {symbol} {tf} Magic: {magic} pending order already active.")
-                    return
+        if open_orders is None:
+            logger.warning("Order inventory unavailable for %s", symbol)
+            return
+        if any(o.magic == magic for o in open_orders):
+            logger.info("Setup already has a pending order for %s %s (magic %s)", symbol, tf, magic)
+            return
 
         # Prepare order execution
         info = mt5.symbol_info(symbol)
@@ -475,7 +494,7 @@ class MT5MultiCriteriaLiveRunner:
 
         # 3. Dynamic Lot Sizing: Slightly scale winning assets / champions within strict margin bounds
         account = mt5.account_info()
-        if not account:
+        if not self.account_matches(account):
             return
 
         volume, sizing_reason = calculate_adaptive_lot_size(
@@ -491,16 +510,6 @@ class MT5MultiCriteriaLiveRunner:
         if volume > float(info.volume_min):
             logger.info(f"🚀 [CHAMPION SCALING] {symbol} {tf} {setup_name}: {sizing_reason}")
 
-        # 4. Pre-Trade Margin & Solvency Filter
-        required_margin = mt5.order_calc_margin(order_type, symbol, volume, entry_price)
-        if required_margin is not None:
-            if required_margin > 0.50 * account.margin_free or (account.margin_free - required_margin) < 100.0:
-                logger.warning(
-                    f"❌ [MARGIN FILTER] {symbol} requires ${required_margin:.2f} margin, "
-                    f"but free margin is ${account.margin_free:.2f}. Rejecting trade to preserve solvency."
-                )
-                return
-
         if side == 1:
             sl = entry_price - risk_dist
             tp = entry_price + (target_rr * risk_dist)
@@ -513,7 +522,29 @@ class MT5MultiCriteriaLiveRunner:
         sl = round(sl, digits)
         tp = round(tp, digits)
 
-        filling = self.get_filling_mode(info)
+        if not all(isfinite(p) and p > 0 for p in (entry_price, sl, tp, volume)) or side * (entry_price - sl) <= 0:
+            return
+
+        direction_type = mt5.ORDER_TYPE_BUY if side == 1 else mt5.ORDER_TYPE_SELL
+        stressed_exit = entry_price + 1.20 * (sl - entry_price)
+        if stressed_exit <= 0:
+            return
+        profit = mt5.order_calc_profit(direction_type, symbol, volume, entry_price, stressed_exit)
+        if profit is None or not isfinite(profit) or profit >= 0 or -profit > self.max_stop_risk_usd:
+            logger.warning("Stop-risk check rejected %s: broker PnL estimate=%s, cap=%.2f", symbol, profit, self.max_stop_risk_usd)
+            return
+
+        required_margin = mt5.order_calc_margin(order_type, symbol, volume, entry_price)
+        free_margin = account.margin_free
+        if (
+            required_margin is None or not isfinite(required_margin) or required_margin < 0
+            or not isfinite(free_margin) or required_margin > 0.50 * free_margin
+            or free_margin - required_margin < 100.0
+        ):
+            logger.warning("Margin check rejected %s: required=%s, free=%s", symbol, required_margin, free_margin)
+            return
+
+        filling = mt5.ORDER_FILLING_RETURN if exec_mode == "LIMIT" else self.get_filling_mode(info)
 
         req = {
             "action": order_action,
@@ -544,10 +575,17 @@ class MT5MultiCriteriaLiveRunner:
                 f"Expiry: {expiry_sec // 60}m | Magic: {magic}"
             )
 
+        if not self.account_matches(mt5.account_info()):
+            return
         res = mt5.order_send(req)
-        if res and res.retcode == mt5.TRADE_RETCODE_DONE:
+        accepted = (
+            (mt5.TRADE_RETCODE_DONE, mt5.TRADE_RETCODE_PLACED) if exec_mode == "LIMIT"
+            else (mt5.TRADE_RETCODE_DONE, mt5.TRADE_RETCODE_DONE_PARTIAL)
+        )
+        if res and res.retcode in accepted and res.order > 0:
             ticket = res.order
-            fill_p = res.price if res.price > 0 else entry_price
+            fill_p = res.price if exec_mode == "MARKET" and res.price > 0 else entry_price
+            recorded_volume = res.volume if exec_mode == "MARKET" and res.volume > 0 else volume
             if exec_mode == "MARKET":
                 logger.info(f"✅ [MARKET ORDER FILLED] Ticket #{ticket} {action_str} {symbol} @ {fill_p}")
             else:
@@ -561,13 +599,17 @@ class MT5MultiCriteriaLiveRunner:
                 "model": model,
                 "setup": setup_name,
                 "action": f"{action_str}_LIMIT" if exec_mode == "LIMIT" else action_str,
-                "volume": volume,
-                "price": entry_price,
+                "volume": recorded_volume,
+                "price": fill_p,
                 "sl": sl,
                 "tp": tp,
                 "magic": magic,
                 "exit_mode": exit_mode,
-                "status": "PENDING_LIMIT" if exec_mode == "LIMIT" else "FILLED"
+                "status": (
+                    "PENDING_LIMIT" if exec_mode == "LIMIT"
+                    else "PARTIAL_FILL" if res.retcode == mt5.TRADE_RETCODE_DONE_PARTIAL
+                    else "FILLED"
+                )
             })
         else:
             err = res.comment if res else str(mt5.last_error())
@@ -636,11 +678,31 @@ class MT5MultiCriteriaLiveRunner:
         except Exception as e:
             logger.error(f"Error updating health telemetry: {e}")
 
+    def read_execution_ledger(self):
+        if not os.path.exists(LEDGER_FILE):
+            return {}
+        rows = pd.read_csv(LEDGER_FILE, dtype={"ticket": "Int64", "magic": "Int64"})
+        return {int(row["ticket"]): row for _, row in rows.dropna(subset=["ticket", "magic"]).iterrows()}
+
+    @staticmethod
+    def owned_execution(item, ledger, *, position=False):
+        if not (item.comment or "").startswith("Alpha_"):
+            return None
+        ids = (item.ticket, item.identifier) if position else (item.ticket,)
+        for ticket in ids:
+            row = ledger.get(ticket)
+            if row is not None and row["symbol"] == item.symbol and int(row["magic"]) == item.magic:
+                return row
+        return None
+
     def manage_trailing_stops(self):
         """Monitors open MT5 positions, tracks MFE, and ratchets trailing SL to breakeven (+0.05R)
         at +1.0R and trails behind MFE at >= 1.5R with 100% backtest fidelity."""
         try:
             positions = mt5.positions_get()
+            if positions is None:
+                logger.warning("Position inventory unavailable; keeping trailing state")
+                return
             if not positions:
                 if self.trailing_state:
                     self.trailing_state.clear()
@@ -653,33 +715,18 @@ class MT5MultiCriteriaLiveRunner:
                 if int(t) not in open_tickets:
                     del self.trailing_state[t]
 
-            # Index ledger for initial entry price, SL, and exit mode
-            ledger_lookup = {}
-            if os.path.exists(LEDGER_FILE):
-                try:
-                    df_led = pd.read_csv(LEDGER_FILE)
-                    for _, row in df_led.iterrows():
-                        ledger_lookup[int(row["ticket"])] = row
-                except Exception:
-                    pass
+            ledger = self.read_execution_ledger()
 
             for p in positions:
+                row = self.owned_execution(p, ledger, position=True)
+                if row is None:
+                    continue
                 ticket_str = str(p.ticket)
                 side = 1 if p.type == mt5.POSITION_TYPE_BUY else -1
                 symbol = p.symbol
-
-                row = ledger_lookup.get(p.ticket)
-                if row is not None:
-                    exit_mode = str(row.get("exit_mode", ""))
-                    initial_entry = float(row.get("price", p.price_open))
-                    initial_sl = float(row.get("sl", p.sl))
-                    risk_dist = abs(initial_entry - initial_sl)
-                elif p.comment and p.comment.startswith("Alpha_"):
-                    exit_mode = "trail_0.5r"
-                    initial_entry = p.price_open
-                    risk_dist = abs(p.price_open - p.sl) if p.sl > 0 else 0.0
-                else:
-                    continue
+                exit_mode = str(row["exit_mode"])
+                initial_entry = float(row["price"])
+                risk_dist = abs(initial_entry - float(row["sl"]))
 
                 if "trail" not in exit_mode or risk_dist <= 0:
                     continue
@@ -741,6 +788,8 @@ class MT5MultiCriteriaLiveRunner:
                         "sl": new_sl,
                         "tp": p.tp,
                     }
+                    if not self.account_matches(mt5.account_info()):
+                        return
                     res = mt5.order_send(req)
                     if res and res.retcode == mt5.TRADE_RETCODE_DONE:
                         logger.info(f"✅ [TRAILING STOP SUCCESS] Ticket #{p.ticket} SL moved to {new_sl}")
@@ -758,16 +807,18 @@ class MT5MultiCriteriaLiveRunner:
             orders = mt5.orders_get()
             if not orders:
                 return
+            ledger = self.read_execution_ledger()
             for o in orders:
-                if not (o.comment and o.comment.startswith("Alpha_")):
+                if self.owned_execution(o, ledger) is None:
                     continue
                 tick = mt5.symbol_info_tick(o.symbol)
-                server_time = int(tick.time) if (tick and tick.time > 0) else (int(time.time()) + 7200)
-                if o.time_expiration > 0 and server_time >= o.time_expiration:
+                if tick and tick.time > 0 and 0 < o.time_expiration <= tick.time:
                     req = {
                         "action": mt5.TRADE_ACTION_REMOVE,
                         "order": o.ticket,
                     }
+                    if not self.account_matches(mt5.account_info()):
+                        return
                     res = mt5.order_send(req)
                     if res and res.retcode == mt5.TRADE_RETCODE_DONE:
                         logger.info(f"🧹 [PURGED EXPIRED LIMIT] Ticket #{o.ticket} {o.symbol} removed (expired).")
@@ -779,6 +830,9 @@ class MT5MultiCriteriaLiveRunner:
 
     def run_cycle(self):
         """Executes a single monitoring cycle across all symbols and setups in the basket."""
+        if not self.account_matches(mt5.account_info()):
+            logger.error("Configured MT5 account changed or is unavailable; skipping the cycle")
+            return
         self.manage_trailing_stops()
         self.clean_expired_pending_orders()
 
@@ -815,6 +869,31 @@ class MT5MultiCriteriaLiveRunner:
             logger.info("MT5 connection closed.")
 
 
+def main() -> int:
+    import msvcrt
+
+    parser = argparse.ArgumentParser(description="Fibonacci MT5 execution runner")
+    parser.add_argument("--live", action="store_true", required=True, help="Explicitly enable live venue actions")
+    parser.add_argument("--account-login", type=int, required=True)
+    parser.add_argument("--max-stop-risk-usd", type=float, required=True, help="Ceiling for 1.20x stressed stop loss before fees")
+    args = parser.parse_args()
+    if args.account_login <= 0 or not isfinite(args.max_stop_risk_usd) or args.max_stop_risk_usd <= 0:
+        parser.error("account-login and max-stop-risk-usd must be positive and finite")
+
+    lock_path = Path(tempfile.gettempdir()) / f"fibonacci-mt5-{args.account_login}.lock"
+    with lock_path.open("a+b") as lock:
+        lock.seek(0)
+        try:
+            msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
+        except OSError:
+            logger.error("A Fibonacci runner already holds the lock for this account")
+            return 1
+        runner = MT5MultiCriteriaLiveRunner(
+            account_login=args.account_login, max_stop_risk_usd=args.max_stop_risk_usd
+        )
+        runner.run_daemon()
+    return 0
+
+
 if __name__ == "__main__":
-    runner = MT5MultiCriteriaLiveRunner(risk_mode="min_lot")
-    runner.run_daemon(poll_interval_sec=5.0)
+    raise SystemExit(main())

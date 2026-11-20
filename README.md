@@ -81,19 +81,38 @@ Every asset in the curated universe operates on its empirical champion timeframe
 
 ---
 
-## 5. Quickstart
+## 5. Current runner and offline verification
 
-### Backtesting (100% Code-Parity on Blueberry Markets Data)
-```bash
-python MT5_Backtest.py
+The repository's current multi-criteria MT5 runner is
+`engine/live_multicriteria_runner.py`. Its configured VWAP/EMA setups come from
+`audit/EXPANDED_OPTIMAL_ALPHA_BASKET.py`. The architecture, asset table and
+risk figures above describe the earlier EMA strategy. They do not configure
+the current runner.
+
+The current runner requires explicit live mode, the expected USD hedging
+account login, and an operator-approved stressed stop-loss ceiling in USD.
+See its available arguments without connecting to MT5:
+
+```powershell
+python -m engine.live_multicriteria_runner --help
 ```
 
-### Live Engine & Dashboard
-```bash
-# Start autonomous monitor daemon
-python -u mt5_alpha_trader_live.py
+Reconcile the existing execution ledger with the broker before moving the live
+runner. Trailing and expiry management require an exact ledger match on the
+broker ticket or position identifier, symbol and magic, plus the Alpha comment
+prefix. A missing match requires operator review. A Windows lock excludes
+other instances of the updated runner on the same account. Legacy processes
+do not participate in that lock and must be stopped for the handoff.
 
-# Start live web dashboard
-python dashboard_server.py
+Run local verification from this repository with UTF-8 enabled for the
+third-party Kaizen harness:
+
+```powershell
+$env:PYTHONUTF8 = "1"
+python -m pytest -q
 ```
-Dashboard available at `http://localhost:8088`.
+
+The OHLC simulator uses a simplified fill path and fixed commission. The live
+runner uses bid/ask, broker quotes, pending limits, and broker margin and
+stop-loss valuations. Validate this gap before using historical metrics for
+live deployment or sizing.
