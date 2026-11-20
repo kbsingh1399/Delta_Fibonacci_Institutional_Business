@@ -14,7 +14,8 @@ from engine.mt5_multicriteria_trader import (
 from engine.live_multicriteria_runner import (
     calculate_trailing_stop_update,
     is_in_rollover_window,
-    is_spread_acceptable
+    is_spread_acceptable,
+    classify_spread_execution_mode
 )
 from audit.EXPANDED_OPTIMAL_ALPHA_BASKET import ROBUST_ALPHA_BASKET
 
@@ -164,3 +165,21 @@ def test_spread_acceptable_calibration():
 
     # Zero or negative risk_dist -> Reject
     assert not is_spread_acceptable(spread=0.01, risk_dist=0.0, max_ratio=0.12)
+
+
+def test_classify_spread_execution_mode():
+    risk_dist = 0.40  # 40 cent stop (e.g. USWTI)
+
+    # 1. MARKET Mode: spread <= 0.12R (0.048)
+    assert classify_spread_execution_mode(spread=0.030, risk_dist=risk_dist) == "MARKET"
+    assert classify_spread_execution_mode(spread=0.048, risk_dist=risk_dist) == "MARKET"
+
+    # 2. LIMIT Mode: 0.12R < spread <= 0.30R (0.048 < spread <= 0.120)
+    assert classify_spread_execution_mode(spread=0.050, risk_dist=risk_dist) == "LIMIT"
+    assert classify_spread_execution_mode(spread=0.080, risk_dist=risk_dist) == "LIMIT"
+    assert classify_spread_execution_mode(spread=0.120, risk_dist=risk_dist) == "LIMIT"
+
+    # 3. REJECT Mode: spread > 0.30R (> 0.120) or risk_dist <= 0
+    assert classify_spread_execution_mode(spread=0.130, risk_dist=risk_dist) == "REJECT"
+    assert classify_spread_execution_mode(spread=0.250, risk_dist=risk_dist) == "REJECT"
+    assert classify_spread_execution_mode(spread=0.010, risk_dist=0.0) == "REJECT"

@@ -36,24 +36,29 @@ KAIZEN_QUARANTINE_FILE = os.path.join(AUDIT_DIR, "kaizen_quarantine_setups.json"
 LIVE_LEDGER_FILE = os.path.join(AUDIT_DIR, "mt5_multicriteria_live_ledger.csv")
 
 
-def load_alpha_ledger_mappings() -> Dict[int, Dict[str, Any]]:
-    """Loads historical trade tickets to setup metadata mapping."""
-    mappings = {}
+def load_alpha_ledger_mappings() -> Tuple[Dict[int, Dict[str, Any]], Dict[int, Dict[str, Any]]]:
+    """Loads historical trade tickets and magic numbers to setup metadata mapping."""
+    ticket_mappings = {}
+    magic_mappings = {}
     if not os.path.exists(LIVE_LEDGER_FILE):
-        return mappings
+        return ticket_mappings, magic_mappings
     try:
         df = pd.read_csv(LIVE_LEDGER_FILE)
         for _, r in df.iterrows():
-            mappings[int(r["ticket"])] = {
+            item = {
                 "symbol": str(r["symbol"]),
                 "tf": str(r["tf"]),
                 "model": str(r["model"]),
                 "setup": str(r["setup"]),
                 "magic": int(r["magic"]) if pd.notnull(r.get("magic")) else 0,
             }
+            if pd.notnull(r.get("ticket")):
+                ticket_mappings[int(r["ticket"])] = item
+            if item["magic"] > 0:
+                magic_mappings[item["magic"]] = item
     except Exception as e:
         logger.warning(f"Failed to read live ledger for Kaizen mapping: {e}")
-    return mappings
+    return ticket_mappings, magic_mappings
 
 
 def evaluate_kaizen_trade_attribution(lookback_days: int = 7) -> Dict[str, Any]:
@@ -64,7 +69,7 @@ def evaluate_kaizen_trade_attribution(lookback_days: int = 7) -> Dict[str, Any]:
         logger.error("MT5 initialization failed in Kaizen evaluator")
         return {"ok": False, "error": "MT5 init failed"}
 
-    mappings = load_alpha_ledger_mappings()
+    ticket_mappings, magic_mappings = load_alpha_ledger_mappings()
     from_t = datetime.now(timezone.utc) - timedelta(days=lookback_days)
     deals = mt5.history_deals_get(from_t, datetime.now(timezone.utc))
 
@@ -73,7 +78,7 @@ def evaluate_kaizen_trade_attribution(lookback_days: int = 7) -> Dict[str, Any]:
         for d in deals:
             # We only evaluate closing deals (entry == 1) to measure realized outcomes
             if d.entry == 1:
-                meta = mappings.get(d.position_id)
+                meta = ticket_mappings.get(d.position_id) or magic_mappings.get(d.magic)
                 symbol = meta["symbol"] if meta else d.symbol
                 tf = meta["tf"] if meta else "UNKNOWN"
                 setup = meta["setup"] if meta else (d.comment or "MANUAL")
@@ -88,7 +93,7 @@ def evaluate_kaizen_trade_attribution(lookback_days: int = 7) -> Dict[str, Any]:
                     "profit": float(d.profit),
                     "comment": d.comment or "",
                     "time": d.time,
-                    "is_alpha": (d.position_id in mappings) or ("Alpha_" in (d.comment or ""))
+                    "is_alpha": (d.position_id in ticket_mappings) or (d.magic in magic_mappings) or ("Alpha_" in (d.comment or ""))
                 })
 
     df = pd.DataFrame(trade_records)

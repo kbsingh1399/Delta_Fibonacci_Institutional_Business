@@ -70,7 +70,14 @@ MAX_LATENCY_SECONDS = {
     "4H": 180,
 }
 
-MAX_SPREAD_RATIO = 0.12  # Peer-reviewed friction threshold (12% of stop distance)
+MAX_SPREAD_RATIO = 0.12  # Peer-reviewed friction threshold for immediate Market Deals (12% of stop distance)
+MAX_LIMIT_SPREAD_RATIO = 0.30  # Maximum spread threshold to accept as Resting Limit Order with Auto-Expiry (30% of stop distance)
+LIMIT_ORDER_EXPIRATIONS = {
+    "5M": 900,    # 15 minutes (3 bars)
+    "15M": 1800,  # 30 minutes (2 bars)
+    "1H": 3600,   # 60 minutes (1 bar)
+    "4H": 7200,   # 120 minutes (0.5 bar)
+}
 
 
 def is_in_rollover_window(dt: Optional[datetime] = None) -> bool:
@@ -84,10 +91,31 @@ def is_in_rollover_window(dt: Optional[datetime] = None) -> bool:
 
 
 def is_spread_acceptable(spread: float, risk_dist: float, max_ratio: float = MAX_SPREAD_RATIO) -> bool:
-    """Verifies that bid-ask spread is within allowable risk friction tolerance."""
+    """Verifies that bid-ask spread is within allowable risk friction tolerance for immediate market fill."""
     if risk_dist <= 0:
         return False
     return spread <= (max_ratio * risk_dist)
+
+
+def classify_spread_execution_mode(
+    spread: float,
+    risk_dist: float,
+    max_market_ratio: float = MAX_SPREAD_RATIO,
+    max_limit_ratio: float = MAX_LIMIT_SPREAD_RATIO
+) -> str:
+    """Classifies execution mode based on current bid-ask spread vs risk distance:
+    - 'MARKET': spread <= max_market_ratio * risk_dist (Liquid, punch immediately at market)
+    - 'LIMIT': max_market_ratio * risk_dist < spread <= max_limit_ratio * risk_dist (Mild spread elevation, place resting limit with auto-expiry)
+    - 'REJECT': spread > max_limit_ratio * risk_dist (Extreme spread blowout / liquidity vacuum, discard trade)
+    """
+    if risk_dist <= 0:
+        return "REJECT"
+    if spread <= (max_market_ratio * risk_dist):
+        return "MARKET"
+    elif spread <= (max_limit_ratio * risk_dist):
+        return "LIMIT"
+    else:
+        return "REJECT"
 
 
 def calculate_trailing_stop_update(
@@ -304,6 +332,14 @@ class MT5MultiCriteriaLiveRunner:
                     logger.info(f"⏭️ [ALREADY OPEN] {symbol} {tf} Magic: {magic} already active.")
                     return
 
+        # Check existing pending limit orders with this setup's magic number
+        open_orders = mt5.orders_get(symbol=symbol)
+        if open_orders:
+            for o in open_orders:
+                if o.magic == magic:
+                    logger.info(f"⏭️ [ALREADY PENDING] {symbol} {tf} Magic: {magic} pending order already active.")
+                    return
+
         # Prepare order execution
         info = mt5.symbol_info(symbol)
         if not info or not info.visible:
@@ -318,7 +354,6 @@ class MT5MultiCriteriaLiveRunner:
             return
 
         action_str = "BUY" if side == 1 else "SELL"
-        entry_price = tick.ask if side == 1 else tick.bid
 
         # Minimum lot size as per user requirement
         volume = float(info.volume_min)
@@ -355,18 +390,49 @@ class MT5MultiCriteriaLiveRunner:
             logger.info(f"⏳ [ROLLOVER GUARD] Pausing new entries during daily rollover window (21:55-22:15 UTC).")
             return
 
-        # 2. Pre-Trade Spread Filter (Max 0.12R spread to eliminate friction drag)
+        # 2. Pre-Trade Two-Tier Spread Classification (Market vs. Resting Limit with Auto-Expiry)
         spread = tick.ask - tick.bid
-        max_spread = MAX_SPREAD_RATIO * risk_dist
-        if not is_spread_acceptable(spread, risk_dist, MAX_SPREAD_RATIO):
+        exec_mode = classify_spread_execution_mode(spread, risk_dist, MAX_SPREAD_RATIO, MAX_LIMIT_SPREAD_RATIO)
+
+        if exec_mode == "REJECT":
+            max_limit_spread = MAX_LIMIT_SPREAD_RATIO * risk_dist
             logger.warning(
-                f"❌ [SPREAD FILTER] {symbol} spread={spread:.5f} > max allowed {max_spread:.5f} ({MAX_SPREAD_RATIO:.2f}R). "
-                f"Rejecting trade to prevent friction bleed."
+                f"❌ [SPREAD FILTER] {symbol} spread={spread:.5f} > limit ceiling {max_limit_spread:.5f} ({MAX_LIMIT_SPREAD_RATIO:.2f}R). "
+                f"Rejecting trade due to extreme liquidity blowout."
             )
             return
 
+        digits = info.digits
+
+        if exec_mode == "MARKET":
+            order_action = mt5.TRADE_ACTION_DEAL
+            order_type = mt5.ORDER_TYPE_BUY if side == 1 else mt5.ORDER_TYPE_SELL
+            entry_price = tick.ask if side == 1 else tick.bid
+            type_time = mt5.ORDER_TIME_GTC
+            expiration_time = 0
+            order_comment = f"Alpha_{setup_name[:12]}"
+        else:  # LIMIT mode
+            order_action = mt5.TRADE_ACTION_PENDING
+            order_type = mt5.ORDER_TYPE_BUY_LIMIT if side == 1 else mt5.ORDER_TYPE_SELL_LIMIT
+            candle_close = float(df["close"].iloc[-2]) if len(df) >= 2 else (tick.bid if side == 1 else tick.ask)
+
+            if side == 1:
+                # Buy Limit rests at candle close or bid, capped at current ask
+                entry_price = min(candle_close, tick.bid)
+                if entry_price >= tick.ask:
+                    entry_price = tick.bid
+            else:
+                # Sell Limit rests at candle close or ask, capped at current bid
+                entry_price = max(candle_close, tick.ask)
+                if entry_price <= tick.bid:
+                    entry_price = tick.ask
+
+            expiry_sec = LIMIT_ORDER_EXPIRATIONS.get(tf, 900)
+            type_time = mt5.ORDER_TIME_SPECIFIED
+            expiration_time = int(time.time()) + expiry_sec
+            order_comment = f"Alpha_{setup_name[:8]}_Lmt"
+
         # 3. Pre-Trade Margin & Solvency Filter
-        order_type = mt5.ORDER_TYPE_BUY if side == 1 else mt5.ORDER_TYPE_SELL
         account = mt5.account_info()
         if not account:
             return
@@ -388,7 +454,6 @@ class MT5MultiCriteriaLiveRunner:
             tp = entry_price - (target_rr * risk_dist)
 
         # Round prices to broker precision
-        digits = info.digits
         entry_price = round(entry_price, digits)
         sl = round(sl, digits)
         tp = round(tp, digits)
@@ -396,30 +461,42 @@ class MT5MultiCriteriaLiveRunner:
         filling = self.get_filling_mode(info)
 
         req = {
-            "action": mt5.TRADE_ACTION_DEAL,
+            "action": order_action,
             "symbol": symbol,
             "volume": volume,
-            "type": mt5.ORDER_TYPE_BUY if side == 1 else mt5.ORDER_TYPE_SELL,
+            "type": order_type,
             "price": entry_price,
             "sl": sl,
             "tp": tp,
             "deviation": 25,
             "magic": magic,
-            "comment": f"Alpha_{setup_name[:12]}",
-            "type_time": mt5.ORDER_TIME_GTC,
+            "comment": order_comment,
+            "type_time": type_time,
             "type_filling": filling,
         }
+        if type_time == mt5.ORDER_TIME_SPECIFIED:
+            req["expiration"] = expiration_time
 
-        logger.info(
-            f"⚡ [AUTO-PUNCH TRIGGER] {action_str} {symbol} | TF: {tf} | Setup: {setup_name} | "
-            f"Lot: {volume} | Price: {entry_price} | SL: {sl} | TP: {tp} | Magic: {magic}"
-        )
+        if exec_mode == "MARKET":
+            logger.info(
+                f"⚡ [AUTO-PUNCH MARKET] {action_str} {symbol} | TF: {tf} | Setup: {setup_name} | "
+                f"Lot: {volume} | Price: {entry_price} | SL: {sl} | TP: {tp} | Spread: {spread:.5f} ({spread/risk_dist:.2f}R) | Magic: {magic}"
+            )
+        else:
+            logger.info(
+                f"⏳ [AUTO-PUNCH LIMIT] {action_str}_LIMIT {symbol} | TF: {tf} | Setup: {setup_name} | "
+                f"Lot: {volume} | LimitPrice: {entry_price} | SL: {sl} | TP: {tp} | Spread: {spread:.5f} ({spread/risk_dist:.2f}R > {MAX_SPREAD_RATIO:.2f}R) | "
+                f"Expiry: {expiry_sec // 60}m | Magic: {magic}"
+            )
 
         res = mt5.order_send(req)
         if res and res.retcode == mt5.TRADE_RETCODE_DONE:
             ticket = res.order
             fill_p = res.price if res.price > 0 else entry_price
-            logger.info(f"✅ [AUTO-PUNCH FILLED] Ticket #{ticket} {action_str} {symbol} @ {fill_p}")
+            if exec_mode == "MARKET":
+                logger.info(f"✅ [MARKET ORDER FILLED] Ticket #{ticket} {action_str} {symbol} @ {fill_p}")
+            else:
+                logger.info(f"✅ [LIMIT ORDER PLACED] Ticket #{ticket} {action_str}_LIMIT {symbol} @ {entry_price} (Expires in {expiry_sec // 60}m)")
 
             self.log_trade_to_ledger({
                 "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -428,14 +505,14 @@ class MT5MultiCriteriaLiveRunner:
                 "tf": tf,
                 "model": model,
                 "setup": setup_name,
-                "action": action_str,
+                "action": f"{action_str}_LIMIT" if exec_mode == "LIMIT" else action_str,
                 "volume": volume,
-                "price": fill_p,
+                "price": entry_price,
                 "sl": sl,
                 "tp": tp,
                 "magic": magic,
                 "exit_mode": exit_mode,
-                "status": "FILLED"
+                "status": "PENDING_LIMIT" if exec_mode == "LIMIT" else "FILLED"
             })
         else:
             err = res.comment if res else str(mt5.last_error())
@@ -446,6 +523,7 @@ class MT5MultiCriteriaLiveRunner:
         try:
             account = mt5.account_info()
             positions = mt5.positions_get()
+            orders = mt5.orders_get()
             pos_list = []
             if positions:
                 for p in positions:
@@ -462,6 +540,21 @@ class MT5MultiCriteriaLiveRunner:
                         "comment": p.comment,
                     })
 
+            order_list = []
+            if orders:
+                for o in orders:
+                    order_list.append({
+                        "ticket": o.ticket,
+                        "symbol": o.symbol,
+                        "type": "BUY_LIMIT" if o.type == mt5.ORDER_TYPE_BUY_LIMIT else ("SELL_LIMIT" if o.type == mt5.ORDER_TYPE_SELL_LIMIT else str(o.type)),
+                        "volume": o.volume_current,
+                        "price_open": o.price_open,
+                        "sl": o.sl,
+                        "tp": o.tp,
+                        "magic": o.magic,
+                        "comment": o.comment,
+                    })
+
             health = {
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "status": "ONLINE",
@@ -470,6 +563,7 @@ class MT5MultiCriteriaLiveRunner:
                 "balance": account.balance if account else 0.0,
                 "margin_free": account.margin_free if account else 0.0,
                 "open_positions_count": len(pos_list),
+                "pending_orders_count": len(order_list),
                 "active_symbols_tracked": len(self.basket),
                 "total_setups_tracked": sum(len(v) for v in self.basket.values())
             }
@@ -479,6 +573,10 @@ class MT5MultiCriteriaLiveRunner:
 
             with open(POSITIONS_FILE, "w", encoding="utf-8") as f:
                 json.dump(pos_list, f, indent=2)
+
+            pending_file = os.path.join(AUDIT_DIR, "mt5_multicriteria_pending_orders.json")
+            with open(pending_file, "w", encoding="utf-8") as f:
+                json.dump(order_list, f, indent=2)
 
         except Exception as e:
             logger.error(f"Error updating health telemetry: {e}")
