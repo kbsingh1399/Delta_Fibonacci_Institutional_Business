@@ -1,19 +1,20 @@
 {
-  "timestamp_utc": "2026-11-20 18:48:49 UTC",
-  "total_alpha_trades": 105,
-  "total_setups_evaluated": 57,
-  "quarantined_count": 16,
+  "timestamp_utc": "2026-11-20 19:24:11 UTC",
+  "total_alpha_trades": 109,
+  "total_setups_evaluated": 58,
+  "quarantined_count": 17,
   "champions_count": 5,
   "quarantine_keys": [
     "XAUUSD.pi:1H:VWAP_M2_LONG",
     "USDCHF.pi:4H:VWAP_M2_LONG",
     "GBPNOK.pi:5M:VWAP_P1_LONG",
-    "USWTI.p:5M:EMA20_TWO_BAR_BULLISH",
     "XRPUSD.pi:4H:EMA20_BOUNCE",
     "USDCHF.pi:4H:VWAP_M2_TWO_BAR_BULLISH",
     "USDJPY.pi:4H:VWAP_M2_LONG",
+    "USWTI.p:5M:EMA20_TWO_BAR_BULLISH",
     "GBPNOK.pi:15M:VWAP_P2_TWO_BAR_BEARISH",
     "USWTI.p:1H:VWAP_0_LONG",
+    "USWTI.p:1H:VWAP_0_TWO_BAR_BEARISH",
     "USWTI.p:4H:VWAP_M2_LONG",
     "NZDSGD.pi:5M:VWAP_0_SHORT",
     "USWTI.p:5M:EMA20_BOUNCE",
@@ -72,22 +73,6 @@
       "quarantine_reason": "Severe Bleed: Net PnL $-3.06 with low win rate (0.0%)."
     },
     {
-      "key": "USWTI.p:5M:EMA20_TWO_BAR_BULLISH",
-      "symbol": "USWTI.p",
-      "tf": "5M",
-      "setup": "EMA20_TWO_BAR_BULLISH",
-      "trades": 6,
-      "wins": 0,
-      "losses": 6,
-      "win_rate": 0.0,
-      "profit_factor": 0.0,
-      "gross_win": 0.0,
-      "gross_loss": 3.05,
-      "net_pnl": -3.05,
-      "status": "QUARANTINED",
-      "quarantine_reason": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited."
-    },
-    {
       "key": "XRPUSD.pi:4H:EMA20_BOUNCE",
       "symbol": "XRPUSD.pi",
       "tf": "4H",
@@ -136,6 +121,22 @@
       "quarantine_reason": "Severe Bleed: Net PnL $-2.74 with low win rate (0.0%)."
     },
     {
+      "key": "USWTI.p:5M:EMA20_TWO_BAR_BULLISH",
+      "symbol": "USWTI.p",
+      "tf": "5M",
+      "setup": "EMA20_TWO_BAR_BULLISH",
+      "trades": 7,
+      "wins": 1,
+      "losses": 6,
+      "win_rate": 14.3,
+      "profit_factor": 0.16,
+      "gross_win": 0.5,
+      "gross_loss": 3.05,
+      "net_pnl": -2.55,
+      "status": "QUARANTINED",
+      "quarantine_reason": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited."
+    },
+    {
       "key": "GBPNOK.pi:15M:VWAP_P2_TWO_BAR_BEARISH",
       "symbol": "GBPNOK.pi",
       "tf": "15M",
@@ -166,6 +167,22 @@
       "net_pnl": -2.31,
       "status": "QUARANTINED",
       "quarantine_reason": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited."
+    },
+    {
+      "key": "USWTI.p:1H:VWAP_0_TWO_BAR_BEARISH",
+      "symbol": "USWTI.p",
+      "tf": "1H",
+      "setup": "VWAP_0_TWO_BAR_BEARISH",
+      "trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_win": 0.0,
+      "gross_loss": 2.03,
+      "net_pnl": -2.03,
+      "status": "QUARANTINED",
+      "quarantine_reason": "Toxic Drift: 2 trades, 0 wins, net PnL $-2.03 (0% Win Rate)."
     },
     {
       "key": "USWTI.p:4H:VWAP_M2_LONG",
@@ -716,22 +733,6 @@
       "quarantine_reason": ""
     },
     {
-      "key": "USWTI.p:5M:EMA20_REJECTION",
-      "symbol": "USWTI.p",
-      "tf": "5M",
-      "setup": "EMA20_REJECTION",
-      "trades": 4,
-      "wins": 2,
-      "losses": 1,
-      "win_rate": 50.0,
-      "profit_factor": 0.96,
-      "gross_win": 0.45,
-      "gross_loss": 0.47,
-      "net_pnl": -0.02,
-      "status": "ACTIVE",
-      "quarantine_reason": ""
-    },
-    {
       "key": "EURUSD.pi:15M:VWAP_M2_DOUBLE_TAP_BULLISH",
       "symbol": "EURUSD.pi",
       "tf": "15M",
@@ -888,6 +889,22 @@
       "gross_win": 0.0,
       "gross_loss": 0.5,
       "net_pnl": -0.5,
+      "status": "ACTIVE",
+      "quarantine_reason": ""
+    },
+    {
+      "key": "USWTI.p:5M:EMA20_REJECTION",
+      "symbol": "USWTI.p",
+      "tf": "5M",
+      "setup": "EMA20_REJECTION",
+      "trades": 5,
+      "wins": 2,
+      "losses": 2,
+      "win_rate": 40.0,
+      "profit_factor": 0.47,
+      "gross_win": 0.45,
+      "gross_loss": 0.96,
+      "net_pnl": -0.51,
       "status": "ACTIVE",
       "quarantine_reason": ""
     },
@@ -1084,6 +1101,22 @@
       "quarantine_reason": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited."
     },
     {
+      "key": "USWTI.p:1H:VWAP_0_TWO_BAR_BEARISH",
+      "symbol": "USWTI.p",
+      "tf": "1H",
+      "setup": "VWAP_0_TWO_BAR_BEARISH",
+      "trades": 2,
+      "wins": 0,
+      "losses": 2,
+      "win_rate": 0.0,
+      "profit_factor": 0.0,
+      "gross_win": 0.0,
+      "gross_loss": 2.03,
+      "net_pnl": -2.03,
+      "status": "QUARANTINED",
+      "quarantine_reason": "Toxic Drift: 2 trades, 0 wins, net PnL $-2.03 (0% Win Rate)."
+    },
+    {
       "key": "HK50.p:1H:VWAP_M2_LONG",
       "symbol": "HK50.p",
       "tf": "1H",
@@ -1148,6 +1181,22 @@
       "quarantine_reason": ""
     },
     {
+      "key": "USWTI.p:5M:EMA20_TWO_BAR_BULLISH",
+      "symbol": "USWTI.p",
+      "tf": "5M",
+      "setup": "EMA20_TWO_BAR_BULLISH",
+      "trades": 7,
+      "wins": 1,
+      "losses": 6,
+      "win_rate": 14.3,
+      "profit_factor": 0.16,
+      "gross_win": 0.5,
+      "gross_loss": 3.05,
+      "net_pnl": -2.55,
+      "status": "QUARANTINED",
+      "quarantine_reason": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited."
+    },
+    {
       "key": "USDJPY.pi:4H:VWAP_M2_LONG",
       "symbol": "USDJPY.pi",
       "tf": "4H",
@@ -1194,22 +1243,6 @@
       "net_pnl": -3.0,
       "status": "QUARANTINED",
       "quarantine_reason": "Severe Bleed: Net PnL $-3.00 with low win rate (0.0%)."
-    },
-    {
-      "key": "USWTI.p:5M:EMA20_TWO_BAR_BULLISH",
-      "symbol": "USWTI.p",
-      "tf": "5M",
-      "setup": "EMA20_TWO_BAR_BULLISH",
-      "trades": 6,
-      "wins": 0,
-      "losses": 6,
-      "win_rate": 0.0,
-      "profit_factor": 0.0,
-      "gross_win": 0.0,
-      "gross_loss": 3.05,
-      "net_pnl": -3.05,
-      "status": "QUARANTINED",
-      "quarantine_reason": "Macro Bear Regime: 0% historical win rate on oil counter-trend longs. Longs prohibited."
     },
     {
       "key": "GBPNOK.pi:5M:VWAP_P1_LONG",

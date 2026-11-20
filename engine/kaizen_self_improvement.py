@@ -33,6 +33,7 @@ os.makedirs(AUDIT_DIR, exist_ok=True)
 
 KAIZEN_LEDGER_FILE = os.path.join(AUDIT_DIR, "kaizen_learning_ledger.json")
 KAIZEN_QUARANTINE_FILE = os.path.join(AUDIT_DIR, "kaizen_quarantine_setups.json")
+KAIZEN_CHAMPIONS_FILE = os.path.join(AUDIT_DIR, "kaizen_champion_setups.json")
 LIVE_LEDGER_FILE = os.path.join(AUDIT_DIR, "mt5_multicriteria_live_ledger.csv")
 
 
@@ -216,7 +217,33 @@ def evaluate_kaizen_trade_attribution(lookback_days: int = 7) -> Dict[str, Any]:
                 ]
             }, f, indent=2)
 
-        logger.info(f"✅ [KAIZEN] Updated quarantine list ({len(quarantine_list)} setups quarantined, {len(champion_list)} champions promoted)")
+        # Standalone clean machine-readable champion and winning assets lookup
+        champions_map = {c["key"]: c for c in champion_list}
+        winning_assets = {}
+        if not alpha_df.empty and "symbol" in alpha_df.columns:
+            sym_grp = alpha_df.groupby("symbol")
+            for sym, group in sym_grp:
+                t_count = len(group)
+                w_count = int((group["profit"] > 0).sum())
+                pnl = float(group["profit"].sum())
+                wr = (w_count / t_count * 100.0) if t_count > 0 else 0.0
+                if t_count >= 2 and pnl > 0 and wr >= 50.0:
+                    winning_assets[str(sym)] = {
+                        "trades": t_count,
+                        "wins": w_count,
+                        "win_rate": round(wr, 1),
+                        "net_pnl": round(pnl, 2)
+                    }
+
+        with open(KAIZEN_CHAMPIONS_FILE, "w", encoding="utf-8") as f:
+            json.dump({
+                "timestamp_utc": kaizen_manifest["timestamp_utc"],
+                "champions_count": len(champion_list),
+                "champions_map": champions_map,
+                "winning_assets": winning_assets
+            }, f, indent=2)
+
+        logger.info(f"✅ [KAIZEN] Updated quarantine list ({len(quarantine_list)} quarantined) and champions list ({len(champion_list)} champions, {len(winning_assets)} winning assets)")
     except Exception as e:
         logger.error(f"Failed to write Kaizen files: {e}")
 
@@ -248,6 +275,54 @@ def check_kaizen_quarantine(symbol: str, tf: str, setup_name: str) -> Tuple[bool
             pass
 
     return False, ""
+
+
+def is_kaizen_champion(symbol: str, tf: str, setup_name: str) -> Tuple[bool, Dict[str, Any]]:
+    """Checks if a setup is a validated Prime Champion."""
+    key = f"{symbol}:{tf}:{setup_name}"
+    if os.path.exists(KAIZEN_CHAMPIONS_FILE):
+        try:
+            with open(KAIZEN_CHAMPIONS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                c_map = data.get("champions_map", {})
+                if key in c_map:
+                    return True, c_map[key]
+        except Exception:
+            pass
+    return False, {}
+
+
+def get_adaptive_sizing_multiplier(symbol: str, tf: str, setup_name: str) -> Tuple[float, str]:
+    """Determines whether a setup or asset qualifies for slightly scaled lot size as per winning assets.
+    Returns (multiplier, reason).
+    Default multiplier is 1.0 (base volume_min).
+    Winning assets / Prime Champions get 2.0 (slightly scaled, e.g. 0.01 -> 0.02 lots).
+    """
+    key = f"{symbol}:{tf}:{setup_name}"
+    if os.path.exists(KAIZEN_CHAMPIONS_FILE):
+        try:
+            with open(KAIZEN_CHAMPIONS_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                c_map = data.get("champions_map", {})
+                w_assets = data.get("winning_assets", {})
+                if key in c_map:
+                    c = c_map[key]
+                    return 2.0, f"Prime Champion Setup ({c.get('win_rate', 0)}% WR, +${c.get('net_pnl', 0):.2f})"
+                if symbol in w_assets:
+                    w = w_assets[symbol]
+                    return 2.0, f"Winning Asset Basket ({w.get('win_rate', 0)}% WR, +${w.get('net_pnl', 0):.2f})"
+        except Exception:
+            pass
+    elif os.path.exists(KAIZEN_LEDGER_FILE):
+        try:
+            with open(KAIZEN_LEDGER_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                for c in data.get("champions_details", []):
+                    if c.get("key") == key:
+                        return 2.0, f"Prime Champion Setup ({c.get('win_rate', 0)}% WR, +${c.get('net_pnl', 0):.2f})"
+        except Exception:
+            pass
+    return 1.0, "Standard Base Sizing"
 
 
 class KaizenTradingAgent:

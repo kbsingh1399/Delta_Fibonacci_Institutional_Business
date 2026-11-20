@@ -1,0 +1,106 @@
+{
+  "timestamp_utc": "2026-11-20 19:24:11 UTC",
+  "champions_count": 5,
+  "champions_map": {
+    "EURUSD.pi:15M:VWAP_P1_LONG": {
+      "key": "EURUSD.pi:15M:VWAP_P1_LONG",
+      "symbol": "EURUSD.pi",
+      "tf": "15M",
+      "setup": "VWAP_P1_LONG",
+      "trades": 3,
+      "wins": 3,
+      "losses": 0,
+      "win_rate": 100.0,
+      "profit_factor": 99.0,
+      "gross_win": 3.35,
+      "gross_loss": 0.0,
+      "net_pnl": 3.35,
+      "status": "PRIME_CHAMPION",
+      "quarantine_reason": ""
+    },
+    "EURUSD.pi:15M:VWAP_M2_TWO_BAR_BULLISH": {
+      "key": "EURUSD.pi:15M:VWAP_M2_TWO_BAR_BULLISH",
+      "symbol": "EURUSD.pi",
+      "tf": "15M",
+      "setup": "VWAP_M2_TWO_BAR_BULLISH",
+      "trades": 5,
+      "wins": 4,
+      "losses": 1,
+      "win_rate": 80.0,
+      "profit_factor": 6.09,
+      "gross_win": 3.23,
+      "gross_loss": 0.53,
+      "net_pnl": 2.7,
+      "status": "PRIME_CHAMPION",
+      "quarantine_reason": ""
+    },
+    "EURUSD.pi:15M:VWAP_P2_SHORT": {
+      "key": "EURUSD.pi:15M:VWAP_P2_SHORT",
+      "symbol": "EURUSD.pi",
+      "tf": "15M",
+      "setup": "VWAP_P2_SHORT",
+      "trades": 4,
+      "wins": 3,
+      "losses": 1,
+      "win_rate": 75.0,
+      "profit_factor": 3.06,
+      "gross_win": 2.02,
+      "gross_loss": 0.66,
+      "net_pnl": 1.36,
+      "status": "PRIME_CHAMPION",
+      "quarantine_reason": ""
+    },
+    "NZDSGD.pi:5M:VWAP_0_LONG": {
+      "key": "NZDSGD.pi:5M:VWAP_0_LONG",
+      "symbol": "NZDSGD.pi",
+      "tf": "5M",
+      "setup": "VWAP_0_LONG",
+      "trades": 3,
+      "wins": 2,
+      "losses": 1,
+      "win_rate": 66.7,
+      "profit_factor": 3.45,
+      "gross_win": 1.14,
+      "gross_loss": 0.33,
+      "net_pnl": 0.81,
+      "status": "PRIME_CHAMPION",
+      "quarantine_reason": ""
+    },
+    "XAUUSD.pi:5M:EMA200_PINBAR_KISS": {
+      "key": "XAUUSD.pi:5M:EMA200_PINBAR_KISS",
+      "symbol": "XAUUSD.pi",
+      "tf": "5M",
+      "setup": "EMA200_PINBAR_KISS",
+      "trades": 2,
+      "wins": 2,
+      "losses": 0,
+      "win_rate": 100.0,
+      "profit_factor": 99.0,
+      "gross_win": 0.68,
+      "gross_loss": 0.0,
+      "net_pnl": 0.68,
+      "status": "PRIME_CHAMPION",
+      "quarantine_reason": ""
+    }
+  },
+  "winning_assets": {
+    "BTCUSD.pi": {
+      "trades": 2,
+      "wins": 1,
+      "win_rate": 50.0,
+      "net_pnl": 6.17
+    },
+    "EURUSD.pi": {
+      "trades": 27,
+      "wins": 16,
+      "win_rate": 59.3,
+      "net_pnl": 5.86
+    },
+    "USDCAD.pi": {
+      "trades": 2,
+      "wins": 2,
+      "win_rate": 100.0,
+      "net_pnl": 0.64
+    }
+  }
+}

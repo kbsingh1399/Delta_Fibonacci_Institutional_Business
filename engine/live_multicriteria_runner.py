@@ -34,7 +34,7 @@ from engine.mt5_multicriteria_trader import (
     calculate_position_lot_size,
     evaluate_live_setup_signal
 )
-from engine.kaizen_self_improvement import check_kaizen_quarantine
+from engine.kaizen_self_improvement import check_kaizen_quarantine, get_adaptive_sizing_multiplier
 from audit.EXPANDED_OPTIMAL_ALPHA_BASKET import ROBUST_ALPHA_BASKET
 
 # Configure Logging
@@ -176,6 +176,48 @@ def calculate_trailing_stop_update(
             return round(target_sl, digits)
 
     return None
+
+
+def calculate_adaptive_lot_size(
+    symbol: str,
+    tf: str,
+    setup_name: str,
+    info: Any,
+    account: Any,
+    order_type: int,
+    entry_price: float,
+    risk_dist: float
+) -> Tuple[float, str]:
+    """Calculates surgical, mathematically bounded lot size as per winning assets/champions.
+    - Base: info.volume_min (usually 0.01).
+    - Slightly scaled: Base + info.volume_step (usually 0.02) for verified champions/winning assets.
+    - Margin Guard: Scaling is permitted only if margin <= $150.0 and <= 10% free margin,
+      safely keeping high-margin assets (Gold, Crypto, Indices) at base 0.01 lot.
+    """
+    base_volume = float(info.volume_min) if info else 0.01
+    step_volume = float(info.volume_step) if info else 0.01
+    max_volume = float(info.volume_max) if info else 10.0
+
+    multiplier, reason = get_adaptive_sizing_multiplier(symbol, tf, setup_name)
+
+    if multiplier > 1.0:
+        target_volume = round(base_volume + step_volume, 2)
+        target_volume = min(max(target_volume, base_volume), max_volume)
+
+        # Margin Safety Gate: Check margin for target volume
+        margin_req = mt5.order_calc_margin(order_type, symbol, target_volume, entry_price) if entry_price > 0 else None
+        if margin_req is None or margin_req > 150.0 or (account and margin_req > 0.10 * getattr(account, "margin_free", 0)):
+            req_str = f"${margin_req:.2f}" if margin_req is not None else "N/A"
+            return base_volume, f"Base {base_volume} lot maintained (Margin Gate: {req_str} > $150 cap)"
+
+        # Solvency Gate: Ensure remaining free margin is at least $1500
+        free_m = getattr(account, "margin_free", 2000.0) if account else 2000.0
+        if (free_m - margin_req) < 1500.0:
+            return base_volume, f"Base {base_volume} lot maintained (Solvency Buffer preservation)"
+
+        return target_volume, f"Slightly Scaled: {reason} -> {target_volume} lots (Margin: ${margin_req:.2f})"
+
+    return base_volume, "Standard Base Minimum (0.01)"
 
 
 class MT5MultiCriteriaLiveRunner:
@@ -355,9 +397,6 @@ class MT5MultiCriteriaLiveRunner:
 
         action_str = "BUY" if side == 1 else "SELL"
 
-        # Minimum lot size as per user requirement
-        volume = float(info.volume_min)
-
         # Calculate SL and TP
         risk_dist = sig.get("risk_dist", 0.0)
         if risk_dist <= 0:
@@ -434,11 +473,25 @@ class MT5MultiCriteriaLiveRunner:
             expiration_time = server_time + expiry_sec
             order_comment = f"Alpha_{setup_name[:8]}_Lmt"
 
-        # 3. Pre-Trade Margin & Solvency Filter
+        # 3. Dynamic Lot Sizing: Slightly scale winning assets / champions within strict margin bounds
         account = mt5.account_info()
         if not account:
             return
 
+        volume, sizing_reason = calculate_adaptive_lot_size(
+            symbol=symbol,
+            tf=tf,
+            setup_name=setup_name,
+            info=info,
+            account=account,
+            order_type=order_type,
+            entry_price=entry_price,
+            risk_dist=risk_dist
+        )
+        if volume > float(info.volume_min):
+            logger.info(f"🚀 [CHAMPION SCALING] {symbol} {tf} {setup_name}: {sizing_reason}")
+
+        # 4. Pre-Trade Margin & Solvency Filter
         required_margin = mt5.order_calc_margin(order_type, symbol, volume, entry_price)
         if required_margin is not None:
             if required_margin > 0.50 * account.margin_free or (account.margin_free - required_margin) < 100.0:

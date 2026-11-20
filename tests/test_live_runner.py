@@ -15,7 +15,8 @@ from engine.live_multicriteria_runner import (
     calculate_trailing_stop_update,
     is_in_rollover_window,
     is_spread_acceptable,
-    classify_spread_execution_mode
+    classify_spread_execution_mode,
+    calculate_adaptive_lot_size
 )
 from audit.EXPANDED_OPTIMAL_ALPHA_BASKET import ROBUST_ALPHA_BASKET
 
@@ -183,3 +184,98 @@ def test_classify_spread_execution_mode():
     assert classify_spread_execution_mode(spread=0.130, risk_dist=risk_dist) == "REJECT"
     assert classify_spread_execution_mode(spread=0.250, risk_dist=risk_dist) == "REJECT"
     assert classify_spread_execution_mode(spread=0.010, risk_dist=0.0) == "REJECT"
+
+
+def test_adaptive_lot_sizing_winning_asset_and_champion():
+    class MockSymbolInfo:
+        volume_min = 0.01
+        volume_step = 0.01
+        volume_max = 10.0
+
+    class MockAccount:
+        margin_free = 2200.0
+
+    # Prime Champion setup EURUSD.pi
+    info = MockSymbolInfo()
+    account = MockAccount()
+
+    # For EURUSD (Forex), mock margin calculation returns low margin (~$73)
+    import MetaTrader5 as mt5
+    original_calc = mt5.order_calc_margin
+    try:
+        mt5.order_calc_margin = lambda o_type, sym, vol, price: 73.0 if vol == 0.02 else 36.5
+        lot, reason = calculate_adaptive_lot_size(
+            symbol="EURUSD.pi",
+            tf="15M",
+            setup_name="VWAP_P1_LONG",
+            info=info,
+            account=account,
+            order_type=0,
+            entry_price=1.0500,
+            risk_dist=0.0015
+        )
+        assert lot == 0.02
+        assert "Slightly Scaled" in reason
+    finally:
+        mt5.order_calc_margin = original_calc
+
+
+def test_adaptive_lot_sizing_high_margin_safety_cap():
+    class MockSymbolInfo:
+        volume_min = 0.01
+        volume_step = 0.01
+        volume_max = 10.0
+
+    class MockAccount:
+        margin_free = 2200.0
+
+    info = MockSymbolInfo()
+    account = MockAccount()
+
+    import MetaTrader5 as mt5
+    original_calc = mt5.order_calc_margin
+    try:
+        # Mock high margin (e.g. Gold or Indices > $150)
+        mt5.order_calc_margin = lambda o_type, sym, vol, price: 700.0 if vol == 0.02 else 350.0
+        lot, reason = calculate_adaptive_lot_size(
+            symbol="XAUUSD.pi",
+            tf="5M",
+            setup_name="EMA200_PINBAR_KISS",
+            info=info,
+            account=account,
+            order_type=0,
+            entry_price=2650.0,
+            risk_dist=2.5
+        )
+        # Must safely reject scaling and stay at 0.01 base!
+        assert lot == 0.01
+        assert "Margin Gate" in reason
+    finally:
+        mt5.order_calc_margin = original_calc
+
+
+def test_adaptive_lot_sizing_unranked_setup():
+    class MockSymbolInfo:
+        volume_min = 0.01
+        volume_step = 0.01
+        volume_max = 10.0
+
+    class MockAccount:
+        margin_free = 2200.0
+
+    info = MockSymbolInfo()
+    account = MockAccount()
+
+    lot, reason = calculate_adaptive_lot_size(
+        symbol="USWTI.p",
+        tf="5M",
+        setup_name="SOME_UNRANKED_SETUP",
+        info=info,
+        account=account,
+        order_type=0,
+        entry_price=70.0,
+        risk_dist=0.50
+    )
+    assert lot == 0.01
+    assert "Standard Base Minimum" in reason
+

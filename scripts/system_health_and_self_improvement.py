@@ -318,6 +318,7 @@ def generate_markdown_report(
 1. **Via Negativa Execution**: The fastest way to increase portfolio Sharpe ratio is cutting toxic bleed. The live runner strictly refuses entry on quarantined setups.
 2. **Macro Trend Alignment**: Counter-trend mean reversion entries during established directional regimes (e.g., Oil longs during macro sell-offs) are permanently vetoed.
 3. **Volatility Sizing Disconnect**: 1H Gold ATR requires >$10 dollar stop distance on minimum lots, creating disproportionate risk. Restricting Gold exclusively to 5M/15M ensures tight risk-reward asymmetry.
+4. **Adaptive Champion Sizing**: Setups belonging to Prime Champions or assets with positive net expectancy and >= 50% Win Rate (e.g., EURUSD.pi, NZDSGD.pi, USDCAD.pi) are allocated 0.02 lots (+100% boost). High-margin instruments (Gold, Crypto, Indices) remain strictly capped at 0.01 lots to preserve liquidity buffers.
 
 ---
 
